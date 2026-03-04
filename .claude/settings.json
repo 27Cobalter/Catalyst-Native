@@ -32,6 +32,8 @@
       "Bash(npm publish)",
       "Bash(pnpm publish)",
       "Bash(yarn publish)",
+      "Edit(anrdoid/**)",
+      "Edit(ios/**)",
       "Edit(pnpm-lock.yaml)",
       "Edit(yarn.lock)",
       "Edit(package-lock.json)"
