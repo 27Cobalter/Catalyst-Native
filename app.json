@@ -2,14 +2,15 @@
   "expo": {
     "name": "Catalyst",
     "slug": "catalyst-native",
+    "scheme": "com.natsuneko.catalyst",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "catalyst",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
+      "bundleIdentifier": "com.natsuneko.catalyst",
       "config": {
         "usesNonExemptEncryption": false
       }
@@ -23,7 +24,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.natsuneko.catalyst.android"
+      "package": "com.natsuneko.catalyst"
     },
     "web": {
       "output": "static",
