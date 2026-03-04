@@ -1,17 +1,22 @@
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from "@react-navigation/native";
-import { SplashScreen, Stack } from "expo-router";
+// polyfills
+import "react-native-get-random-values";
+
+// imports
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { accountAtom } from "@/models/atoms/account";
+import * as Credential from "@/models/credential";
+import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
+import * as Sentry from "@sentry/react-native";
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import { useSetAtom } from "jotai";
+import { useState } from "react";
+
 import "react-native-reanimated";
 
+import { useAsyncOneTimeEffect } from "@/hooks/useAsyncOneTimeEffect";
 import "../globals.css";
-
-import { useColorScheme } from "@/hooks/use-color-scheme";
-import * as Sentry from "@sentry/react-native";
-import { useEffect, useState } from "react";
 
 Sentry.init({
   dsn: "https://6d7c270e3a7bb56c0a746319d7e885d5@o4504564074348544.ingest.us.sentry.io/4510957726793728",
@@ -37,16 +42,15 @@ export const unstable_settings = {
 export default Sentry.wrap(function RootLayout() {
   const colorScheme = useColorScheme();
   const [isLoaded, setIsLoaded] = useState(false);
+  const setAccount = useSetAtom(accountAtom);
 
-  useEffect(() => {
-    async function prepare() {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      // setIsLoaded(true);
-      //await SplashScreen.hideAsync();
-    }
+  useAsyncOneTimeEffect(async () => {
+    const { credential, isLoggedIn } = await Credential.init();
 
-    prepare();
-  }, []);
+    setAccount(isLoggedIn ? { user: Credential.currentUser()!, credential } : null);
+    setIsLoaded(true);
+    await SplashScreen.hideAsync();
+  });
 
   if (!isLoaded) {
     return null;
@@ -56,10 +60,8 @@ export default Sentry.wrap(function RootLayout() {
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="modal"
-          options={{ presentation: "modal", title: "Modal" }}
-        />
+        <Stack.Screen name="authorize" options={{ headerShown: false }} />
+        <Stack.Screen name="modal" options={{ presentation: "modal", title: "Modal" }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
