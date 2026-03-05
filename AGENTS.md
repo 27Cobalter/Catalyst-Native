@@ -1,0 +1,79 @@
+# AGENTS.md
+
+Catalyst-React-Nativ は、 CatalystSDK を使用して構築された [Catalyst](https://catalyst.natsuneko.com) のネイティブクライアント実装です。  
+このドキュメントは、プロジェクトの構造、使用技術、開発フローなど、一般的なプロジェクト情報を提供します。CLAUDE.md には、Claude Code での作業に特化した指針を配置します。
+
+## Commands
+
+```bash
+# Install dependencies (uses pnpm)
+pnpm install
+
+# Start the dev server
+pnpm start          # or: expo start
+
+# Run on specific platform
+pnpm android        # expo run:android
+pnpm ios            # expo run:ios
+pnpm web            # expo start --web
+
+# Lint
+pnpm lint           # expo lint
+```
+
+There are no automated tests in this project.
+
+## アーキテクチャ
+
+このプロジェクトは Expo と expo-router を使用した React Native モバイルアプリで、ソーシャルネットワーククライアント「Catalyst」の実装です。
+
+### SDK
+
+このアプリは `@natsuneko-laboratory/catalyst-sdk` に依存しており、これは [CatalystSDK](https://github.com/mika-f/CatalystSDK) を指します。
+また、`package.json` でローカルパッケージとしてリンクされています: `"@natsuneko-laboratory/catalyst-sdk": "link:../CatalystSDK/packages/nodejs"`。
+SDK は `CatalystTS`（API クライアント）、`PKCE`、および `CatalystStatus`、`EgeriaUser` などの型を提供します。
+
+### ステート管理
+
+グローバルステートの管理には [Jotai](https://jotai.org/) を使用しています。
+
+### 認証フロー
+
+認証は [models/credential.ts](models/credential.ts) と [models/credential-store.ts](models/credential-store.ts) で管理されています：
+
+- Credentials (アクセストークン/リフレッシュトークン) は `expo-secure-store`（キーチェーン）に保存されます。
+- アプリのスタートアップ時に `Credential.init()` が保存されたトークンをチェックし、現在のユーザーの取得を試み、必要に応じてトークンをリフレッシュするか、`expo-web-browser` を介して OAuth PKCE フローを開始します。
+- OAuth クライアントID/シークレットおよびリダイレクトURIはプラットフォーム固有で、[constants/apikey.ts](constants/apikey.ts) に定義されています。
+
+### ルーティング
+
+**expo-router** を使用したファイルベースのルーティング：
+
+- `app/_layout.tsx` — ルートレイアウト、認証の初期化、全体を `GestureHandlerRootView` + `ThemeProvider` でラップ
+- `app/(tabs)/` — ボトムタブナビゲーション（ホーム、検索、通知、プロフィール）。通知とプロフィールタブは認証時にのみ表示されます。
+- `app/status/[id].tsx` — 単一投稿ビュー
+- `app/user/[screenName].tsx` — ユーザープロフィールビュー
+- `app/authorize.tsx` — 認証画面 (リダイレクト)
+
+### スタイリング
+
+基本的には [NativeWind](https://www.nativewind.dev/)（React Native 向け Tailwind CSS）を使用し、`tailwind-merge` と `clsx` で条件付きクラスを管理しています。
+グローバル CSS は `globals.css` に配置されています。
+プラットフォーム固有のコンポーネントバリアントは `.ios.tsx` サフィックスの慣習を使用しています（例: `components/ui/icon-symbol.ios.tsx`）。
+
+### エラーモニタリング
+
+Sentry は [app/\_layout.tsx](app/_layout.tsx) で初期化され、ルートコンポーネントは `Sentry.wrap(...)` でラップされています。
+
+## 参考アプリ
+
+このアプリは次のアプリの体験や UI を参考に実装されます。
+
+- Twitter for iOS/Android
+- Instagram for iOS/Android
+- Mastodon for iOS/Android
+
+## その他参考情報
+
+既存のアプリとして Catalyst for iOS (SwiftUI) が存在しており、それをベースとして移植することがあります。
+特に指示が無い場合は同等の機能を React Native で実装することが期待されます (コードはプロンプトとして提供されます)。
