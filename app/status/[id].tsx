@@ -213,8 +213,8 @@ export default function StatusDetailsPage() {
       menuOverlayOpacity.setValue(0);
       setIsMenuVisible(true);
       Animated.parallel([
-        Animated.timing(menuOverlayOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
-        Animated.timing(menuSheetTranslateY, { toValue: 0, duration: 250, useNativeDriver: true }),
+        Animated.timing(menuOverlayOpacity, { toValue: 1, duration: 350, useNativeDriver: true }),
+        Animated.timing(menuSheetTranslateY, { toValue: 0, duration: 350, useNativeDriver: true }),
       ]).start();
     }
   }, [isMyself, handleMenuAction, menuOverlayOpacity, menuSheetTranslateY]);
