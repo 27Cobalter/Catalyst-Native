@@ -4,6 +4,7 @@ import { CatalystStatus } from "@/natsuneko-laboratory/catalyst-sdk/packages/nod
 import { FlashList } from "@shopify/flash-list";
 import { useAtomValue } from "jotai";
 import { useState } from "react";
+import { View } from "react-native";
 import { TimelineStatus } from "../TimelineStatus";
 
 export const FollowingTimeline = () => {
@@ -25,6 +26,9 @@ export const FollowingTimeline = () => {
       renderItem={({ item }) => {
         return <TimelineStatus status={item} />;
       }}
+      ItemSeparatorComponent={() => (
+        <View style={{ height: 1, backgroundColor: "#e0e0e0" }} />
+      )}
     />
   );
 };
