@@ -34,6 +34,10 @@ type ReactionsBarProps = {
   onUnreact: (symbol: string) => void;
 };
 
+const isUnicodeEmoji = (symbol: string): boolean => {
+  return /\p{Emoji}/u.test(symbol);
+};
+
 const ReactionsBar = ({ reactions, onReact, onUnreact }: ReactionsBarProps) => {
   const entries = Object.values(reactions);
   if (entries.length === 0) return null;
@@ -46,7 +50,15 @@ const ReactionsBar = ({ reactions, onReact, onUnreact }: ReactionsBarProps) => {
           onPress={() => (reaction.hasSelfReaction ? onUnreact(reaction.symbol) : onReact(reaction.symbol))}
           style={[styles.reactionChip, reaction.hasSelfReaction && styles.reactionChipActive]}
         >
-          <Text style={styles.reactionSymbol}>{reaction.symbol}</Text>
+          {isUnicodeEmoji(reaction.symbol) ? (
+            <Text style={styles.reactionSymbol}>{reaction.symbol}</Text>
+          ) : (
+            <Image
+              source={{ uri: `https://static.natsuneko.com/images/reactions/${reaction.symbol}.png` }}
+              style={styles.reactionImage}
+              contentFit="contain"
+            />
+          )}
           <Text style={[styles.reactionCount, reaction.hasSelfReaction && styles.reactionCountActive]}>
             {reaction.count}
           </Text>
@@ -479,6 +491,10 @@ const styles = StyleSheet.create({
   },
   reactionSymbol: {
     fontSize: 16,
+  },
+  reactionImage: {
+    width: 16,
+    height: 16,
   },
   reactionCount: {
     fontSize: 13,
