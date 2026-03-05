@@ -37,6 +37,11 @@ export function Tabs({ tabs, renderScene, defaultIndex = 0 }: Props) {
   const handleTabPress = (index: number) => {
     setActiveIndex(index);
     flatListRef.current?.scrollToIndex({ index, animated: true });
+    Animated.timing(scrollX, {
+      toValue: index * SCREEN_WIDTH,
+      duration: 250,
+      useNativeDriver: false,
+    }).start();
   };
 
   const renderItem: ListRenderItem<Tab> = ({ item }) => (
@@ -85,19 +90,13 @@ export function Tabs({ tabs, renderScene, defaultIndex = 0 }: Props) {
         data={tabs}
         horizontal
         pagingEnabled
+        scrollEnabled={false}
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item.key}
         renderItem={renderItem}
         getItemLayout={(_, index) => ({ length: SCREEN_WIDTH, offset: SCREEN_WIDTH * index, index })}
         initialScrollIndex={defaultIndex}
-        onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
-          useNativeDriver: false,
-        })}
         scrollEventThrottle={16}
-        onMomentumScrollEnd={(e) => {
-          const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-          setActiveIndex(index);
-        }}
         style={styles.flatList}
       />
     </View>

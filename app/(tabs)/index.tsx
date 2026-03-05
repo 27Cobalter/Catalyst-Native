@@ -1,32 +1,17 @@
 import { Tab, Tabs } from "@/components/tabs";
+import { FirehoseTimeline } from "@/components/timeline/firehose";
+import { FollowingTimeline } from "@/components/timeline/following";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { accountAtom } from "@/models/atoms/account";
 import { useAtomValue } from "jotai";
 import React from "react";
-import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const TABS: Tab[] = [
-  { key: "firehose", label: "おすすめ" },
   { key: "following", label: "フォロー中" },
+  { key: "firehose", label: "グローバル" },
 ];
-
-function FirehoseContent({ color }: { color: string }) {
-  return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Text style={{ fontSize: 16, color }}>おすすめタイムライン</Text>
-    </View>
-  );
-}
-
-function FollowingContent({ color }: { color: string }) {
-  return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Text style={{ fontSize: 16, color }}>フォロー中タイムライン</Text>
-    </View>
-  );
-}
 
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
@@ -39,13 +24,13 @@ export default function HomeScreen() {
         <Tabs
           tabs={TABS}
           renderScene={(tab) => {
-            if (tab.key === "firehose") return <FirehoseContent color={colors.icon} />;
-            return <FollowingContent color={colors.icon} />;
+            if (tab.key === "firehose") return <FirehoseTimeline />;
+            return <FollowingTimeline />;
           }}
         />
       </SafeAreaView>
     );
   }
 
-  return <FirehoseContent color={colors.icon} />;
+  return <FirehoseTimeline />;
 }
