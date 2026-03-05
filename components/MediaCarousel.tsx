@@ -1,5 +1,5 @@
 import { getCdnUrl } from "@/lib/media";
-import type { CatalystMedia } from "@natsuneko-laboratory/catalyst-sdk";
+import type { Media } from "@/natsuneko-laboratory/catalyst-sdk/packages/nodejs/dist";
 import { Image } from "expo-image";
 import { EyeOff } from "lucide-react-native";
 import React, { useState } from "react";
@@ -18,7 +18,7 @@ const SPRING_CONFIG = {
 };
 
 type Props = {
-  medias: CatalystMedia[];
+  medias: Media[];
 };
 
 export const MediaCarousel = ({ medias }: Props) => {

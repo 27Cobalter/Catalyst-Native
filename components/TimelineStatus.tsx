@@ -1,3 +1,4 @@
+import { rel } from "@/lib/dayjs";
 import { getCdnUrl } from "@/lib/media";
 import type { CatalystStatus } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
@@ -8,19 +9,6 @@ import { MediaCarousel } from "./MediaCarousel";
 import { StatusText } from "./StatusText";
 
 export type StatusRenderingMode = "twtr" | "plain";
-
-function formatRelativeTime(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-  if (diffSec < 60) return `${diffSec}s`;
-  const diffMin = Math.floor(diffSec / 60);
-  if (diffMin < 60) return `${diffMin}m`;
-  const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `${diffHour}h`;
-  return `${Math.floor(diffHour / 24)}d`;
-}
 
 type Props = {
   status: CatalystStatus;
@@ -73,7 +61,7 @@ export const TimelineStatus = ({ status, renderingMode = "twtr" }: Props) => {
                 @{user?.screenName ?? "unknown"}
               </Text>
             </TouchableOpacity>
-            <Text style={{ fontSize: 13, color: "gray", flexShrink: 0 }}>・{formatRelativeTime(status.createdAt)}</Text>
+            <Text style={{ fontSize: 13, color: "gray", flexShrink: 0 }}>・{rel(status.createdAt)}</Text>
           </View>
         </View>
       </TouchableOpacity>

@@ -9,10 +9,10 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native
 import * as Sentry from "@sentry/react-native";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import "react-native-reanimated";
 
@@ -62,6 +62,8 @@ export default Sentry.wrap(function RootLayout() {
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false, gestureEnabled: false }} />
+          <Stack.Screen name="status/[id]" options={{ title: "投稿" }} />
+          <Stack.Screen name="user/[screenName]" options={{ headerShown: false }} />
           <Stack.Screen name="authorize" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: "modal", title: "Modal" }} />
         </Stack>
