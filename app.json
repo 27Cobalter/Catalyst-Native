@@ -53,6 +53,12 @@
           "project": "catalyst-native",
           "organization": "natsuneko-laboratory"
         }
+      ],
+      [
+        "expo-asset",
+        {
+          "assets": ["assets/images/emoji"]
+        }
       ]
     ],
     "experiments": {

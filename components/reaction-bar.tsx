@@ -1,10 +1,16 @@
+import { emojis } from "@/lib/emojis";
+import { cn } from "@/lib/utils";
 import type { CatalystReaction } from "@/natsuneko-laboratory/catalyst-sdk/packages/nodejs/dist";
 import { Image } from "expo-image";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 
-const isUnicodeEmoji = (symbol: string): boolean => {
-  return /\p{Emoji}/u.test(symbol);
+const isUnicodeCodepoint = (symbol: string): boolean => {
+  return /^[0-9a-f]+$/i.test(symbol);
+};
+
+const codepointToEmoji = (codepoint: string): string => {
+  return String.fromCodePoint(parseInt(codepoint, 16));
 };
 
 type Props = {
@@ -18,61 +24,34 @@ export const ReactionBar = ({ reactions, onReact, onUnreact }: Props) => {
   if (entries.length === 0) return null;
 
   return (
-    <View style={styles.container}>
+    <View className="flex-row flex-wrap gap-2 py-1">
       {entries.map((reaction) => (
         <TouchableOpacity
           key={reaction.name}
           onPress={() => (reaction.hasSelfReaction ? onUnreact(reaction.symbol) : onReact(reaction.symbol))}
-          style={[styles.chip, reaction.hasSelfReaction && styles.chipActive]}
+          className={cn(
+            "flex-row items-center gap-1 px-2.5 py-1 rounded-full border",
+            reaction.hasSelfReaction ? "border-[#007AFF]" : "border-[#E5E5EA]",
+          )}
         >
-          {isUnicodeEmoji(reaction.symbol) ? (
-            <Text style={styles.symbol}>{reaction.symbol}</Text>
+          {isUnicodeCodepoint(reaction.symbol) ? (
+            <Image
+              source={emojis[reaction.symbol as keyof typeof emojis]}
+              style={{ width: 24, height: 24 }}
+              contentFit="contain"
+            />
           ) : (
             <Image
               source={{ uri: `https://static.natsuneko.com/images/reactions/${reaction.symbol}.png` }}
-              style={styles.image}
+              style={{ width: 24, height: 24 }}
               contentFit="contain"
             />
           )}
-          <Text style={[styles.count, reaction.hasSelfReaction && styles.countActive]}>{reaction.count}</Text>
+          <Text className={cn("text-base", reaction.hasSelfReaction ? "text-[#007AFF]" : "text-[#3C3C43]")}>
+            {reaction.count}
+          </Text>
         </TouchableOpacity>
       ))}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    paddingVertical: 4,
-  },
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#E5E5EA",
-  },
-  chipActive: {
-    borderColor: "#007AFF",
-  },
-  symbol: {
-    fontSize: 16,
-  },
-  image: {
-    width: 16,
-    height: 16,
-  },
-  count: {
-    fontSize: 13,
-    color: "#3C3C43",
-  },
-  countActive: {
-    color: "#007AFF",
-  },
-});

@@ -5,8 +5,9 @@
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
-    "android": "expo run:android",
-    "ios": "expo run:ios",
+    "bin:emoji-gen": "tsx ./bin/emoji-gen.ts",
+    "android": "pnpm run bin:emoji-gen && expo run:android",
+    "ios": "pnpm run bin:emoji-gen && expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
     "expo": "expo"
@@ -22,6 +23,7 @@
     "clsx": "^2.1.1",
     "dayjs": "^1.11.19",
     "expo": "~55.0.4",
+    "expo-asset": "^55.0.8",
     "expo-clipboard": "^55.0.8",
     "expo-constants": "~55.0.7",
     "expo-dev-client": "~55.0.10",
@@ -69,6 +71,7 @@
     "eslint-config-expo": "~55.0.0",
     "prettier-plugin-tailwindcss": "0.7.2",
     "tailwindcss": "3.4.17",
+    "tsx": "^4.21.0",
     "typescript": "~5.9.2"
   },
   "private": true,
