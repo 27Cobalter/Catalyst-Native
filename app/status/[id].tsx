@@ -11,10 +11,11 @@ import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { Heart, MoreHorizontal } from "lucide-react-native";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActionSheetIOS,
   Alert,
+  Animated,
   Linking,
   Modal,
   Platform,
@@ -28,7 +29,6 @@ import {
   useColorScheme,
   View,
 } from "react-native";
-
 
 export default function StatusDetailsPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -44,6 +44,8 @@ export default function StatusDetailsPage() {
   const [isEditSheetVisible, setIsEditSheetVisible] = useState(false);
   const [isEditingSaving, setIsEditingSaving] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const menuOverlayOpacity = useRef(new Animated.Value(0)).current;
+  const menuSheetTranslateY = useRef(new Animated.Value(300)).current;
 
   const isMyself = account?.user?.id === status?.user?.id;
   const isLoggedIn = account !== null;
@@ -144,27 +146,6 @@ export default function StatusDetailsPage() {
     }
   }, [account, id, editingCaption]);
 
-  const showMenu = useCallback(() => {
-    if (Platform.OS === "ios") {
-      const options: string[] = ["キャンセル", "ブラウザで開く", "URL をコピー", "投稿をコピー", "共有"];
-      if (isMyself) {
-        options.splice(1, 0, "編集する", "削除する");
-      }
-      const cancelIndex = 0;
-      const destructiveIndex = isMyself ? options.indexOf("削除する") : -1;
-
-      ActionSheetIOS.showActionSheetWithOptions(
-        { options, cancelButtonIndex: cancelIndex, destructiveButtonIndex: destructiveIndex },
-        (buttonIndex) => {
-          const label = options[buttonIndex];
-          handleMenuAction(label);
-        },
-      );
-    } else {
-      setIsMenuVisible(true);
-    }
-  }, [isMyself]);
-
   const handleMenuAction = useCallback(
     (action: string) => {
       switch (action) {
@@ -197,6 +178,46 @@ export default function StatusDetailsPage() {
     },
     [status, statusUrl, handleDeleteStatus],
   );
+
+  const closeMenu = useCallback(
+    (onClosed?: () => void) => {
+      Animated.parallel([
+        Animated.timing(menuOverlayOpacity, { toValue: 0, duration: 150, useNativeDriver: true }),
+        Animated.timing(menuSheetTranslateY, { toValue: 300, duration: 200, useNativeDriver: true }),
+      ]).start(() => {
+        setIsMenuVisible(false);
+        onClosed?.();
+      });
+    },
+    [menuOverlayOpacity, menuSheetTranslateY],
+  );
+
+  const showMenu = useCallback(() => {
+    if (Platform.OS === "ios") {
+      const options: string[] = ["キャンセル", "ブラウザで開く", "URL をコピー", "投稿をコピー", "共有"];
+      if (isMyself) {
+        options.splice(1, 0, "編集する", "削除する");
+      }
+      const cancelIndex = 0;
+      const destructiveIndex = isMyself ? options.indexOf("削除する") : -1;
+
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options, cancelButtonIndex: cancelIndex, destructiveButtonIndex: destructiveIndex },
+        (buttonIndex) => {
+          const label = options[buttonIndex];
+          handleMenuAction(label);
+        },
+      );
+    } else {
+      menuSheetTranslateY.setValue(300);
+      menuOverlayOpacity.setValue(0);
+      setIsMenuVisible(true);
+      Animated.parallel([
+        Animated.timing(menuOverlayOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.timing(menuSheetTranslateY, { toValue: 0, duration: 250, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [isMyself, handleMenuAction, menuOverlayOpacity, menuSheetTranslateY]);
 
   const user = status?.user;
 
@@ -279,7 +300,7 @@ export default function StatusDetailsPage() {
 
       {/* Edit caption sheet */}
       <Modal visible={isEditSheetVisible} animationType="slide" presentationStyle="pageSheet">
-        <View style={styles.editSheetContainer}>
+        <View style={[styles.editSheetContainer, { backgroundColor: theme === "dark" ? Colors.dark.background : Colors.light.background }]}>
           <View style={styles.editSheetHeader}>
             <TouchableOpacity onPress={() => setIsEditSheetVisible(false)}>
               <Text style={styles.editSheetCancel}>キャンセル</Text>
@@ -309,26 +330,27 @@ export default function StatusDetailsPage() {
 
       {/* Android menu modal */}
       {Platform.OS !== "ios" && (
-        <Modal visible={isMenuVisible} transparent animationType="slide" onRequestClose={() => setIsMenuVisible(false)}>
-          <Pressable style={styles.menuOverlay} onPress={() => setIsMenuVisible(false)}>
-            <View style={styles.menuSheet}>
+        <Modal visible={isMenuVisible} transparent animationType="none" onRequestClose={() => closeMenu()}>
+          <Animated.View style={[styles.menuOverlay, { opacity: menuOverlayOpacity }]}>
+            <Pressable style={styles.menuOverlayPressable} onPress={() => closeMenu()} />
+            <Animated.View
+              style={[
+                styles.menuSheet,
+                { backgroundColor: theme === "dark" ? Colors.dark.background : Colors.light.background },
+                { transform: [{ translateY: menuSheetTranslateY }] },
+              ]}
+            >
               {isMyself && (
                 <>
                   <TouchableOpacity
                     style={styles.menuItem}
-                    onPress={() => {
-                      setIsMenuVisible(false);
-                      handleMenuAction("編集する");
-                    }}
+                    onPress={() => closeMenu(() => handleMenuAction("編集する"))}
                   >
                     <Text style={styles.menuItemText}>編集する</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.menuItem}
-                    onPress={() => {
-                      setIsMenuVisible(false);
-                      handleMenuAction("削除する");
-                    }}
+                    onPress={() => closeMenu(() => handleMenuAction("削除する"))}
                   >
                     <Text style={[styles.menuItemText, styles.destructiveText]}>削除する</Text>
                   </TouchableOpacity>
@@ -336,42 +358,30 @@ export default function StatusDetailsPage() {
               )}
               <TouchableOpacity
                 style={styles.menuItem}
-                onPress={() => {
-                  setIsMenuVisible(false);
-                  handleMenuAction("ブラウザで開く");
-                }}
+                onPress={() => closeMenu(() => handleMenuAction("ブラウザで開く"))}
               >
                 <Text style={styles.menuItemText}>ブラウザで開く</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.menuItem}
-                onPress={() => {
-                  setIsMenuVisible(false);
-                  handleMenuAction("URL をコピー");
-                }}
+                onPress={() => closeMenu(() => handleMenuAction("URL をコピー"))}
               >
                 <Text style={styles.menuItemText}>URL をコピー</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.menuItem}
-                onPress={() => {
-                  setIsMenuVisible(false);
-                  handleMenuAction("投稿をコピー");
-                }}
+                onPress={() => closeMenu(() => handleMenuAction("投稿をコピー"))}
               >
                 <Text style={styles.menuItemText}>投稿をコピー</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.menuItem}
-                onPress={() => {
-                  setIsMenuVisible(false);
-                  handleMenuAction("共有");
-                }}
+                onPress={() => closeMenu(() => handleMenuAction("共有"))}
               >
                 <Text style={styles.menuItemText}>共有</Text>
               </TouchableOpacity>
-            </View>
-          </Pressable>
+            </Animated.View>
+          </Animated.View>
         </Modal>
       )}
     </>
@@ -432,7 +442,7 @@ const styles = StyleSheet.create({
   actionButtonDisabled: {
     opacity: 0.2,
   },
-editSheetContainer: {
+  editSheetContainer: {
     flex: 1,
   },
   editSheetHeader: {
@@ -469,6 +479,9 @@ editSheetContainer: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "flex-end",
+  },
+  menuOverlayPressable: {
+    flex: 1,
   },
   menuSheet: {
     borderTopLeftRadius: 16,
