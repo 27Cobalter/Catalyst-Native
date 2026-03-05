@@ -1,4 +1,5 @@
 import { MediaCarousel } from "@/components/MediaCarousel";
+import { ReactionBar } from "@/components/reaction-bar";
 import { StatusText } from "@/components/StatusText";
 import { Colors } from "@/constants/theme";
 import { abs, rel } from "@/lib/dayjs";
@@ -28,45 +29,6 @@ import {
   View,
 } from "react-native";
 
-type ReactionsBarProps = {
-  reactions: Record<string, CatalystReaction>;
-  onReact: (symbol: string) => void;
-  onUnreact: (symbol: string) => void;
-};
-
-const isUnicodeEmoji = (symbol: string): boolean => {
-  return /\p{Emoji}/u.test(symbol);
-};
-
-const ReactionsBar = ({ reactions, onReact, onUnreact }: ReactionsBarProps) => {
-  const entries = Object.values(reactions);
-  if (entries.length === 0) return null;
-
-  return (
-    <View style={styles.reactionsContainer}>
-      {entries.map((reaction) => (
-        <TouchableOpacity
-          key={reaction.name}
-          onPress={() => (reaction.hasSelfReaction ? onUnreact(reaction.symbol) : onReact(reaction.symbol))}
-          style={[styles.reactionChip, reaction.hasSelfReaction && styles.reactionChipActive]}
-        >
-          {isUnicodeEmoji(reaction.symbol) ? (
-            <Text style={styles.reactionSymbol}>{reaction.symbol}</Text>
-          ) : (
-            <Image
-              source={{ uri: `https://static.natsuneko.com/images/reactions/${reaction.symbol}.png` }}
-              style={styles.reactionImage}
-              contentFit="contain"
-            />
-          )}
-          <Text style={[styles.reactionCount, reaction.hasSelfReaction && styles.reactionCountActive]}>
-            {reaction.count}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-};
 
 export default function StatusDetailsPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -309,7 +271,7 @@ export default function StatusDetailsPage() {
 
               <View style={styles.divider} />
 
-              <ReactionsBar reactions={reactions} onReact={handleReact} onUnreact={handleUnreact} />
+              <ReactionBar reactions={reactions} onReact={handleReact} onUnreact={handleUnreact} />
             </>
           )}
         </View>
@@ -470,40 +432,7 @@ const styles = StyleSheet.create({
   actionButtonDisabled: {
     opacity: 0.2,
   },
-  reactionsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    paddingVertical: 4,
-  },
-  reactionChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#E5E5EA",
-  },
-  reactionChipActive: {
-    borderColor: "#007AFF",
-  },
-  reactionSymbol: {
-    fontSize: 16,
-  },
-  reactionImage: {
-    width: 16,
-    height: 16,
-  },
-  reactionCount: {
-    fontSize: 13,
-    color: "#3C3C43",
-  },
-  reactionCountActive: {
-    color: "#007AFF",
-  },
-  editSheetContainer: {
+editSheetContainer: {
     flex: 1,
   },
   editSheetHeader: {
