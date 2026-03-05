@@ -35,7 +35,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <Search size={28} color={color} />,
         }}
       />
-      {account && (
+      {!!account && (
         <Tabs.Screen
           name="notifications"
           options={{
@@ -44,7 +44,7 @@ export default function TabLayout() {
           }}
         />
       )}
-      {account && (
+      {!!account && (
         <Tabs.Screen
           name="profile"
           options={{
