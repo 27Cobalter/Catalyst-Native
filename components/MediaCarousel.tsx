@@ -3,7 +3,7 @@ import type { Media } from "@/natsuneko-laboratory/catalyst-sdk/packages/nodejs/
 import { Image } from "expo-image";
 import { EyeOff } from "lucide-react-native";
 import React, { useState } from "react";
-import { Dimensions, Modal, Pressable, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 
@@ -153,7 +153,7 @@ export const MediaCarousel = ({ medias }: Props) => {
 
         {/* Sensitive content overlay */}
         {hasSensitiveContent && !isBlurRemoved && (
-          <TouchableOpacity
+          <Pressable
             onPress={() => setIsBlurRemoved(true)}
             style={{
               position: "absolute",
@@ -175,7 +175,7 @@ export const MediaCarousel = ({ medias }: Props) => {
             {isSpoiler && (
               <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 13 }}>ネタバレ注意コンテンツです</Text>
             )}
-          </TouchableOpacity>
+          </Pressable>
         )}
 
         {/* Indicator dots */}
@@ -190,7 +190,7 @@ export const MediaCarousel = ({ medias }: Props) => {
             }}
           >
             {medias.map((_, index) => (
-              <TouchableOpacity
+              <Pressable
                 key={index}
                 onPress={() => navigateToIndex(index)}
                 style={{

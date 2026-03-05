@@ -1,11 +1,13 @@
 import { useAsyncOneTimeEffect } from "@/hooks/useAsyncOneTimeEffect";
 import { accountAtom } from "@/models/atoms/account";
 import { CatalystStatus } from "@/natsuneko-laboratory/catalyst-sdk/packages/nodejs/dist";
-import { FlashList } from "@shopify/flash-list";
+import { FlashList, ListRenderItem } from "@shopify/flash-list";
 import { useAtomValue } from "jotai";
-import { useState } from "react";
-import { View } from "react-native";
+import { useCallback, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import { TimelineStatus } from "../TimelineStatus";
+
+const ItemSeparator = () => <View style={styles.separator} />;
 
 export const FirehoseTimeline = () => {
   const account = useAtomValue(accountAtom);
@@ -20,15 +22,22 @@ export const FirehoseTimeline = () => {
     }
   });
 
+  const renderItem = useCallback<ListRenderItem<CatalystStatus>>(({ item }) => {
+    return <TimelineStatus status={item} />;
+  }, []);
+
   return (
     <FlashList
       data={items}
-      renderItem={({ item }) => {
-        return <TimelineStatus status={item} />;
-      }}
-      ItemSeparatorComponent={() => (
-        <View style={{ height: 1, backgroundColor: "#e0e0e0" }} />
-      )}
+      renderItem={renderItem}
+      ItemSeparatorComponent={ItemSeparator}
     />
   );
 };
+
+const styles = StyleSheet.create({
+  separator: {
+    height: 1,
+    backgroundColor: "#e0e0e0",
+  },
+});

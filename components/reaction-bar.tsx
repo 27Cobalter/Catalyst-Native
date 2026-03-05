@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import type { CatalystReaction } from "@/natsuneko-laboratory/catalyst-sdk/packages/nodejs/dist";
 import { Image } from "expo-image";
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 const isUnicodeCodepoint = (symbol: string): boolean => {
   return /^[0-9a-f]+$/i.test(symbol);
@@ -26,7 +26,7 @@ export const ReactionBar = ({ reactions, onReact, onUnreact }: Props) => {
   return (
     <View className="flex-row flex-wrap gap-2 py-1">
       {entries.map((reaction) => (
-        <TouchableOpacity
+        <Pressable
           key={reaction.name}
           onPress={() => (reaction.hasSelfReaction ? onUnreact(reaction.symbol) : onReact(reaction.symbol))}
           className={cn(
@@ -50,7 +50,7 @@ export const ReactionBar = ({ reactions, onReact, onUnreact }: Props) => {
           <Text className={cn("text-base", reaction.hasSelfReaction ? "text-[#007AFF]" : "text-[#3C3C43]")}>
             {reaction.count}
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       ))}
     </View>
   );
