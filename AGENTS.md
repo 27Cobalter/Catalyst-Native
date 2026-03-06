@@ -77,4 +77,6 @@ Sentry は [app/\_layout.tsx](app/_layout.tsx) で初期化され、ルートコ
 ## その他参考情報
 
 既存のアプリとして Catalyst for iOS (SwiftUI) が存在しており、それをベースとして移植することがあります。
-特に指示が無い場合は同等の機能を React Native で実装することが期待されます (コードはプロンプトとして提供されます)。
+特に指示が無い場合は同等の機能を React Native で実装することが期待されます。
+
+Catalyst for iOS のコードは、 `../Catalyst-for-iOS` ディレクトリに配置されており、任意のタイミングで参照することが出来ます。
