@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "uniwind": {
+      "url": "https://docs.uniwind.dev/mcp",
+      "headers": {}
+    }
+  }
+}
