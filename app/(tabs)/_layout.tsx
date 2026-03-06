@@ -91,7 +91,6 @@ function CustomTabBar({ state }: BottomTabBarProps) {
       {tabs.map((tab) => {
         const isActive = getIsActive(tab);
         const color = isActive ? colors.tint : colors.icon;
-        console.log({ tab, isActive, activeDrawerRouteName, activeTabRoute });
 
         return (
           <Pressable
