@@ -6,6 +6,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import { accountAtom } from "@/models/atoms/account";
 import { useAtomValue } from "jotai";
 import React from "react";
+import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const TABS: Tab[] = [
@@ -32,5 +33,9 @@ export default function HomeScreen() {
     );
   }
 
-  return <FirehoseTimeline />;
+  return (
+    <View>
+      <FirehoseTimeline />
+    </View>
+  );
 }
