@@ -2,8 +2,8 @@
 import "react-native-get-random-values";
 
 // imports
+import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { useAsyncOneTimeEffect } from "@/hooks/useAsyncOneTimeEffect";
 import { accountAtom } from "@/models/atoms/account";
 import * as Credential from "@/models/credential";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";

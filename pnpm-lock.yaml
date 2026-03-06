@@ -17,8 +17,8 @@ importers:
         specifier: ^15.0.3
         version: 15.1.1(expo-font@55.0.4)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
       '@natsuneko-laboratory/catalyst-sdk':
-        specifier: link:../CatalystSDK/packages/nodejs
-        version: link:../CatalystSDK/packages/nodejs
+        specifier: ^0.1.0
+        version: 0.1.0
       '@react-navigation/bottom-tabs':
         specifier: ^7.15.3
         version: 7.15.3(@react-navigation/native@7.1.31(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native-safe-area-context@5.7.0(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native-screens@4.24.0(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
@@ -1165,6 +1165,9 @@ packages:
 
   '@napi-rs/wasm-runtime@0.2.12':
     resolution: {integrity: sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==}
+
+  '@natsuneko-laboratory/catalyst-sdk@0.1.0':
+    resolution: {integrity: sha512-dYYWEso8UCeTXiXwyrgEJVTn717qJdApZwPmHb4HFuJhJhpo6btWUiaBfDPiv0aG+buy4gsmn58XhGxfGcPEOQ==}
 
   '@nolyfill/is-core-module@1.0.39':
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
@@ -3590,6 +3593,9 @@ packages:
         optional: true
       react:
         optional: true
+
+  js-sha256@0.11.1:
+    resolution: {integrity: sha512-o6WSo/LUvY2uC4j7mO50a2ms7E/EAdbP0swigLV+nzHKTTaYnaLIWJ02VdXrsJX0vGedDESQnLsOekr94ryfjg==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -6609,6 +6615,10 @@ snapshots:
       '@tybys/wasm-util': 0.10.1
     optional: true
 
+  '@natsuneko-laboratory/catalyst-sdk@0.1.0':
+    dependencies:
+      js-sha256: 0.11.1
+
   '@nolyfill/is-core-module@1.0.39': {}
 
   '@oxfmt/binding-android-arm-eabi@0.36.0':
@@ -9323,6 +9333,8 @@ snapshots:
       '@babel/template': 7.28.6
       '@types/react': 19.2.14
       react: 19.2.4
+
+  js-sha256@0.11.1: {}
 
   js-tokens@4.0.0: {}
 
