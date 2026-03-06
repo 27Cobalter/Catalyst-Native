@@ -1,4 +1,4 @@
-import { TimelineStatus } from "@/components/TimelineStatus";
+import { TimelineStatus } from "@/components/timeline/status";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { getCdnUrl } from "@/lib/media";

@@ -5,8 +5,8 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { memo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { MediaCarousel } from "./MediaCarousel";
-import { StatusText } from "./StatusText";
+import { MediaCarousel } from "../MediaCarousel";
+import { StatusText } from "../status/text";
 
 export type StatusRenderingMode = "twtr" | "plain";
 
@@ -42,10 +42,7 @@ export const TimelineStatus = memo(({ status, renderingMode = "twtr" }: Props) =
           </Pressable>
 
           <View style={styles.userInfoRow}>
-            <Pressable
-              onPress={navigateToUser}
-              style={styles.userNameRow}
-            >
+            <Pressable onPress={navigateToUser} style={styles.userNameRow}>
               <Text style={styles.displayName} numberOfLines={1}>
                 {user?.displayName ?? "Unknown"}
               </Text>
@@ -76,6 +73,7 @@ export const TimelineStatus = memo(({ status, renderingMode = "twtr" }: Props) =
     </View>
   );
 });
+TimelineStatus.displayName = "TimelineStatus";
 
 const styles = StyleSheet.create({
   container: {

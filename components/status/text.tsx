@@ -41,11 +41,19 @@ export const StatusText = ({ status }: { status: string }) => {
           pre: Fragment,
           a: ({ href, children }: { href: string; children: React.ReactNode }) => {
             if (href.startsWith("/")) {
-              // @ts-expect-error
-              return <Link href={href}>{children}</Link>;
+              return (
+                // @ts-expect-error
+                <Link className="text-blue-500 dark:text-blue-600" href={href}>
+                  {children}
+                </Link>
+              );
             }
 
-            return <TouchableOpacity onPress={() => handleLinkPress(href)}>{children}</TouchableOpacity>;
+            return (
+              <TouchableOpacity className="text-blue-500 dark:text-blue-600" onPress={() => handleLinkPress(href)}>
+                {children}
+              </TouchableOpacity>
+            );
           },
           br: () => <Text>{"\n"}</Text>,
           p: ({ children }: { children: React.ReactNode }) => <Text>{children}</Text>,

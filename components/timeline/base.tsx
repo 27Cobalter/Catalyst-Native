@@ -4,7 +4,7 @@ import { CatalystStatus } from "@natsuneko-laboratory/catalyst-sdk";
 import { FlashList, ListRenderItem } from "@shopify/flash-list";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, RefreshControl, useColorScheme, View } from "react-native";
-import { TimelineStatus } from "../TimelineStatus";
+import { TimelineStatus } from "./status";
 
 const ItemSeparator = () => {
   const theme = useColorScheme();

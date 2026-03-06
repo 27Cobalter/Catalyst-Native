@@ -1,6 +1,6 @@
 import { MediaCarousel } from "@/components/MediaCarousel";
 import { ReactionBar } from "@/components/reaction-bar";
-import { StatusText } from "@/components/StatusText";
+import { StatusText } from "@/components/status/text";
 import { Colors } from "@/constants/theme";
 import { abs, rel } from "@/lib/dayjs";
 import { getCdnUrl } from "@/lib/media";
