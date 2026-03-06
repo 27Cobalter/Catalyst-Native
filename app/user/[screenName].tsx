@@ -418,6 +418,7 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: "row",
+    width: SCREEN_WIDTH,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   tab: {
