@@ -1,4 +1,3 @@
-import { TabBar } from "@/components/tabs";
 import { TimelineStatus } from "@/components/TimelineStatus";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -14,6 +13,7 @@ import {
   Animated,
   Dimensions,
   Linking,
+  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -47,12 +47,15 @@ export default function UserProfilePage() {
   const [isFollowLoading, setIsFollowLoading] = useState(false);
 
   const scrollY = useRef(new Animated.Value(0)).current;
+  const indicatorAnim = useRef(new Animated.Value(0)).current;
 
   const isMyself = account?.user?.id === user?.id;
   const isLoggedIn = account !== null;
 
   const tabs = isMyself ? [...TABS_BASE, { key: "likes", label: "いいね" }] : TABS_BASE;
 
+  const TAB_WIDTH = SCREEN_WIDTH / tabs.length;
+  const INDICATOR_WIDTH = TAB_WIDTH * 0.3;
   const NAV_BAR_HEIGHT = insets.top + 45;
 
   const navBarOpacity = scrollY.interpolate({
@@ -66,6 +69,10 @@ export default function UserProfilePage() {
     outputRange: [0, 1],
     extrapolate: "clamp",
   });
+
+  useEffect(() => {
+    indicatorAnim.setValue((TAB_WIDTH - INDICATOR_WIDTH) / 2);
+  }, [tabs.length, TAB_WIDTH, INDICATOR_WIDTH, indicatorAnim]);
 
   useEffect(() => {
     if (!screenName || !account?.credential.client) return;
@@ -118,6 +125,18 @@ export default function UserProfilePage() {
       setIsFollowLoading(false);
     }
   }, [user, account, relationships, isFollowLoading]);
+
+  const handleTabPress = useCallback(
+    (index: number) => {
+      setActiveTab(index);
+      Animated.timing(indicatorAnim, {
+        toValue: index * TAB_WIDTH + (TAB_WIDTH - INDICATOR_WIDTH) / 2,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    },
+    [TAB_WIDTH, INDICATOR_WIDTH, indicatorAnim],
+  );
 
   const isDark = colorScheme === "dark";
   const textColor = colors.text;
@@ -258,7 +277,29 @@ export default function UserProfilePage() {
         </View>
 
         {/* Sticky Tab Bar (child 1) */}
-        <TabBar tabs={tabs} activeIndex={activeTab} onTabPress={setActiveTab} />
+        <View style={[styles.tabBar, { backgroundColor: bgColor, borderBottomColor: grayColor + "33" }]}>
+          {tabs.map((tab, index) => (
+            <Pressable key={tab.key} style={styles.tab} onPress={() => handleTabPress(index)}>
+              <Text
+                style={[
+                  styles.tabLabel,
+                  {
+                    color: index === activeTab ? textColor : grayColor,
+                    fontWeight: index === activeTab ? "700" : "400",
+                  },
+                ]}
+              >
+                {tab.label}
+              </Text>
+            </Pressable>
+          ))}
+          <Animated.View
+            style={[
+              styles.tabIndicator,
+              { width: INDICATOR_WIDTH, backgroundColor: colors.tint, transform: [{ translateX: indicatorAnim }] },
+            ]}
+          />
+        </View>
 
         {/* Tab Content (child 2) */}
         <View style={{ minHeight: 400 }}>{activeTabContent()}</View>
@@ -374,6 +415,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textDecorationLine: "underline",
     flexShrink: 1,
+  },
+  tabBar: {
+    flexDirection: "row",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  tab: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 14,
+  },
+  tabLabel: {
+    fontSize: 15,
+  },
+  tabIndicator: {
+    position: "absolute",
+    bottom: 0,
+    height: 2,
+    borderRadius: 1,
   },
   separator: {
     height: StyleSheet.hairlineWidth,
