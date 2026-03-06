@@ -1,6 +1,6 @@
 import { emojis } from "@/lib/emojis";
 import { cn } from "@/lib/utils";
-import type { CatalystReaction } from "@/natsuneko-laboratory/catalyst-sdk/packages/nodejs/dist";
+import type { CatalystReaction } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
 import React from "react";
 import { Pressable, Text, View } from "react-native";

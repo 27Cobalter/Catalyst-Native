@@ -1,6 +1,6 @@
 import { useAsyncOneTimeEffect } from "@/hooks/useAsyncOneTimeEffect";
 import { accountAtom } from "@/models/atoms/account";
-import { CatalystStatus } from "@/natsuneko-laboratory/catalyst-sdk/packages/nodejs/dist";
+import { CatalystStatus } from "@natsuneko-laboratory/catalyst-sdk";
 import { FlashList, ListRenderItem } from "@shopify/flash-list";
 import { useAtomValue } from "jotai";
 import { useCallback, useState } from "react";
@@ -26,13 +26,7 @@ export const FirehoseTimeline = () => {
     return <TimelineStatus status={item} />;
   }, []);
 
-  return (
-    <FlashList
-      data={items}
-      renderItem={renderItem}
-      ItemSeparatorComponent={ItemSeparator}
-    />
-  );
+  return <FlashList data={items} renderItem={renderItem} ItemSeparatorComponent={ItemSeparator} />;
 };
 
 const styles = StyleSheet.create({

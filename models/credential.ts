@@ -1,7 +1,7 @@
 import { API_KEY } from "@/constants/apikey";
 import * as CredentialStore from "@/models/credential-store";
-import type { EgeriaUser } from "@/natsuneko-laboratory/catalyst-sdk/packages/nodejs/dist";
-import { PKCE } from "@/natsuneko-laboratory/catalyst-sdk/packages/nodejs/dist";
+import type { EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
+import { PKCE } from "@natsuneko-laboratory/catalyst-sdk";
 import * as WebBrowser from "expo-web-browser";
 import { v4 } from "uuid";
 
@@ -33,7 +33,11 @@ export const init = async (): Promise<{
         });
 
         return {
-          credential: { ...credential, accessToken: newTokens.accessToken, refreshToken: newTokens.refreshToken },
+          credential: {
+            ...credential,
+            accessToken: newTokens.accessToken,
+            refreshToken: newTokens.refreshToken,
+          },
           isLoggedIn: true,
         };
       }
@@ -44,8 +48,15 @@ export const init = async (): Promise<{
 
   const pcke = await PKCE.create();
   const state = v4();
-  const redirect = credential.client.oauth.getAuthorizeURL(API_KEY.redirectUri, pcke, state);
-  const result = await WebBrowser.openAuthSessionAsync(redirect.toString(), API_KEY.redirectUri);
+  const redirect = credential.client.oauth.getAuthorizeURL(
+    API_KEY.redirectUri,
+    pcke,
+    state,
+  );
+  const result = await WebBrowser.openAuthSessionAsync(
+    redirect.toString(),
+    API_KEY.redirectUri,
+  );
 
   if (result.type === "success" && result.url) {
     const url = new URL(result.url);
@@ -53,14 +64,22 @@ export const init = async (): Promise<{
     const returnedState = url.searchParams.get("state");
 
     if (code && returnedState === state) {
-      const token = await credential.client.oauth.getAccessTokenByCode(code, API_KEY.redirectUri, pcke);
+      const token = await credential.client.oauth.getAccessTokenByCode(
+        code,
+        API_KEY.redirectUri,
+        pcke,
+      );
       await CredentialStore.saveCredential({ ...token });
 
       const me = await credential.client.egeria.me();
       if (me?.user) {
         _currentUser = me.user;
         return {
-          credential: { ...credential, accessToken: token.accessToken, refreshToken: token.refreshToken },
+          credential: {
+            ...credential,
+            accessToken: token.accessToken,
+            refreshToken: token.refreshToken,
+          },
           isLoggedIn: true,
         };
       }

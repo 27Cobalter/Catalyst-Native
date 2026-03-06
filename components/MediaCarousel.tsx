@@ -1,5 +1,5 @@
 import { getCdnUrl } from "@/lib/media";
-import type { Media } from "@/natsuneko-laboratory/catalyst-sdk/packages/nodejs/dist";
+import type { Media } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
 import { EyeOff } from "lucide-react-native";
 import React, { useState } from "react";

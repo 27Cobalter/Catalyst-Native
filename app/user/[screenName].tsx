@@ -3,11 +3,7 @@ import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { getCdnUrl } from "@/lib/media";
 import { accountAtom } from "@/models/atoms/account";
-import type {
-  CatalystRelationships,
-  CatalystStatus,
-  EgeriaUser,
-} from "@/natsuneko-laboratory/catalyst-sdk/packages/nodejs/dist";
+import type { CatalystRelationships, CatalystStatus, EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
@@ -139,18 +135,23 @@ export default function UserProfilePage() {
   const bgColor = colors.background;
   const grayColor = isDark ? "#8E8E93" : "#6E6E73";
 
-  const stickyTabBarOpacity = headerHeight > 0
-    ? scrollY.interpolate({
-        inputRange: [headerHeight - 1, headerHeight],
-        outputRange: [0, 1],
-        extrapolate: "clamp",
-      })
-    : 0;
+  const stickyTabBarOpacity =
+    headerHeight > 0
+      ? scrollY.interpolate({
+          inputRange: [headerHeight - 1, headerHeight],
+          outputRange: [0, 1],
+          extrapolate: "clamp",
+        })
+      : 0;
 
   const renderTabBar = () => (
     <>
       {tabs.map((tab, index) => (
-        <Pressable key={tab.key} style={{ width: TAB_WIDTH, alignItems: "center", paddingVertical: 14 }} onPress={() => handleTabPress(index)}>
+        <Pressable
+          key={tab.key}
+          style={{ width: TAB_WIDTH, alignItems: "center", paddingVertical: 14 }}
+          onPress={() => handleTabPress(index)}
+        >
           <Text
             style={[
               styles.tabLabel,
@@ -305,7 +306,15 @@ export default function UserProfilePage() {
         </View>
 
         {/* Tab Bar (scrolls with content) */}
-        <View className="flex-row" style={{ width: SCREEN_WIDTH, backgroundColor: bgColor, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: grayColor + "33" }}>
+        <View
+          className="flex-row"
+          style={{
+            width: SCREEN_WIDTH,
+            backgroundColor: bgColor,
+            borderBottomWidth: StyleSheet.hairlineWidth,
+            borderBottomColor: grayColor + "33",
+          }}
+        >
           {renderTabBar()}
         </View>
 

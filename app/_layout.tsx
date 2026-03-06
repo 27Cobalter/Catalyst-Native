@@ -3,6 +3,7 @@ import "react-native-get-random-values";
 
 // imports
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useAsyncOneTimeEffect } from "@/hooks/useAsyncOneTimeEffect";
 import { accountAtom } from "@/models/atoms/account";
 import * as Credential from "@/models/credential";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
@@ -16,8 +17,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import "react-native-reanimated";
 
-import { useAsyncOneTimeEffect } from "@/hooks/useAsyncOneTimeEffect";
-import "../globals.css";
+import "../global.css";
 
 Sentry.init({
   dsn: "https://6d7c270e3a7bb56c0a746319d7e885d5@o4504564074348544.ingest.us.sentry.io/4510957726793728",

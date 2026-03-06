@@ -5,12 +5,12 @@ import { Colors } from "@/constants/theme";
 import { abs, rel } from "@/lib/dayjs";
 import { getCdnUrl } from "@/lib/media";
 import { accountAtom } from "@/models/atoms/account";
-import type { CatalystReaction, CatalystStatus } from "@/natsuneko-laboratory/catalyst-sdk/packages/nodejs/dist";
+import type { CatalystReaction, CatalystStatus } from "@natsuneko-laboratory/catalyst-sdk";
 import * as Clipboard from "expo-clipboard";
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
-import { Heart, MoreHorizontal } from "lucide-react-native";
+import { ArrowLeft, Check, Heart, MoreHorizontal } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActionSheetIOS,
@@ -299,34 +299,77 @@ export default function StatusDetailsPage() {
       </ScrollView>
 
       {/* Edit caption sheet */}
-      <Modal visible={isEditSheetVisible} animationType="slide" presentationStyle="pageSheet">
-        <View style={[styles.editSheetContainer, { backgroundColor: theme === "dark" ? Colors.dark.background : Colors.light.background }]}>
-          <View style={styles.editSheetHeader}>
-            <TouchableOpacity onPress={() => setIsEditSheetVisible(false)}>
-              <Text style={styles.editSheetCancel}>キャンセル</Text>
-            </TouchableOpacity>
-            <Text style={styles.editSheetTitle}>キャプションを編集</Text>
-            <TouchableOpacity onPress={handleEditSave} disabled={isEditingSaving || editingCaption.length === 0}>
-              <Text
+      {Platform.OS === "ios" ? (
+        <Modal visible={isEditSheetVisible} animationType="slide" presentationStyle="pageSheet">
+          <View
+            style={[
+              styles.editSheetContainer,
+              { backgroundColor: theme === "dark" ? Colors.dark.background : Colors.light.background },
+            ]}
+          >
+            <View style={styles.editSheetHeader}>
+              <TouchableOpacity onPress={() => setIsEditSheetVisible(false)}>
+                <Text style={styles.editSheetCancel}>キャンセル</Text>
+              </TouchableOpacity>
+              <Text style={styles.editSheetTitle}>キャプションを編集</Text>
+              <TouchableOpacity onPress={handleEditSave} disabled={isEditingSaving || editingCaption.length === 0}>
+                <Text
+                  style={[
+                    styles.editSheetSave,
+                    (isEditingSaving || editingCaption.length === 0) && styles.editSheetSaveDisabled,
+                  ]}
+                >
+                  保存
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={styles.editSheetInput}
+              value={editingCaption}
+              onChangeText={setEditingCaption}
+              multiline
+              autoFocus
+              textAlignVertical="top"
+            />
+          </View>
+        </Modal>
+      ) : (
+        <Modal visible={isEditSheetVisible} animationType="fade" statusBarTranslucent>
+          <View
+            style={[
+              styles.editSheetContainerAndroid,
+              { backgroundColor: theme === "dark" ? Colors.dark.background : Colors.light.background },
+            ]}
+          >
+            <View style={[styles.editSheetToolbar, { backgroundColor: theme === "dark" ? "#1E1E1E" : "#FFFFFF" }]}>
+              <TouchableOpacity onPress={() => setIsEditSheetVisible(false)} style={styles.toolbarIconButton}>
+                <ArrowLeft size={24} color={theme === "dark" ? "#FFFFFF" : "#000000"} />
+              </TouchableOpacity>
+              <Text style={[styles.toolbarTitle, { color: theme === "dark" ? "#FFFFFF" : "#000000" }]}>
+                キャプションを編集
+              </Text>
+              <TouchableOpacity
+                onPress={handleEditSave}
+                disabled={isEditingSaving || editingCaption.length === 0}
                 style={[
-                  styles.editSheetSave,
-                  (isEditingSaving || editingCaption.length === 0) && styles.editSheetSaveDisabled,
+                  styles.toolbarSaveButton,
+                  (isEditingSaving || editingCaption.length === 0) && styles.toolbarSaveButtonDisabled,
                 ]}
               >
-                保存
-              </Text>
-            </TouchableOpacity>
+                <Check size={22} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={[styles.editSheetInput, { color: theme === "dark" ? "#FFFFFF" : "#000000" }]}
+              value={editingCaption}
+              onChangeText={setEditingCaption}
+              multiline
+              autoFocus
+              textAlignVertical="top"
+            />
           </View>
-          <TextInput
-            style={styles.editSheetInput}
-            value={editingCaption}
-            onChangeText={setEditingCaption}
-            multiline
-            autoFocus
-            textAlignVertical="top"
-          />
-        </View>
-      </Modal>
+        </Modal>
+      )}
 
       {/* Android menu modal */}
       {Platform.OS !== "ios" && (
@@ -374,10 +417,7 @@ export default function StatusDetailsPage() {
               >
                 <Text style={styles.menuItemText}>投稿をコピー</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => closeMenu(() => handleMenuAction("共有"))}
-              >
+              <TouchableOpacity style={styles.menuItem} onPress={() => closeMenu(() => handleMenuAction("共有"))}>
                 <Text style={styles.menuItemText}>共有</Text>
               </TouchableOpacity>
             </Animated.View>
@@ -474,6 +514,39 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     fontSize: 16,
+  },
+  editSheetContainerAndroid: {
+    flex: 1,
+  },
+  editSheetToolbar: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 4,
+    paddingVertical: 8,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  toolbarIconButton: {
+    padding: 12,
+  },
+  toolbarTitle: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: "500",
+    marginLeft: 8,
+  },
+  toolbarSaveButton: {
+    margin: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "#1976D2",
+  },
+  toolbarSaveButtonDisabled: {
+    backgroundColor: "#90CAF9",
   },
   menuOverlay: {
     flex: 1,
