@@ -7,7 +7,6 @@ import { accountAtom } from "@/models/atoms/account";
 import { useAtomValue } from "jotai";
 import React from "react";
 import { View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 const TABS: Tab[] = [
   { key: "following", label: "フォロー中" },
@@ -21,7 +20,7 @@ export default function HomeScreen() {
 
   if (account) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
         <Tabs
           tabs={TABS}
           renderScene={(tab) => {
@@ -29,7 +28,7 @@ export default function HomeScreen() {
             return <FollowingTimeline />;
           }}
         />
-      </SafeAreaView>
+      </View>
     );
   }
 
