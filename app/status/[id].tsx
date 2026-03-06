@@ -1,3 +1,4 @@
+import { EmojiPickerSheet } from "@/components/emoji-verse";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import { ReactionBar } from "@/components/reaction-bar";
 import { StatusText } from "@/components/status/text";
@@ -44,6 +45,7 @@ export default function StatusDetailsPage() {
   const [isEditSheetVisible, setIsEditSheetVisible] = useState(false);
   const [isEditingSaving, setIsEditingSaving] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const [isReactionSheetVisible, setIsReactionSheetVisible] = useState(false);
   const menuOverlayOpacity = useRef(new Animated.Value(0)).current;
   const menuSheetTranslateY = useRef(new Animated.Value(300)).current;
 
@@ -292,7 +294,12 @@ export default function StatusDetailsPage() {
 
               <View style={styles.divider} />
 
-              <ReactionBar reactions={reactions} onReact={handleReact} onUnreact={handleUnreact} />
+              <ReactionBar
+                reactions={reactions}
+                onReact={handleReact}
+                onUnreact={handleUnreact}
+                onAddReaction={isLoggedIn ? () => setIsReactionSheetVisible(true) : undefined}
+              />
             </>
           )}
         </View>
@@ -370,6 +377,13 @@ export default function StatusDetailsPage() {
           </View>
         </Modal>
       )}
+
+      {/* Reaction picker sheet */}
+      <EmojiPickerSheet
+        visible={isReactionSheetVisible}
+        onClose={() => setIsReactionSheetVisible(false)}
+        onReact={handleReact}
+      />
 
       {/* Android menu modal */}
       {Platform.OS !== "ios" && (
