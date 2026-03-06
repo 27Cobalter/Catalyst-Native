@@ -11,7 +11,7 @@ import RemarkRehype from "remark-rehype";
 import twitter from "twitter-text";
 import { unified } from "unified";
 
-export const StatusText = ({ status }: { status: string }) => {
+export const StatusText = React.memo(({ status }: { status: string }) => {
   const handleLinkPress = useCallback((url: string) => {
     Linking.openURL(url);
   }, []);
@@ -51,7 +51,7 @@ export const StatusText = ({ status }: { status: string }) => {
 
             return (
               <TouchableOpacity className="text-blue-500 dark:text-blue-600" onPress={() => handleLinkPress(href)}>
-                {children}
+                <Text>{children}</Text>
               </TouchableOpacity>
             );
           },
@@ -64,4 +64,5 @@ export const StatusText = ({ status }: { status: string }) => {
   }, [status, handleLinkPress]);
 
   return <View>{val}</View>;
-};
+});
+StatusText.displayName = "StatusText";
