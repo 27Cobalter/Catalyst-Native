@@ -3,22 +3,17 @@ import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { getCdnUrl } from "@/lib/media";
 import { accountAtom } from "@/models/atoms/account";
-import type { CatalystRelationships, CatalystStatus, EgeriaUser } from "@/natsuneko-laboratory/catalyst-sdk/packages/nodejs/dist";
+import type {
+  CatalystRelationships,
+  CatalystStatus,
+  EgeriaUser,
+} from "@/natsuneko-laboratory/catalyst-sdk/packages/nodejs/dist";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { ArrowLeft, Link as LinkIcon } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Animated,
-  Dimensions,
-  Linking,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Animated, Dimensions, Linking, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -48,6 +43,7 @@ export default function UserProfilePage() {
 
   const scrollY = useRef(new Animated.Value(0)).current;
   const indicatorAnim = useRef(new Animated.Value(0)).current;
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   const isMyself = account?.user?.id === user?.id;
   const isLoggedIn = account !== null;
@@ -143,6 +139,40 @@ export default function UserProfilePage() {
   const bgColor = colors.background;
   const grayColor = isDark ? "#8E8E93" : "#6E6E73";
 
+  const stickyTabBarOpacity = headerHeight > 0
+    ? scrollY.interpolate({
+        inputRange: [headerHeight - 1, headerHeight],
+        outputRange: [0, 1],
+        extrapolate: "clamp",
+      })
+    : 0;
+
+  const renderTabBar = () => (
+    <>
+      {tabs.map((tab, index) => (
+        <Pressable key={tab.key} style={{ width: TAB_WIDTH, alignItems: "center", paddingVertical: 14 }} onPress={() => handleTabPress(index)}>
+          <Text
+            style={[
+              styles.tabLabel,
+              {
+                color: index === activeTab ? textColor : grayColor,
+                fontWeight: index === activeTab ? "700" : "400",
+              },
+            ]}
+          >
+            {tab.label}
+          </Text>
+        </Pressable>
+      ))}
+      <Animated.View
+        style={[
+          styles.tabIndicator,
+          { width: INDICATOR_WIDTH, backgroundColor: colors.tint, transform: [{ translateX: indicatorAnim }] },
+        ]}
+      />
+    </>
+  );
+
   const activeTabContent = () => {
     const currentStatuses = activeTab === 1 ? galleryStatuses : statuses;
     if (activeTab === 2 && isMyself) {
@@ -174,10 +204,9 @@ export default function UserProfilePage() {
           useNativeDriver: false,
         })}
         scrollEventThrottle={16}
-        stickyHeaderIndices={[1]}
       >
-        {/* Profile Header (child 0 - scrolls away) */}
-        <View style={{ backgroundColor: bgColor }}>
+        {/* Profile Header */}
+        <View style={{ backgroundColor: bgColor }} onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}>
           {/* Banner (extends under status bar) */}
           <View style={{ paddingTop: insets.top }}>
             {user?.profile?.bannerUrl ? (
@@ -187,7 +216,9 @@ export default function UserProfilePage() {
                 contentFit="cover"
               />
             ) : (
-              <View style={{ width: SCREEN_WIDTH, height: BANNER_HEIGHT, backgroundColor: isDark ? "#333" : "#e0e0e0" }} />
+              <View
+                style={{ width: SCREEN_WIDTH, height: BANNER_HEIGHT, backgroundColor: isDark ? "#333" : "#e0e0e0" }}
+              />
             )}
           </View>
 
@@ -207,8 +238,9 @@ export default function UserProfilePage() {
 
             <View style={{ flex: 1 }} />
 
-            {isLoggedIn && user && (
-              isMyself || relationships?.isMyself ? (
+            {isLoggedIn &&
+              user &&
+              (isMyself || relationships?.isMyself ? (
                 <TouchableOpacity style={[styles.outlineButton, { borderColor: grayColor }]}>
                   <Text style={[styles.outlineButtonText, { color: textColor }]}>編集</Text>
                 </TouchableOpacity>
@@ -231,17 +263,13 @@ export default function UserProfilePage() {
                     activeOpacity={0.7}
                   >
                     <Text
-                      style={[
-                        styles.followButtonText,
-                        { color: relationships?.isFollowing ? textColor : bgColor },
-                      ]}
+                      style={[styles.followButtonText, { color: relationships?.isFollowing ? textColor : bgColor }]}
                     >
                       {relationships === null ? "読み込み中" : relationships.isFollowing ? "フォロー中" : "フォロー"}
                     </Text>
                   </TouchableOpacity>
                 </View>
-              )
-            )}
+              ))}
           </View>
 
           {/* Profile Info */}
@@ -249,9 +277,7 @@ export default function UserProfilePage() {
             <Text style={[styles.displayName, { color: textColor }]}>{user?.displayName ?? ""}</Text>
             <Text style={[styles.screenNameText, { color: grayColor }]}>@{user?.screenName ?? screenName}</Text>
 
-            {user?.profile?.bio ? (
-              <Text style={[styles.bio, { color: textColor }]}>{user.profile.bio}</Text>
-            ) : null}
+            {user?.profile?.bio ? <Text style={[styles.bio, { color: textColor }]}>{user.profile.bio}</Text> : null}
 
             {user?.profile?.website ? (
               <TouchableOpacity
@@ -265,40 +291,22 @@ export default function UserProfilePage() {
               </TouchableOpacity>
             ) : null}
 
-            {user?.profile?.additionalWebsites?.map((website, i) => (
-              <TouchableOpacity key={i} style={styles.websiteRow} onPress={() => Linking.openURL(website)}>
-                <LinkIcon size={14} color={grayColor} />
-                <Text style={[styles.websiteText, { color: grayColor }]} numberOfLines={1}>
-                  {website}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {user?.profile?.additionalWebsites
+              ?.filter((w) => !!w.trim())
+              .map((website, i) => (
+                <TouchableOpacity key={i} style={styles.websiteRow} onPress={() => Linking.openURL(website)}>
+                  <LinkIcon size={14} color={grayColor} />
+                  <Text style={[styles.websiteText, { color: grayColor }]} numberOfLines={1}>
+                    {website}
+                  </Text>
+                </TouchableOpacity>
+              ))}
           </View>
         </View>
 
-        {/* Sticky Tab Bar (child 1) */}
-        <View style={[styles.tabBar, { backgroundColor: bgColor, borderBottomColor: grayColor + "33" }]}>
-          {tabs.map((tab, index) => (
-            <Pressable key={tab.key} style={styles.tab} onPress={() => handleTabPress(index)}>
-              <Text
-                style={[
-                  styles.tabLabel,
-                  {
-                    color: index === activeTab ? textColor : grayColor,
-                    fontWeight: index === activeTab ? "700" : "400",
-                  },
-                ]}
-              >
-                {tab.label}
-              </Text>
-            </Pressable>
-          ))}
-          <Animated.View
-            style={[
-              styles.tabIndicator,
-              { width: INDICATOR_WIDTH, backgroundColor: colors.tint, transform: [{ translateX: indicatorAnim }] },
-            ]}
-          />
+        {/* Tab Bar (scrolls with content) */}
+        <View className="flex-row" style={{ width: SCREEN_WIDTH, backgroundColor: bgColor, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: grayColor + "33" }}>
+          {renderTabBar()}
         </View>
 
         {/* Tab Content (child 2) */}
@@ -306,7 +314,10 @@ export default function UserProfilePage() {
       </Animated.ScrollView>
 
       {/* Overlay Navigation Bar */}
-      <View style={[styles.navBarContainer, { height: NAV_BAR_HEIGHT, paddingTop: insets.top }]} pointerEvents="box-none">
+      <View
+        style={[styles.navBarContainer, { height: NAV_BAR_HEIGHT, paddingTop: insets.top }]}
+        pointerEvents="box-none"
+      >
         <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: bgColor, opacity: navBarOpacity }]} />
         <View style={styles.navBarContent} pointerEvents="box-none">
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -322,6 +333,24 @@ export default function UserProfilePage() {
           <View style={{ width: 52 }} />
         </View>
       </View>
+
+      {/* Sticky Tab Bar Overlay */}
+      <Animated.View
+        className="flex-row"
+        style={{
+          position: "absolute",
+          top: NAV_BAR_HEIGHT,
+          left: 0,
+          width: SCREEN_WIDTH,
+          backgroundColor: bgColor,
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: grayColor + "33",
+          opacity: stickyTabBarOpacity,
+        }}
+        pointerEvents={headerHeight > 0 ? "auto" : "none"}
+      >
+        {renderTabBar()}
+      </Animated.View>
     </View>
   );
 }
@@ -417,6 +446,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   tabBar: {
+    display: "flex",
     flexDirection: "row",
     width: SCREEN_WIDTH,
     borderBottomWidth: StyleSheet.hairlineWidth,
