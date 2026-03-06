@@ -2,6 +2,7 @@ import { Fonts } from "@/constants/theme";
 import { getCdnUrl } from "@/lib/media";
 import { accountAtom } from "@/models/atoms/account";
 import { DrawerActions } from "@react-navigation/native";
+import { router } from "expo-router";
 import { Image } from "expo-image";
 import { Drawer } from "expo-router/drawer";
 import { useAtomValue } from "jotai";
@@ -59,7 +60,7 @@ export default function TabLayout() {
           );
         },
       })}
-      drawerContent={() => (
+      drawerContent={({ navigation }) => (
         <SafeAreaView>
           <View className="flex flex-col">
             <View className="pt-4">
@@ -86,7 +87,14 @@ export default function TabLayout() {
               <View>
                 <View className="border-b dark:border-gray-700 border-gray-300 py-2">
                   {HEADER_ROUTES.map((route) => (
-                    <Pressable key={route.name} className="pl-8 px-4 py-2">
+                    <Pressable
+                      key={route.name}
+                      className="pl-8 px-4 py-2"
+                      onPress={() => {
+                        navigation.dispatch(DrawerActions.closeDrawer());
+                        router.push(route.href as never);
+                      }}
+                    >
                       <View className="flex-row items-center">
                         <View className="pr-2">{route.icon()}</View>
                         <Text>{route.name}</Text>
@@ -96,7 +104,14 @@ export default function TabLayout() {
                 </View>
                 <View className="border-b dark:border-gray-700 border-gray-300 py-2">
                   {FOOTER_ROUTES.map((route) => (
-                    <Pressable key={route.name} className="pl-8 px-4 py-2">
+                    <Pressable
+                      key={route.name}
+                      className="pl-8 px-4 py-2"
+                      onPress={() => {
+                        navigation.dispatch(DrawerActions.closeDrawer());
+                        router.push(route.href as never);
+                      }}
+                    >
                       <View className="flex-row items-center">
                         <View className="pr-2">{route.icon()}</View>
                         <Text>{route.name}</Text>
