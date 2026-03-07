@@ -54,10 +54,13 @@ export const TimelineStatus = memo(
 
             <View className="flex-row items-center flex-1 ml-2 overflow-hidden">
               <Pressable
-                className="flex-row items-center shrink overflow-hidden"
+                className="flex flex-row items-center shrink overflow-hidden"
                 onPress={navigateToUser}
               >
-                <Text className="font-bold text-sm" numberOfLines={1}>
+                <Text
+                  className="font-bold text-sm text-black dark:text-white"
+                  numberOfLines={1}
+                >
                   {user?.displayName ?? "Unknown"}
                 </Text>
                 <Text
