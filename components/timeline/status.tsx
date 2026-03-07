@@ -4,7 +4,8 @@ import type { CatalystStatus } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { memo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { withUniwind } from "uniwind";
 import { MediaCarousel } from "../MediaCarousel";
 import { StatusText } from "../status/text";
 
@@ -15,121 +16,81 @@ type Props = {
   renderingMode?: StatusRenderingMode;
 };
 
-export const TimelineStatus = memo(({ status, renderingMode = "twtr" }: Props) => {
-  const router = useRouter();
+const UniImage = withUniwind(Image);
 
-  const user = status.user;
-  const medias = status.medias;
+export const TimelineStatus = memo(
+  ({ status, renderingMode = "twtr" }: Props) => {
+    const router = useRouter();
 
-  const navigateToStatus = () => router.push(`/status/${status.id}`);
-  const navigateToUser = () => user && router.push(`/user/${user.screenName}`);
+    const user = status.user;
+    const medias = status.medias;
 
-  return (
-    <View style={styles.container}>
-      {/* Header */}
-      <Pressable onPress={navigateToStatus}>
-        <View style={styles.headerRow}>
-          <Pressable onPress={navigateToUser}>
-            {user?.profile?.iconUrl ? (
-              <Image
-                source={{ uri: getCdnUrl({ src: user.profile.iconUrl, variant: "icon", width: 64 }) }}
-                style={styles.avatar}
-                contentFit="cover"
-              />
+    const navigateToStatus = () => router.push(`/status/${status.id}`);
+    const navigateToUser = () =>
+      user && router.push(`/user/${user.screenName}`);
+
+    return (
+      <View className="py-2">
+        {/* Header */}
+        <Pressable onPress={navigateToStatus}>
+          <View className="flex-row items-center px-4 mb-1">
+            <Pressable onPress={navigateToUser}>
+              {user?.profile?.iconUrl ? (
+                <UniImage
+                  source={{
+                    uri: getCdnUrl({
+                      src: user.profile.iconUrl,
+                      variant: "icon",
+                      width: 64,
+                    }),
+                  }}
+                  className="w-8 h-8 rounded-full"
+                  contentFit="cover"
+                />
+              ) : (
+                <View className="w-8 h-8 rounded-full bg-[#888] opacity-25" />
+              )}
+            </Pressable>
+
+            <View className="flex-row items-center flex-1 ml-2 overflow-hidden">
+              <Pressable
+                className="flex-row items-center shrink overflow-hidden"
+                onPress={navigateToUser}
+              >
+                <Text className="font-bold text-sm" numberOfLines={1}>
+                  {user?.displayName ?? "Unknown"}
+                </Text>
+                <Text
+                  className="font-sm ml-1 text-gray-400 dark:text-gray-600"
+                  numberOfLines={1}
+                >
+                  @{user?.screenName ?? "unknown"}
+                </Text>
+              </Pressable>
+              <Text className="text-gray-400 dark:text-gray-600 text-sm shrink-0">
+                ・{rel(status.createdAt)}
+              </Text>
+            </View>
+          </View>
+        </Pressable>
+
+        {/* Media carousel */}
+        {medias.length > 0 && <MediaCarousel medias={medias} />}
+
+        {/* Body */}
+        {status.body.length > 0 && (
+          <Pressable onPress={navigateToStatus}>
+            {renderingMode === "twtr" ? (
+              <View className="px-4 py-2">
+                <StatusText status={status.body} />
+              </View>
             ) : (
-              <View style={styles.avatarPlaceholder} />
+              <Text className="px-4 py-2 text-sm">{status.body}</Text>
             )}
           </Pressable>
-
-          <View style={styles.userInfoRow}>
-            <Pressable onPress={navigateToUser} style={styles.userNameRow}>
-              <Text style={styles.displayName} numberOfLines={1}>
-                {user?.displayName ?? "Unknown"}
-              </Text>
-              <Text style={styles.screenName} numberOfLines={1}>
-                @{user?.screenName ?? "unknown"}
-              </Text>
-            </Pressable>
-            <Text style={styles.timestamp}>・{rel(status.createdAt)}</Text>
-          </View>
-        </View>
-      </Pressable>
-
-      {/* Media carousel */}
-      {medias.length > 0 && <MediaCarousel medias={medias} />}
-
-      {/* Body */}
-      {status.body.length > 0 && (
-        <Pressable onPress={navigateToStatus}>
-          {renderingMode === "twtr" ? (
-            <View style={styles.bodyContainer}>
-              <StatusText status={status.body} />
-            </View>
-          ) : (
-            <Text style={styles.bodyText}>{status.body}</Text>
-          )}
-        </Pressable>
-      )}
-    </View>
-  );
-});
+        )}
+      </View>
+    );
+  },
+);
 TimelineStatus.displayName = "TimelineStatus";
-
-const styles = StyleSheet.create({
-  container: {
-    paddingVertical: 8,
-  },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    marginBottom: 4,
-  },
-  avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-  },
-  avatarPlaceholder: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(128,128,128,0.25)",
-  },
-  userInfoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    marginLeft: 8,
-    overflow: "hidden",
-  },
-  userNameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexShrink: 1,
-    overflow: "hidden",
-  },
-  displayName: {
-    fontWeight: "bold",
-    fontSize: 13,
-  },
-  screenName: {
-    fontSize: 13,
-    color: "gray",
-    marginLeft: 4,
-  },
-  timestamp: {
-    fontSize: 13,
-    color: "gray",
-    flexShrink: 0,
-  },
-  bodyContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  bodyText: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    fontSize: 13,
-  },
-});
