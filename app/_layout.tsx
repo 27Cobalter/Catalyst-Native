@@ -6,7 +6,11 @@ import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { accountAtom } from "@/models/atoms/account";
 import * as Credential from "@/models/credential";
-import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
 import * as Sentry from "@sentry/react-native";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -46,11 +50,16 @@ export default Sentry.wrap(function RootLayout() {
   const setAccount = useSetAtom(accountAtom);
 
   useAsyncOneTimeEffect(async () => {
-    const { credential, isLoggedIn } = await Credential.init();
+    try {
+      const { credential, isLoggedIn } = await Credential.init();
 
-    setAccount(isLoggedIn ? { user: Credential.currentUser()!, credential } : null);
-    setIsLoaded(true);
-    await SplashScreen.hideAsync();
+      setAccount(
+        isLoggedIn ? { user: Credential.currentUser()!, credential } : null,
+      );
+    } finally {
+      setIsLoaded(true);
+      await SplashScreen.hideAsync();
+    }
   });
 
   if (!isLoaded) {
@@ -61,11 +70,20 @@ export default Sentry.wrap(function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <Stack>
-          <Stack.Screen name="(drawer)" options={{ headerShown: false, gestureEnabled: false }} />
+          <Stack.Screen
+            name="(drawer)"
+            options={{ headerShown: false, gestureEnabled: false }}
+          />
           <Stack.Screen name="status/[id]" options={{ title: "投稿" }} />
-          <Stack.Screen name="user/[screenName]" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="user/[screenName]"
+            options={{ headerShown: false }}
+          />
           <Stack.Screen name="authorize" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: "modal", title: "Modal" }} />
+          <Stack.Screen
+            name="modal"
+            options={{ presentation: "modal", title: "Modal" }}
+          />
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>
