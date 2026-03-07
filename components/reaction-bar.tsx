@@ -17,38 +17,58 @@ type Props = {
   onAddReaction?: () => void;
 };
 
-export const ReactionBar = ({ reactions, onReact, onUnreact, onAddReaction }: Props) => {
+export const ReactionBar = ({
+  reactions,
+  onReact,
+  onUnreact,
+  onAddReaction,
+}: Props) => {
   const entries = Object.values(reactions);
 
   return (
     <View className="flex-row flex-wrap gap-2 py-1">
-      {entries.map((reaction) => (
-        <Pressable
-          key={reaction.name}
-          onPress={() => (reaction.hasSelfReaction ? onUnreact(reaction.symbol) : onReact(reaction.symbol))}
-          className={cn(
-            "flex-row items-center gap-1 px-2.5 py-1 rounded-full border",
-            reaction.hasSelfReaction ? "border-[#007AFF]" : "border-[#E5E5EA]",
-          )}
-        >
-          {isUnicodeCodepoint(reaction.symbol) ? (
-            <Image
-              source={emojis[reaction.symbol as keyof typeof emojis]}
-              style={{ width: 24, height: 24 }}
-              contentFit="contain"
-            />
-          ) : (
-            <Image
-              source={{ uri: `https://static.natsuneko.com/images/reactions/${reaction.symbol}.png` }}
-              style={{ width: 24, height: 24 }}
-              contentFit="contain"
-            />
-          )}
-          <Text className={cn("text-base", reaction.hasSelfReaction ? "text-[#007AFF]" : "text-[#3C3C43]")}>
-            {reaction.count}
-          </Text>
-        </Pressable>
-      ))}
+      {entries
+        .filter((w) => w.count >= 1)
+        .map((reaction) => (
+          <Pressable
+            key={reaction.symbol}
+            onPress={() =>
+              reaction.hasSelfReaction
+                ? onUnreact(reaction.symbol)
+                : onReact(reaction.symbol)
+            }
+            className={cn(
+              "flex-row items-center gap-1 px-2.5 py-1 rounded-full border",
+              reaction.hasSelfReaction
+                ? "border-[#007AFF]"
+                : "border-[#E5E5EA]",
+            )}
+          >
+            {isUnicodeCodepoint(reaction.symbol) ? (
+              <Image
+                source={emojis[reaction.symbol as keyof typeof emojis]}
+                style={{ width: 24, height: 24 }}
+                contentFit="contain"
+              />
+            ) : (
+              <Image
+                source={{
+                  uri: `https://static.natsuneko.com/images/reactions/${reaction.symbol}.png`,
+                }}
+                style={{ width: 24, height: 24 }}
+                contentFit="contain"
+              />
+            )}
+            <Text
+              className={cn(
+                "text-base",
+                reaction.hasSelfReaction ? "text-[#007AFF]" : "text-[#3C3C43]",
+              )}
+            >
+              {reaction.count}
+            </Text>
+          </Pressable>
+        ))}
       {onAddReaction && (
         <Pressable
           onPress={onAddReaction}

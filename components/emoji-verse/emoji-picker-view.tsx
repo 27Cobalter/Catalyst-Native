@@ -15,14 +15,26 @@ import {
   X,
 } from "lucide-react-native";
 import React, { memo, useCallback, useMemo, useState } from "react";
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useColorScheme } from "react-native";
+import {
+  FlatList,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  useColorScheme,
+} from "react-native";
 import type { EmojiCategory, EmojiItem } from "./types";
 import { emojiToCodepoints } from "./unicode";
 
 const GRID_COLUMNS = 8;
 const EMOJI_SIZE = 36;
 
-const ICON_MAP: Record<string, React.ComponentType<{ size: number; color: string }>> = {
+const ICON_MAP: Record<
+  string,
+  React.ComponentType<{ size: number; color: string }>
+> = {
   clock: Clock,
   smile: Smile,
   "paw-print": PawPrint,
@@ -40,32 +52,48 @@ type Props = {
   onEmojiSelected: (emoji: EmojiItem) => void;
 };
 
-const EmojiItemCell = memo(({ item, onPress }: { item: EmojiItem; onPress: (item: EmojiItem) => void }) => {
-  const handlePress = useCallback(() => onPress(item), [item, onPress]);
+const EmojiItemCell = memo(
+  ({
+    item,
+    onPress,
+  }: {
+    item: EmojiItem;
+    onPress: (item: EmojiItem) => void;
+  }) => {
+    const handlePress = useCallback(() => onPress(item), [item, onPress]);
 
-  if (item.type.kind === "unicode") {
-    const codepoint = emojiToCodepoints(item.type.emoji);
-    const source = emojis[codepoint as keyof typeof emojis];
-    if (source) {
+    if (item.type.kind === "unicode") {
+      const codepoint = emojiToCodepoints(item.type.emoji);
+      const source = emojis[codepoint as keyof typeof emojis];
+      if (source) {
+        return (
+          <Pressable onPress={handlePress} style={styles.emojiCell}>
+            <Image
+              source={source}
+              style={styles.emojiImage}
+              contentFit="contain"
+            />
+          </Pressable>
+        );
+      }
       return (
         <Pressable onPress={handlePress} style={styles.emojiCell}>
-          <Image source={source} style={styles.emojiImage} contentFit="contain" />
+          <Text style={styles.emojiText}>{item.type.emoji}</Text>
         </Pressable>
       );
     }
+
     return (
       <Pressable onPress={handlePress} style={styles.emojiCell}>
-        <Text style={styles.emojiText}>{item.type.emoji}</Text>
+        <Image
+          source={{ uri: item.type.url }}
+          style={styles.emojiImage}
+          contentFit="contain"
+        />
       </Pressable>
     );
-  }
-
-  return (
-    <Pressable onPress={handlePress} style={styles.emojiCell}>
-      <Image source={{ uri: item.type.url }} style={styles.emojiImage} contentFit="contain" />
-    </Pressable>
-  );
-});
+  },
+);
 EmojiItemCell.displayName = "EmojiItemCell";
 
 function CategoryButton({
@@ -85,16 +113,32 @@ function CategoryButton({
   const inactiveColor = theme === "dark" ? "#8E8E93" : "#8E8E93";
 
   return (
-    <Pressable onPress={onPress} disabled={disabled} style={[styles.categoryButton, disabled && { opacity: 0.5 }]}>
-      {IconComponent && <IconComponent size={22} color={isSelected ? activeColor : inactiveColor} />}
-      <View style={[styles.categoryIndicator, isSelected && { backgroundColor: activeColor }]} />
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={[styles.categoryButton, disabled && { opacity: 0.5 }]}
+    >
+      {IconComponent && (
+        <IconComponent
+          size={22}
+          color={isSelected ? activeColor : inactiveColor}
+        />
+      )}
+      <View
+        style={[
+          styles.categoryIndicator,
+          isSelected && { backgroundColor: activeColor },
+        ]}
+      />
     </Pressable>
   );
 }
 
 export function EmojiPickerView({ categories, onEmojiSelected }: Props) {
   const theme = useColorScheme() ?? "light";
-  const [selectedCategoryId, setSelectedCategoryId] = useState(categories[0]?.id ?? "");
+  const [selectedCategoryId, setSelectedCategoryId] = useState(
+    categories[0]?.id ?? "",
+  );
   const [searchText, setSearchText] = useState("");
   const isSearching = searchText.trim().length > 0;
 
@@ -124,22 +168,42 @@ export function EmojiPickerView({ categories, onEmojiSelected }: Props) {
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: EmojiItem }) => <EmojiItemCell item={item} onPress={handleEmojiPress} />,
+    ({ item }: { item: EmojiItem }) => (
+      <EmojiItemCell item={item} onPress={handleEmojiPress} />
+    ),
     [handleEmojiPress],
   );
 
-  const keyExtractor = useCallback((item: EmojiItem, index: number) => `${item.id}-${index}`, []);
+  const keyExtractor = useCallback(
+    (item: EmojiItem, index: number) => `${item.id}-${index}`,
+    [],
+  );
 
   const selectedCategory = categories.find((c) => c.id === selectedCategoryId);
-  const displayEmojis = isSearching ? searchResults : (selectedCategory?.emojis ?? []);
+  const displayEmojis = isSearching
+    ? searchResults
+    : (selectedCategory?.emojis ?? []);
 
   return (
-    <View style={[styles.container, { backgroundColor: theme === "dark" ? "#1C1C1E" : "#FFFFFF" }]}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme === "dark" ? "#1C1C1E" : "#FFFFFF" },
+      ]}
+    >
       {/* Search bar */}
-      <View style={[styles.searchBar, { backgroundColor: theme === "dark" ? "#2C2C2E" : "#F2F2F7" }]}>
+      <View
+        style={[
+          styles.searchBar,
+          { backgroundColor: theme === "dark" ? "#2C2C2E" : "#F2F2F7" },
+        ]}
+      >
         <Search size={16} color="#8E8E93" />
         <TextInput
-          style={[styles.searchInput, { color: theme === "dark" ? "#FFFFFF" : "#000000" }]}
+          style={[
+            styles.searchInput,
+            { color: theme === "dark" ? "#FFFFFF" : "#000000" },
+          ]}
           placeholder="絵文字を検索"
           placeholderTextColor="#8E8E93"
           value={searchText}
@@ -172,7 +236,12 @@ export function EmojiPickerView({ categories, onEmojiSelected }: Props) {
         ))}
       </ScrollView>
 
-      <View style={[styles.divider, { backgroundColor: theme === "dark" ? "#38383A" : "#E5E5EA" }]} />
+      <View
+        style={[
+          styles.divider,
+          { backgroundColor: theme === "dark" ? "#38383A" : "#E5E5EA" },
+        ]}
+      />
 
       {/* Emoji grid */}
       <FlatList
@@ -217,6 +286,8 @@ const styles = StyleSheet.create({
   },
   categoryBar: {
     maxHeight: 48,
+    flexShrink: 0,
+    flexGrow: 0,
   },
   categoryBarContent: {
     paddingHorizontal: 12,
