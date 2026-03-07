@@ -88,9 +88,6 @@
       "@sentry/cli",
       "unrs-resolver"
     ],
-    "patchedDependencies": {
-      "metro-config": "patches/metro-config.patch"
-    },
     "ignoredBuiltDependencies": [
       "core-js",
       "dtrace-provider",
