@@ -6,9 +6,14 @@
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "bin:emoji-gen": "tsx ./bin/emoji-gen.ts",
-    "android": "pnpm run bin:emoji-gen && expo run:android",
-    "ios": "pnpm run bin:emoji-gen && expo run:ios",
-    "web": "expo start --web",
+    "run:android": "pnpm run bin:emoji-gen && expo run:android",
+    "run:ios": "pnpm run bin:emoji-gen && expo run:ios",
+    "build:android:development": "pnpm run bin:emoji-gen && eas build --platform android --profile development --local",
+    "build:android:preview": "pnpm run bin:emoji-gen && eas build --platform android --profile preview --local",
+    "build:android:production": "pnpm run bin:emoji-gen && eas build --platform android --profile production --local",
+    "build:ios:development": "pnpm run bin:emoji-gen && eas build --platform ios --profile development --local",
+    "build:ios:preview": "pnpm run bin:emoji-gen && eas build --platform ios --profile preview --local",
+    "build:ios:production": "pnpm run bin:emoji-gen && eas build --platform ios --profile production --local",
     "lint": "expo lint",
     "expo": "expo"
   },
@@ -69,6 +74,8 @@
     "@types/react": "latest",
     "@types/twitter-text": "^3.1.10",
     "babel-preset-expo": "^55.0.10",
+    "eas-cli": "^18.1.0",
+    "eas-cli-local-build-plugin": "^18.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~55.0.0",
     "oxfmt": "^0.36.0",
@@ -78,10 +85,16 @@
   "private": true,
   "pnpm": {
     "onlyBuiltDependencies": [
+      "@sentry/cli",
       "unrs-resolver"
     ],
     "patchedDependencies": {
       "metro-config": "patches/metro-config.patch"
-    }
+    },
+    "ignoredBuiltDependencies": [
+      "core-js",
+      "dtrace-provider",
+      "esbuild"
+    ]
   }
 }
