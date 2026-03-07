@@ -74,7 +74,10 @@ export default Sentry.wrap(function RootLayout() {
             name="(drawer)"
             options={{ headerShown: false, gestureEnabled: false }}
           />
-          <Stack.Screen name="status/[id]" options={{ title: "投稿" }} />
+          <Stack.Screen
+            name="status/[id]"
+            options={{ title: "投稿", headerBackTitle: "戻る" }}
+          />
           <Stack.Screen
             name="user/[screenName]"
             options={{ headerShown: false }}
