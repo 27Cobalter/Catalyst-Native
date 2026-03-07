@@ -30,13 +30,13 @@ function CustomTabBar({ state }: BottomTabBarProps) {
     {
       key: "index",
       label: "ホーム",
-      href: "/(tabs)/(drawer)/",
+      href: "/(drawer)/(tabs)/",
       icon: (color) => <House size={28} color={color} />,
     },
     {
       key: "explore",
       label: "検索",
-      href: "/(tabs)/(drawer)/explore",
+      href: "/(drawer)/(tabs)/explore",
       icon: (color) => <Search size={28} color={color} />,
     },
     ...(account
@@ -44,13 +44,13 @@ function CustomTabBar({ state }: BottomTabBarProps) {
           {
             key: "notifications",
             label: "通知",
-            href: "/(tabs)/(drawer)/notifications",
+            href: "/(drawer)/(tabs)/notifications",
             icon: (color: string) => <Bell size={28} color={color} />,
           },
           {
             key: "profile",
             label: "プロフィール",
-            href: "/(tabs)/profile",
+            href: "/(drawer)/(tabs)/profile",
             icon: () => (
               <View className="overflow-hidden rounded-full">
                 <Image
@@ -65,17 +65,11 @@ function CustomTabBar({ state }: BottomTabBarProps) {
       : []),
   ];
 
-  // Determine which tab is active based on the drawer's current route
-  const drawerRoute = state.routes.find((r) => r.name === "(drawer)");
-  const drawerState = drawerRoute?.state;
-  const activeDrawerRouteName = drawerState?.routes?.[drawerState?.index ?? 0]?.name;
   const activeTabRoute = state.routes[state.index]?.name;
 
   const getIsActive = (tab: TabItem) => {
-    if (tab.key === "profile") return activeTabRoute === "profile";
-    // drawerState is undefined on initial load, default to "index"
-    const currentDrawerRoute = activeDrawerRouteName ?? "index";
-    return activeTabRoute === "(drawer)" && currentDrawerRoute === (tab.key === "index" ? "index" : tab.key);
+    if (tab.key === "index") return activeTabRoute === "index";
+    return activeTabRoute === tab.key;
   };
 
   return (
@@ -127,7 +121,9 @@ export default function TabLayout() {
         headerShown: false,
       }}
     >
-      <Tabs.Screen name="(drawer)" />
+      <Tabs.Screen name="index" />
+      <Tabs.Screen name="explore" />
+      <Tabs.Screen name="notifications" />
       <Tabs.Screen name="profile" />
     </Tabs>
   );

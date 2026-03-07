@@ -2,7 +2,7 @@ import { Fonts } from "@/constants/theme";
 import { getCdnUrl } from "@/lib/media";
 import { accountAtom } from "@/models/atoms/account";
 import { DrawerActions } from "@react-navigation/native";
-import { router } from "expo-router";
+import { router, useSegments } from "expo-router";
 import { Image } from "expo-image";
 import { Drawer } from "expo-router/drawer";
 import { useAtomValue } from "jotai";
@@ -23,18 +23,22 @@ const HEADER_ROUTES: Route[] = [
 ];
 
 const FOOTER_ROUTES: Route[] = [
-  //
   { name: "設定とプライバシー", href: "/settings", icon: () => <Cog size={32} /> },
 ];
 
-export default function TabLayout() {
+export default function DrawerLayout() {
   const account = useAtomValue(accountAtom);
+  const segments = useSegments();
+
+  const isProfileTab = segments.includes("profile" as never);
 
   return (
     <Drawer
       screenOptions={({ navigation }) => ({
         headerTitle: "",
         headerShadowVisible: false,
+        headerShown: !isProfileTab,
+        swipeEnabled: !isProfileTab,
         headerLeft: () => {
           const openDrawer = () => {
             navigation.dispatch(DrawerActions.openDrawer());

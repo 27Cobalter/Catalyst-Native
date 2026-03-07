@@ -37,7 +37,7 @@ Sentry.init({
 SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
-  anchor: "(tabs)",
+  anchor: "(drawer)",
 };
 
 export default Sentry.wrap(function RootLayout() {
@@ -61,7 +61,7 @@ export default Sentry.wrap(function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false, gestureEnabled: false }} />
+          <Stack.Screen name="(drawer)" options={{ headerShown: false, gestureEnabled: false }} />
           <Stack.Screen name="status/[id]" options={{ title: "投稿" }} />
           <Stack.Screen name="user/[screenName]" options={{ headerShown: false }} />
           <Stack.Screen name="authorize" options={{ headerShown: false }} />
