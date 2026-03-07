@@ -99,7 +99,7 @@ export default function StatusDetailsPage() {
         await account.credential.client.catalyst.react(id, symbol);
         setReactions((prev) => ({
           ...prev,
-          [symbol]: { ...prev[symbol], count: (prev[symbol]?.count ?? 0) + 1, hasSelfReaction: true },
+          [symbol]: { ...prev[symbol], symbol, count: (prev[symbol]?.count ?? 0) + 1, hasSelfReaction: true },
         }));
       } catch {
         Alert.alert("エラー", "リアクションに失敗しました");
