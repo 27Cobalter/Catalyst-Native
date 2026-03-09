@@ -136,7 +136,7 @@ export default function DrawerLayout() {
                   router.push(`/user/${account.user.screenName}`);
                 }}
               >
-                <View className="border-b dark:border-gray-700 border-gray-300 pb-4">
+                <View className="border-b dark:border-neutral-700 border-neutral-300 pb-4">
                   <View className="pl-8">
                     <UniImage
                       source={getCdnUrl({
@@ -154,7 +154,7 @@ export default function DrawerLayout() {
                       </Text>
 
                       <Text
-                        className="text-sm text-gray-600 dark:text-gray-400"
+                        className="text-sm text-neutral-500"
                         style={{ fontFamily: Fonts.mono }}
                       >
                         @{account.user.screenName}
@@ -165,7 +165,7 @@ export default function DrawerLayout() {
               </Pressable>
             )}
             <View>
-              <View className="border-b dark:border-gray-700 border-gray-300 py-2">
+              <View className="border-b dark:neutral-gray-700 border-neutral-300 py-2">
                 {headers.map((route) => (
                   <DrawerMenu
                     key={route.name}
@@ -174,7 +174,7 @@ export default function DrawerLayout() {
                   />
                 ))}
               </View>
-              <View className="border-b dark:border-gray-700 border-gray-300 py-2">
+              <View className="border-b dark:neutral-gray-700 border-neutral-300 py-2">
                 {footers.map((route) => (
                   <DrawerMenu
                     key={route.name}
