@@ -1,0 +1,17 @@
+diff --git a/build/src/start/platforms/android/adb.js b/build/src/start/platforms/android/adb.js
+index a8dafb4fedf286fd3aba8f764d3c2ba8566db292..0e8568ed8781a48b943e74546014bd63244b2aca 100644
+--- a/build/src/start/platforms/android/adb.js
++++ b/build/src/start/platforms/android/adb.js
+@@ -209,9 +209,9 @@ async function installAsync(device, { filePath }) {
+ }
+ function adbArgs(pid, ...options) {
+     const args = [];
+-    if (pid) {
+-        args.push('-s', pid);
+-    }
++    // if (pid) {
++    //     args.push('-s', pid);
++    // }
+     return args.concat(options);
+ }
+ async function getAttachedDevicesAsync() {
