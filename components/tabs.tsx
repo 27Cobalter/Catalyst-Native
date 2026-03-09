@@ -51,7 +51,7 @@ export function Tabs({ tabs, renderScene, defaultIndex = 0 }: Props) {
   return (
     <View style={styles.container}>
       {/* タブバー */}
-      <View className="border-b  border-gray-700 dark:border-gray-300" style={[styles.tabBar]}>
+      <View className="border-b  border-neutral-700 dark:border-neutral-300" style={[styles.tabBar]}>
         {tabs.map((tab, index) => {
           const isActive = index === activeIndex;
           return (

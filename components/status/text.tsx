@@ -10,6 +10,9 @@ import RemarkParse from "remark-parse";
 import RemarkRehype from "remark-rehype";
 import twitter from "twitter-text";
 import { unified } from "unified";
+import { withUniwind } from "uniwind";
+
+const UniLink = withUniwind(Link);
 
 export const StatusText = React.memo(({ status }: { status: string }) => {
   const handleLinkPress = useCallback((url: string) => {
@@ -43,20 +46,20 @@ export const StatusText = React.memo(({ status }: { status: string }) => {
             if (href.startsWith("/")) {
               return (
                 // @ts-expect-error
-                <Link className="text-blue-500 dark:text-blue-600" href={href}>
+                <UniLink className="text-blue-500 leading-none" href={href}>
                   {children}
-                </Link>
+                </UniLink>
               );
             }
 
             return (
-              <TouchableOpacity className="text-blue-500 dark:text-blue-600" onPress={() => handleLinkPress(href)}>
-                <Text>{children}</Text>
+              <TouchableOpacity  onPress={() => handleLinkPress(href)}>
+                <Text className="text-blue-500 leading-none">{children}</Text>
               </TouchableOpacity>
             );
           },
-          br: () => <Text>{"\n"}</Text>,
-          p: ({ children }: { children: React.ReactNode }) => <Text>{children}</Text>,
+          br: () => <Text className="text-black dark:text-white">{"\n"}</Text>,
+          p: ({ children }: { children: React.ReactNode }) => <Text className="text-black dark:text-white">{children}</Text>,
         },
       });
 

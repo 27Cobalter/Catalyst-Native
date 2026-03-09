@@ -22,7 +22,7 @@ export const TimelineStatus = memo(
   ({ status, renderingMode = "twtr" }: Props) => {
     const router = useRouter();
 
-    const user = status.user;
+    const user = status.user!;
     const medias = status.medias;
 
     const navigateToStatus = () => router.push(`/status/${status.id}`);
@@ -61,16 +61,16 @@ export const TimelineStatus = memo(
                   className="font-bold text-sm text-black dark:text-white"
                   numberOfLines={1}
                 >
-                  {user?.displayName ?? "Unknown"}
+                  {user.displayName }
                 </Text>
                 <Text
-                  className="font-sm ml-1 text-gray-400 dark:text-gray-600"
+                  className="font-sm ml-1 text-neutral-500"
                   numberOfLines={1}
                 >
-                  @{user?.screenName ?? "unknown"}
+                  @{user.screenName}
                 </Text>
               </Pressable>
-              <Text className="text-gray-400 dark:text-gray-600 text-sm shrink-0">
+              <Text className="text-neutral-500 text-sm shrink-0">
                 ・{rel(status.createdAt)}
               </Text>
             </View>
