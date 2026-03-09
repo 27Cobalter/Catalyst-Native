@@ -1,2 +1,13 @@
 @import "tailwindcss";
 @import "uniwind";
+
+@theme {
+  --color-light-text: "#11181c";
+  --color-light-background: "#ffffff";
+  --color-light-tint: "#0a7ea4";
+  --color-light-icon: "#687076";
+  --color-dark-text: "#ecedee";
+  --color-dark-background: "#151718";
+  --color-dark-tint: "#ffffff";
+  --color-dark-icon: "#9ba1a6";
+}

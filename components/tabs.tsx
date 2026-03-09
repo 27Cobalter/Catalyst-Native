@@ -1,5 +1,4 @@
-import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { cn } from "@/lib/utils";
 import React, { useRef, useState } from "react";
 import { Animated, Dimensions, FlatList, ListRenderItem, Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -19,8 +18,6 @@ type Props = {
 };
 
 export function Tabs({ tabs, renderScene, defaultIndex = 0 }: Props) {
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme === "unspecified" ? "light" : colorScheme];
   const [activeIndex, setActiveIndex] = useState(defaultIndex);
   const scrollX = useRef(new Animated.Value(defaultIndex * SCREEN_WIDTH)).current;
   const flatListRef = useRef<FlatList<Tab>>(null);
@@ -57,10 +54,10 @@ export function Tabs({ tabs, renderScene, defaultIndex = 0 }: Props) {
           return (
             <Pressable key={tab.key} style={styles.tab} onPress={() => handleTabPress(index)}>
               <Text
+                className={cn(isActive ? "text-light-text dark:text-dark-text" : "text-light-icon dark:text-dark-icon")}
                 style={[
                   styles.tabLabel,
                   {
-                    color: isActive ? colors.text : colors.icon,
                     fontWeight: isActive ? "700" : "400",
                   },
                 ]}
@@ -73,11 +70,11 @@ export function Tabs({ tabs, renderScene, defaultIndex = 0 }: Props) {
 
         {/* アクティブインジケーター */}
         <Animated.View
+          className="bg-light-background dark:bg-dark-background"
           style={[
             styles.indicator,
             {
               width: INDICATOR_WIDTH,
-              backgroundColor: colors.tint,
               transform: [{ translateX: indicatorTranslateX }],
             },
           ]}

@@ -2,7 +2,6 @@ import { EmojiPickerSheet } from "@/components/emoji-verse";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import { ReactionBar } from "@/components/reaction-bar";
 import { StatusText } from "@/components/status/text";
-import { Colors } from "@/constants/theme";
 import { abs, rel } from "@/lib/dayjs";
 import { getCdnUrl } from "@/lib/media";
 import { accountAtom } from "@/models/atoms/account";
@@ -30,6 +29,9 @@ import {
   useColorScheme,
   View,
 } from "react-native";
+import { withUniwind } from "uniwind";
+
+const UniMoreHorizontal = withUniwind(MoreHorizontal);
 
 export default function StatusDetailsPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -229,16 +231,16 @@ export default function StatusDetailsPage() {
         options={{
           headerRight: () => (
             <TouchableOpacity onPress={showMenu} style={{ padding: 8 }}>
-              <MoreHorizontal size={22} color="#000" />
+              <UniMoreHorizontal size={22} className="text-black dark:text-white" />
             </TouchableOpacity>
           ),
         }}
       />
 
       <ScrollView
+        className="bg-light-background dark:bg-dark-background"
         style={{
           ...styles.container,
-          backgroundColor: theme === "dark" ? Colors.dark.background : Colors.light.background,
         }}
       >
         {/* User header */}
@@ -309,9 +311,9 @@ export default function StatusDetailsPage() {
       {Platform.OS === "ios" ? (
         <Modal visible={isEditSheetVisible} animationType="slide" presentationStyle="pageSheet">
           <View
+            className="bg-light-background dark:bg-dark-background"
             style={[
               styles.editSheetContainer,
-              { backgroundColor: theme === "dark" ? Colors.dark.background : Colors.light.background },
             ]}
           >
             <View style={styles.editSheetHeader}>
@@ -343,9 +345,9 @@ export default function StatusDetailsPage() {
       ) : (
         <Modal visible={isEditSheetVisible} animationType="fade" statusBarTranslucent>
           <View
-            style={[
+               className="bg-light-background dark:bg-dark-background"
+         style={[
               styles.editSheetContainerAndroid,
-              { backgroundColor: theme === "dark" ? Colors.dark.background : Colors.light.background },
             ]}
           >
             <View style={[styles.editSheetToolbar, { backgroundColor: theme === "dark" ? "#1E1E1E" : "#FFFFFF" }]}>
@@ -391,9 +393,9 @@ export default function StatusDetailsPage() {
           <Animated.View style={[styles.menuOverlay, { opacity: menuOverlayOpacity }]}>
             <Pressable style={styles.menuOverlayPressable} onPress={() => closeMenu()} />
             <Animated.View
+              className="bg-light-background dark:bg-dark-background"
               style={[
                 styles.menuSheet,
-                { backgroundColor: theme === "dark" ? Colors.dark.background : Colors.light.background },
                 { transform: [{ translateY: menuSheetTranslateY }] },
               ]}
             >

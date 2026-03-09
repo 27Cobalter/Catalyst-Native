@@ -1,4 +1,3 @@
-import { Colors } from "@/constants/theme";
 import { accountAtom } from "@/models/atoms/account";
 import type { CatalystCustomReaction } from "@natsuneko-laboratory/catalyst-sdk";
 import { useAtomValue } from "jotai";
@@ -140,8 +139,6 @@ export function EmojiPickerSheet({ visible, onClose, onReact }: Props) {
     [onReact, handleClose],
   );
 
-  const bgColor =
-    theme === "dark" ? Colors.dark.background : Colors.light.background;
 
   if (Platform.OS === "ios") {
     return (
@@ -151,7 +148,7 @@ export function EmojiPickerSheet({ visible, onClose, onReact }: Props) {
         presentationStyle="pageSheet"
         onRequestClose={handleClose}
       >
-        <View className="flex-1" style={{ backgroundColor: bgColor }}>
+        <View className="flex-1 bg-light-background dark:bg-dark-background">
           <View className="flex-row items-center justify-between px-4 py-4">
             <Pressable onPress={handleClose}>
               <Text style={styles.cancelText}>キャンセル</Text>
@@ -197,10 +194,10 @@ export function EmojiPickerSheet({ visible, onClose, onReact }: Props) {
       <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
         <Pressable style={styles.overlayPressable} onPress={handleClose} />
         <Animated.View
+          className="bg-light-background dark:bg-dark-background"
           style={[
             styles.androidSheet,
             {
-              backgroundColor: bgColor,
               transform: [{ translateY: sheetTranslateY }],
             },
           ]}

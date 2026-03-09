@@ -1,5 +1,5 @@
-import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { cn } from "@/lib/utils";
 import { accountAtom } from "@/models/atoms/account";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import * as Haptics from "expo-haptics";
@@ -10,12 +10,17 @@ import { Bell, House, Search } from "lucide-react-native";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { withUniwind } from "uniwind";
+
+const UniHouse = withUniwind(House);
+const UniSearch = withUniwind(Search);
+const UniBell = withUniwind(Bell);
 
 type TabItem = {
   key: string;
   label: string;
   href: string;
-  icon: (color: string) => React.ReactNode;
+  icon: (className: string) => React.ReactNode;
   authRequired?: boolean;
 };
 
@@ -24,20 +29,19 @@ function CustomTabBar({ state }: BottomTabBarProps) {
   const account = useAtomValue(accountAtom);
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const colors = Colors[colorScheme === "unspecified" ? "light" : colorScheme];
 
   const tabs: TabItem[] = [
     {
       key: "index",
       label: "ホーム",
       href: "/(drawer)/(tabs)/",
-      icon: (color) => <House size={28} color={color} />,
+      icon: (className) => <UniHouse size={28} className={className} />,
     },
     {
       key: "explore",
       label: "検索",
       href: "/(drawer)/(tabs)/explore",
-      icon: (color) => <Search size={28} color={color} />,
+      icon: (className) => <UniSearch size={28} className={className} />,
     },
     ...(account
       ? [
@@ -45,7 +49,7 @@ function CustomTabBar({ state }: BottomTabBarProps) {
             key: "notifications",
             label: "通知",
             href: "/(drawer)/(tabs)/notifications",
-            icon: (color: string) => <Bell size={28} color={color} />,
+            icon: (className: string) => <UniBell size={28} className={className} />,
           },
           {
             key: "profile",
@@ -74,17 +78,17 @@ function CustomTabBar({ state }: BottomTabBarProps) {
 
   return (
     <View
+      className="bg-light-background dark:bg-dark-background"
       style={{
         flexDirection: "row",
         paddingBottom: insets.bottom,
-        backgroundColor: colorScheme === "dark" ? Colors.dark.background : Colors.light.background,
         borderTopWidth: 0.5,
         borderTopColor: colorScheme === "dark" ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)",
       }}
     >
       {tabs.map((tab) => {
         const isActive = getIsActive(tab);
-        const color = isActive ? colors.tint : colors.icon;
+        const className = isActive ? "text-light-tint dark:text-dark-tint" : "text-light-icon dark:text-dark-icon";
 
         return (
           <Pressable
@@ -104,8 +108,13 @@ function CustomTabBar({ state }: BottomTabBarProps) {
               paddingVertical: 8,
             }}
           >
-            {tab.icon(color)}
-            <Text style={{ color, fontSize: 10, marginTop: 2 }}>{tab.label}</Text>
+            {tab.icon(className)}
+            <Text
+              className={cn("text-light-icon dark:text-light-icon", isActive && "text-light-tint dark:text-dark-tint")}
+              style={{ fontSize: 10, marginTop: 2 }}
+            >
+              {tab.label}
+            </Text>
           </Pressable>
         );
       })}
