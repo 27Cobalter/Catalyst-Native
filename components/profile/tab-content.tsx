@@ -1,16 +1,17 @@
 import { EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
+import React from "react";
 import { Text, View } from "react-native";
-import { UserTimeline } from "./timeline";
+import { UserTimeline, UserTimelineHandle } from "./timeline";
 
 type Props = {
   tab: { route: string };
   user?: EgeriaUser | null;
 };
 
-export const TabContent = ({ tab, user }: Props) => {
+export const TabContent = React.forwardRef<UserTimelineHandle, Props>(({ tab, user }, ref) => {
   if (user) {
     if (tab.route === "posts") {
-      return <UserTimeline user={user} />;
+      return <UserTimeline ref={ref} user={user} />;
     }
 
     return (
@@ -21,4 +22,5 @@ export const TabContent = ({ tab, user }: Props) => {
   }
 
   return null;
-};
+});
+TabContent.displayName = "TabContent";

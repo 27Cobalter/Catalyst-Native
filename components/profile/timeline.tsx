@@ -1,34 +1,90 @@
+import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
+import { cn } from "@/lib/utils";
 import { accountAtom } from "@/models/atoms/account";
-import { EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
+import { CatalystStatus, EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
 import { useAtomValue } from "jotai";
-import { memo, useCallback } from "react";
-import { TimelineBase } from "../timeline/base";
+import React, { memo, useCallback, useImperativeHandle, useRef, useState } from "react";
+import { ActivityIndicator, useColorScheme, View } from "react-native";
+import { TimelineStatus } from "../timeline/status";
 
 type Props = {
   user?: EgeriaUser | null;
 };
 
+export type UserTimelineHandle = {
+  loadMore: () => void;
+};
+
+const ItemSeparator = () => {
+  const theme = useColorScheme();
+  return <View className={cn("h-px", theme === "dark" ? "bg-gray-700" : "bg-gray-300")} />;
+};
+
 export const UserTimeline = memo(
-  ({ user }: Props) => {
+  React.forwardRef<UserTimelineHandle, Props>(({ user }, ref) => {
     const account = useAtomValue(accountAtom);
-    const fetcher = useCallback(
-      async (since: string | null, until: string | null) => {
-        if (!account?.credential.client || !user) {
-          return [];
+    const [items, setItems] = useState<CatalystStatus[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const isLoadingRef = useRef(false);
+
+    const fetchItems = useCallback(async () => {
+      if (!account?.credential.client || !user) {
+        return;
+      }
+
+      setIsLoading(true);
+      isLoadingRef.current = true;
+      try {
+        const result = await account.credential.client.catalyst.userTimeline(user.screenName, {});
+        setItems(result.statuses);
+      } finally {
+        setIsLoading(false);
+        isLoadingRef.current = false;
+      }
+    }, [account, user]);
+
+    const loadMore = useCallback(async () => {
+      if (!account?.credential.client || !user || isLoadingRef.current) {
+        return;
+      }
+
+      const lastItem = items[items.length - 1];
+      if (!lastItem) return;
+
+      setIsLoading(true);
+      isLoadingRef.current = true;
+      try {
+        const result = await account.credential.client.catalyst.userTimeline(user.screenName, {
+          until: lastItem.id,
+        });
+        if (result.statuses.length > 0) {
+          setItems((prev) => [...prev, ...result.statuses]);
         }
+      } finally {
+        setIsLoading(false);
+        isLoadingRef.current = false;
+      }
+    }, [account, user, items]);
 
-        return (
-          await account.credential.client.catalyst.userTimeline(user.screenName, {
-            since: since ?? undefined,
-            until: until ?? undefined,
-          })
-        ).statuses;
-      },
-      [account, user],
+    useImperativeHandle(ref, () => ({ loadMore }), [loadMore]);
+
+    useAsyncOneTimeEffect(fetchItems);
+
+    return (
+      <View>
+        {items.map((item, i) => (
+          <View key={item.id}>
+            {i > 0 && <ItemSeparator />}
+            <TimelineStatus status={item} />
+          </View>
+        ))}
+        {isLoading && (
+          <View className="py-4">
+            <ActivityIndicator />
+          </View>
+        )}
+      </View>
     );
-
-    return <TimelineBase fetcher={fetcher} />;
-  },
-  (a, b) => a.user?.id === b.user?.id,
+  }),
 );
 UserTimeline.displayName = "UserTimeline";
