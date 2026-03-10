@@ -17,7 +17,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import "react-native-reanimated";
 
-import "../global.css";
+// import "../global.css";
 
 Sentry.init({
   dsn: "https://6d7c270e3a7bb56c0a746319d7e885d5@o4504564074348544.ingest.us.sentry.io/4510957726793728",
