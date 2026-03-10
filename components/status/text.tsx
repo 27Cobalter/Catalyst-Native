@@ -22,7 +22,7 @@ export const StatusText = React.memo(
 
     const val = useMemo(() => {
       const html = twitter.autoLink(status, {
-        hashtagUrlBase: "/search?exact=true%q=%23",
+        hashtagUrlBase: "/search?tab=hashtag&exact=true&q=%23",
       });
       const u = unified()
         .use(RemarkParse)
