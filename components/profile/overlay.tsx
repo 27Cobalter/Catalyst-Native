@@ -34,13 +34,7 @@ export const ProfileOverlay = ({ user, scrollY }: Props) => {
         className="bg-light-background dark:bg-dark-background"
         style={[StyleSheet.absoluteFill, { opacity: overlayOpacity }]}
       />
-      <View className="flex-row flex-1 items-center">
-        <TouchableOpacity className="p-2 m-2" onPress={handleBack}>
-          <View className="w-9 h-9 rounded-full bg-black/75 items-center justify-center">
-            <UniArrowLeft size={18} className="text-white" />
-          </View>
-        </TouchableOpacity>
-
+      <View className="relative flex-row flex-1 items-center">
         <Animated.Text
           className="flex-1 text-base font-semibold text-center text-light-text dark:text-dark-text"
           style={{ opacity: overlayOpacity }}
@@ -49,7 +43,11 @@ export const ProfileOverlay = ({ user, scrollY }: Props) => {
           {user?.displayName}
         </Animated.Text>
 
-        <View style={{ width: 52 }} />
+        <TouchableOpacity className="absolute p-2 m-2" onPress={handleBack}>
+          <View className="w-9 h-9 rounded-full bg-black/75 items-center justify-center">
+            <UniArrowLeft size={18} className="text-white" />
+          </View>
+        </TouchableOpacity>
       </View>
     </View>
   );
