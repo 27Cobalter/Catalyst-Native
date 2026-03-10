@@ -1,21 +1,21 @@
-import { accountAtom } from "@/models/atoms/account";
+import { clientAtom } from "@/models/atoms/credential";
 import { useAtomValue } from "jotai";
 import { useCallback } from "react";
 import { TimelineBase } from "./base";
 
 export const FollowingTimeline = () => {
-  const account = useAtomValue(accountAtom);
+  const client = useAtomValue(clientAtom);
 
   const fetcher = useCallback(
     async (since: string | null, until: string | null) => {
       return (
-        (await account?.credential.client.catalyst.homeTimeline({
+        (await client?.catalyst.homeTimeline({
           since: since ?? undefined,
           until: until ?? undefined,
         })) ?? []
       );
     },
-    [account],
+    [client],
   );
 
   return <TimelineBase fetcher={fetcher} />;

@@ -21,7 +21,6 @@ export const StatusText = React.memo(
     }, []);
 
     const val = useMemo(() => {
-      console.log(status);
       const html = twitter.autoLink(status, {
         hashtagUrlBase: "/search?exact=true%q=%23",
       });
