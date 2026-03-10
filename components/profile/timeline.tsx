@@ -1,35 +1,33 @@
-import { clientAtom } from "@/models/atoms/credential";
+import { accountAtom } from "@/models/atoms/account";
 import { EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
 import { useAtomValue } from "jotai";
-import React, { memo, useCallback } from "react";
+import { memo, useCallback } from "react";
 import { TimelineBase } from "../timeline/base";
 
 type Props = {
   user?: EgeriaUser | null;
-  ListHeaderComponent?: React.ComponentType | React.ReactElement | null;
-  onScroll?: React.ComponentProps<typeof TimelineBase>["onScroll"];
 };
 
 export const UserTimeline = memo(
-  ({ user, ListHeaderComponent, onScroll }: Props) => {
-    const client = useAtomValue(clientAtom);
+  ({ user }: Props) => {
+    const account = useAtomValue(accountAtom);
     const fetcher = useCallback(
       async (since: string | null, until: string | null) => {
-        if (!client || !user) {
+        if (!account?.credential.client || !user) {
           return [];
         }
 
         return (
-          await client.catalyst.userTimeline(user.screenName, {
+          await account.credential.client.catalyst.userTimeline(user.screenName, {
             since: since ?? undefined,
             until: until ?? undefined,
           })
         ).statuses;
       },
-      [client, user],
+      [account, user],
     );
 
-    return <TimelineBase fetcher={fetcher} ListHeaderComponent={ListHeaderComponent} onScroll={onScroll} />;
+    return <TimelineBase fetcher={fetcher} />;
   },
   (a, b) => a.user?.id === b.user?.id,
 );
