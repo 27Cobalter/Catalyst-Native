@@ -21,9 +21,11 @@ const LoadingIndicator = () => {
 
 type Props = {
   fetcher: (since: string | null, until: string | null) => Promise<CatalystStatus[]>;
+  ListHeaderComponent?: React.ComponentType | React.ReactElement | null;
+  onScroll?: React.ComponentProps<typeof FlashList<CatalystStatus>>["onScroll"];
 };
 
-export const TimelineBase = ({ fetcher }: Props) => {
+export const TimelineBase = ({ fetcher, ListHeaderComponent, onScroll }: Props) => {
   const [items, setItems] = useState<CatalystStatus[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -88,6 +90,9 @@ export const TimelineBase = ({ fetcher }: Props) => {
       onEndReachedThreshold={0.75}
       ItemSeparatorComponent={ItemSeparator}
       ListFooterComponent={isLoading ? <LoadingIndicator /> : null}
+      ListHeaderComponent={ListHeaderComponent}
+      onScroll={onScroll}
+      scrollEventThrottle={onScroll ? 16 : undefined}
     />
   );
 };

@@ -7,7 +7,7 @@ import { accountAtom } from "@/models/atoms/account";
 import type { EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
 import { useLocalSearchParams } from "expo-router";
 import { useAtomValue } from "jotai";
-import React, { useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Animated, Dimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -67,27 +67,32 @@ export default function UserProfilePage() {
     }
   }, [account, screenName]);
 
-  return (
-    <View className="flex-1 bg-light-background dark:bg-dark-background">
-      <Animated.ScrollView
-        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
-          useNativeDriver: false,
-        })}
-        scrollEventThrottle={16}
-      >
-        <ProfileHeader user={user} onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)} />
+  const onScroll = useMemo(
+    () =>
+      Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+        useNativeDriver: false,
+      }),
+    [scrollY],
+  );
 
+  const listHeader = useCallback(
+    () => (
+      <View>
+        <ProfileHeader user={user} onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)} />
         <View
           className="flex-row border-b border-neutral-500 bg-light-background dark:bg-dark-background"
           style={{ width: SCREEN_WIDTH }}
         >
           <ProfileTabs activeIndex={activeTab} tabs={tabs} onClickTab={setActiveTab} />
         </View>
+      </View>
+    ),
+    [user, activeTab, tabs],
+  );
 
-        <View style={{ minHeight: 400 }}>
-          <TabContent tab={tabs[activeTab]} user={user} />
-        </View>
-      </Animated.ScrollView>
+  return (
+    <View className="flex-1 bg-light-background dark:bg-dark-background">
+      <TabContent tab={tabs[activeTab]} user={user} ListHeaderComponent={listHeader} onScroll={onScroll} />
 
       <ProfileOverlay user={user} scrollY={scrollY} />
 
