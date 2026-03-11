@@ -1,10 +1,8 @@
 import { cn } from "@/lib/utils";
 import React, { useRef, useState } from "react";
-import { Animated, Dimensions, FlatList, ListRenderItem, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Dimensions, FlatList, ListRenderItem, Pressable, Text, View } from "react-native";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
-const INDICATOR_WIDTH_RATIO = 0.3;
 
 export type Tab = {
   key: string;
@@ -23,7 +21,7 @@ export function Tabs({ tabs, renderScene, defaultIndex = 0 }: Props) {
   const flatListRef = useRef<FlatList<Tab>>(null);
 
   const TAB_WIDTH = SCREEN_WIDTH / tabs.length;
-  const INDICATOR_WIDTH = TAB_WIDTH * INDICATOR_WIDTH_RATIO;
+  const INDICATOR_WIDTH = TAB_WIDTH;
 
   const indicatorTranslateX = scrollX.interpolate({
     inputRange: tabs.map((_, i) => i * SCREEN_WIDTH),
@@ -46,21 +44,17 @@ export function Tabs({ tabs, renderScene, defaultIndex = 0 }: Props) {
   );
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1">
       {/* タブバー */}
-      <View className="border-b  border-neutral-700 dark:border-neutral-300" style={[styles.tabBar]}>
+      <View className="flex-row border-b border-light-border dark:border-dark-border">
         {tabs.map((tab, index) => {
           const isActive = index === activeIndex;
           return (
-            <Pressable key={tab.key} style={styles.tab} onPress={() => handleTabPress(index)}>
+            <Pressable key={tab.key} className="flex-1 items-center py-4" onPress={() => handleTabPress(index)}>
               <Text
-                className={cn(isActive ? "text-light-text dark:text-dark-text" : "text-light-icon dark:text-dark-icon")}
-                style={[
-                  styles.tabLabel,
-                  {
-                    fontWeight: isActive ? "700" : "400",
-                  },
-                ]}
+                className={cn(
+                  isActive ? "font-bold text-light-text dark:text-dark-text" : "text-light-icon dark:text-dark-icon",
+                )}
               >
                 {tab.label}
               </Text>
@@ -70,9 +64,8 @@ export function Tabs({ tabs, renderScene, defaultIndex = 0 }: Props) {
 
         {/* アクティブインジケーター */}
         <Animated.View
-          className="bg-light-background dark:bg-dark-background"
+          className="bg-light-accent dark:bg-dark-accent h-1 rounded-none absolute bottom-0"
           style={[
-            styles.indicator,
             {
               width: INDICATOR_WIDTH,
               transform: [{ translateX: indicatorTranslateX }],
@@ -94,35 +87,8 @@ export function Tabs({ tabs, renderScene, defaultIndex = 0 }: Props) {
         getItemLayout={(_, index) => ({ length: SCREEN_WIDTH, offset: SCREEN_WIDTH * index, index })}
         initialScrollIndex={defaultIndex}
         scrollEventThrottle={16}
-        style={styles.flatList}
+        className="flex-1"
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  tabBar: {
-    flexDirection: "row",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  tab: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: 14,
-  },
-  tabLabel: {
-    fontSize: 15,
-  },
-  indicator: {
-    position: "absolute",
-    bottom: 0,
-    height: 2,
-    borderRadius: 1,
-  },
-  flatList: {
-    flex: 1,
-  },
-});
