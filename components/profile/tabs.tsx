@@ -53,7 +53,7 @@ export const ProfileTabs = ({ activeIndex, tabs, onClickTab }: Props) => {
         );
       })}
       <Animated.View
-        className="absolute rounded-[1px] h-0.5 bottom-0 bg-light-tint dark:bg-dark-tint"
+        className="bg-light-accent dark:bg-dark-accent h-1 rounded-none absolute bottom-0"
         style={{ transform: [{ translateX: indicator.current }], width: tabWidth }}
       />
     </View>

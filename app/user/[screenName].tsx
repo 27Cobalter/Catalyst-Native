@@ -22,6 +22,7 @@ type Tab = {
 const DEFAULT_TABS: Tab[] = [
   { route: "posts", label: "投稿" },
   { route: "gallery", label: "ギャラリー" },
+  { route: "album", label: "アルバム" },
 ];
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
