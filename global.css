@@ -3,12 +3,14 @@
 
 @theme {
   --color-light-accent: "#f3b3cf";
+  --color-light-gray: "#8e8e93";
   --color-light-text: "#11181c";
   --color-light-background: "#ffffff";
   --color-light-tint: "#0a7ea4";
   --color-light-icon: "#687076";
   --color-light-border: "#aeaeb2";
   --color-dark-accent: "#ff88b8";
+  --color-dark-gray: "#8e8e93";
   --color-dark-text: "#ecedee";
   --color-dark-background: "#151718";
   --color-dark-tint: "#ffffff";
