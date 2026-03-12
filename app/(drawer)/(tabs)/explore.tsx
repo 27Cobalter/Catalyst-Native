@@ -2,6 +2,7 @@ import { AlbumList } from "@/components/explorer/albums/list";
 import { AlbumsPlaceholder } from "@/components/explorer/albums/placeholder";
 import { ContestsPlaceholder } from "@/components/explorer/contests/placeholder";
 import { StatusesPlaceholder } from "@/components/explorer/statuses/placeholder";
+import { UserList } from "@/components/explorer/users/list";
 import { UsersPlaceholder } from "@/components/explorer/users/placeholder";
 import { Tab, Tabs } from "@/components/tabs";
 import { TimelineBase } from "@/components/timeline/base";
@@ -24,10 +25,11 @@ const TABS: Tab[] = [
 ];
 
 export default function HomeScreen() {
+  const [state, setState] = useState<string>("");
   const [query, setQuery] = useState<string>("");
   const [focused, setFocused] = useState(false);
   const client = useAtomValue(clientAtom);
-  const [state, setState] = useState(v4());
+  const [stateKey, setStateKey] = useState(v4());
 
   const timeline = useCallback(
     async (since: string | null, until: string | null) => {
@@ -44,7 +46,10 @@ export default function HomeScreen() {
     [client, query],
   );
 
-  const runQuery = useCallback(() => setState(v4()), []);
+  const runQuery = useCallback(() => {
+    setQuery(state);
+    setStateKey(v4());
+  }, [state]);
 
   return (
     <View className="flex-col flex-1">
@@ -53,8 +58,8 @@ export default function HomeScreen() {
           <UniSearchIcon size={24} className="text-light-icon dark:text-dark-icon" />
           <TextInput
             className="w-full shrink text-black dark:text-white placeholder-light-icon dark:placeholder-dark-icon"
-            value={query}
-            onChangeText={setQuery}
+            value={state}
+            onChangeText={setState}
             onFocus={() => setFocused(true)}
             onSubmitEditing={runQuery}
             placeholder="検索..."
@@ -64,7 +69,7 @@ export default function HomeScreen() {
               size={24}
               className="text-light-icon dark:text-dark-icon"
               onPress={() => {
-                setQuery("");
+                setState("");
                 setFocused(false);
               }}
             />
@@ -78,7 +83,7 @@ export default function HomeScreen() {
             switch (w.key) {
               case "statuses": {
                 if (query) {
-                  return <TimelineBase key={state} fetcher={timeline} />;
+                  return <TimelineBase key={stateKey} fetcher={timeline} />;
                 }
 
                 return <StatusesPlaceholder />;
@@ -94,6 +99,7 @@ export default function HomeScreen() {
 
               case "users": {
                 if (query) {
+                  return <UserList query={query} />;
                 }
 
                 return <UsersPlaceholder />;
