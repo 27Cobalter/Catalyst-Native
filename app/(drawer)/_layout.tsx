@@ -19,23 +19,17 @@ type Route = {
   icon: () => React.ReactNode;
 };
 
-const DrawerMenu = ({
-  route,
-  navigation,
-}: {
-  route: Route;
-  navigation: DrawerContentComponentProps["navigation"];
-}) => {
+const DrawerMenu = ({ route, navigation }: { route: Route; navigation: DrawerContentComponentProps["navigation"] }) => {
   const onPress = useCallback(() => {
     navigation.dispatch(DrawerActions.closeDrawer());
     router.push(route.href as never);
   }, [route, navigation]);
 
   return (
-    <Pressable className="pl-8 px-4 py-2 my-1" onPress={onPress}>
+    <Pressable className="pl-8 px-4 py-1.5 my-1" onPress={onPress}>
       <View className="flex-row items-center">
         <View className="pr-2">{route.icon()}</View>
-        <Text className="text-black dark:text-white">{route.name}</Text>
+        <Text className="text-light-text dark:text-dark-text">{route.name}</Text>
       </View>
     </Pressable>
   );
@@ -55,23 +49,17 @@ export default function DrawerLayout() {
       account?.user.profile && {
         name: "プロフィール",
         href: `/user/${account.user.screenName ?? ""}`,
-        icon: () => (
-          <UniUser className="text-black dark:text-white" size={32} />
-        ),
+        icon: () => <UniUser className="text-light-text dark:text-dark-text" size={32} />,
       },
       {
         name: "コンテスト",
         href: "/contest",
-        icon: () => (
-          <UniTrophy className="text-black dark:text-white" size={32} />
-        ),
+        icon: () => <UniTrophy className="text-light-text dark:text-dark-text" size={32} />,
       },
       {
         name: "ギャラリー",
         href: "/gallery",
-        icon: () => (
-          <UniImages className="text-black dark:text-white" size={32} />
-        ),
+        icon: () => <UniImages className="text-light-text dark:text-dark-text" size={32} />,
       },
     ].filter(Boolean) as Route[];
   }, [account]);
@@ -81,7 +69,7 @@ export default function DrawerLayout() {
       {
         name: "設定とプライバシー",
         href: "/settings",
-        icon: () => <UniCog className="text-black dark:text-white" size={32} />,
+        icon: () => <UniCog className="text-light-text dark:text-dark-text" size={32} />,
       },
     ].filter(Boolean) as Route[];
   }, []);
@@ -136,7 +124,7 @@ export default function DrawerLayout() {
                   router.push(`/user/${account.user.screenName}`);
                 }}
               >
-                <View className="border-b dark:border-neutral-700 border-neutral-300 pb-4">
+                <View className="border-b dark:border-dark-border border-light-border pb-4">
                   <View className="pl-8">
                     <UniImage
                       source={getCdnUrl({
@@ -149,14 +137,11 @@ export default function DrawerLayout() {
                     />
 
                     <View className="mt-2">
-                      <Text className="text-lg font-bold mt-2 text-black dark:text-white">
+                      <Text className="text-lg font-bold mt-2 text-light-text dark:text-dark-text">
                         {account.user.displayName}
                       </Text>
 
-                      <Text
-                        className="text-sm text-neutral-500"
-                        style={{ fontFamily: Fonts.mono }}
-                      >
+                      <Text className="text-sm text-neutral-500" style={{ fontFamily: Fonts.mono }}>
                         @{account.user.screenName}
                       </Text>
                     </View>
@@ -165,22 +150,14 @@ export default function DrawerLayout() {
               </Pressable>
             )}
             <View>
-              <View className="border-b dark:neutral-gray-700 border-neutral-300 py-2">
+              <View className="border-b dark:border-dark-border border-light-border py-4">
                 {headers.map((route) => (
-                  <DrawerMenu
-                    key={route.name}
-                    route={route}
-                    navigation={navigation}
-                  />
+                  <DrawerMenu key={route.name} route={route} navigation={navigation} />
                 ))}
               </View>
-              <View className="border-b dark:neutral-gray-700 border-neutral-300 py-2">
+              <View className="border-b dark:border-dark-border border-light-border py-4">
                 {footers.map((route) => (
-                  <DrawerMenu
-                    key={route.name}
-                    route={route}
-                    navigation={navigation}
-                  />
+                  <DrawerMenu key={route.name} route={route} navigation={navigation} />
                 ))}
               </View>
             </View>
