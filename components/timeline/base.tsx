@@ -2,8 +2,8 @@ import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { cn } from "@/lib/utils";
 import { CatalystStatus } from "@natsuneko-laboratory/catalyst-sdk";
 import { FlashList, ListRenderItem } from "@shopify/flash-list";
-import { useCallback, useState } from "react";
-import { ActivityIndicator, RefreshControl, useColorScheme, View } from "react-native";
+import React, { useCallback, useState } from "react";
+import { ActivityIndicator, RefreshControl, StyleProp, useColorScheme, View, ViewStyle } from "react-native";
 import { TimelineStatus } from "./status";
 
 const ItemSeparator = () => {
@@ -21,9 +21,11 @@ const LoadingIndicator = () => {
 
 type Props = {
   fetcher: (since: string | null, until: string | null) => Promise<CatalystStatus[]>;
+  ListEmptyComponent?: React.ComponentType;
+  ListEmptyComponentStyle?: StyleProp<ViewStyle>;
 };
 
-export const TimelineBase = ({ fetcher }: Props) => {
+export const TimelineBase = ({ fetcher, ListEmptyComponent, ListEmptyComponentStyle }: Props) => {
   const [items, setItems] = useState<CatalystStatus[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -88,6 +90,8 @@ export const TimelineBase = ({ fetcher }: Props) => {
       onEndReachedThreshold={0.75}
       ItemSeparatorComponent={ItemSeparator}
       ListFooterComponent={isLoading ? <LoadingIndicator /> : null}
+      ListEmptyComponent={!isLoading ? ListEmptyComponent : undefined}
+      ListEmptyComponentStyle={!isLoading ? ListEmptyComponentStyle : undefined}
     />
   );
 };

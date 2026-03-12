@@ -1,6 +1,7 @@
 import { AlbumList } from "@/components/explorer/albums/list";
 import { AlbumsPlaceholder } from "@/components/explorer/albums/placeholder";
 import { ContestsPlaceholder } from "@/components/explorer/contests/placeholder";
+import { StatusesEmptyResult } from "@/components/explorer/statuses/empty-result";
 import { StatusesPlaceholder } from "@/components/explorer/statuses/placeholder";
 import { UserList } from "@/components/explorer/users/list";
 import { UsersPlaceholder } from "@/components/explorer/users/placeholder";
@@ -83,7 +84,14 @@ export default function HomeScreen() {
             switch (w.key) {
               case "statuses": {
                 if (query) {
-                  return <TimelineBase key={stateKey} fetcher={timeline} />;
+                  return (
+                    <TimelineBase
+                      key={stateKey}
+                      fetcher={timeline}
+                      ListEmptyComponent={StatusesEmptyResult}
+                      ListEmptyComponentStyle={{ minHeight: "100%" }}
+                    />
+                  );
                 }
 
                 return <StatusesPlaceholder />;

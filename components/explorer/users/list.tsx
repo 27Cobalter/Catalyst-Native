@@ -5,6 +5,7 @@ import { FlashList, ListRenderItem } from "@shopify/flash-list";
 import { useAtomValue } from "jotai";
 import { useCallback, useState } from "react";
 import { UserCard } from "./card";
+import { UsersEmptyResult } from "./empty-result";
 
 type Props = {
   query: string;
@@ -25,5 +26,13 @@ export const UserList = ({ query }: Props) => {
     }
   }, [query]);
 
-  return <FlashList data={users} keyExtractor={(w) => w.id} renderItem={onRender} />;
+  return (
+    <FlashList
+      data={users}
+      keyExtractor={(w) => w.id}
+      renderItem={onRender}
+      ListEmptyComponent={UsersEmptyResult}
+      ListEmptyComponentStyle={{ minHeight: "100%" }}
+    />
+  );
 };
