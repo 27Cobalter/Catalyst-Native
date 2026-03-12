@@ -2,18 +2,18 @@
 @import "uniwind";
 
 @theme {
-  --color-light-accent: "#f3b3cf";
-  --color-light-gray: "#8e8e93";
-  --color-light-text: "#11181c";
-  --color-light-background: "#ffffff";
-  --color-light-tint: "#0a7ea4";
-  --color-light-icon: "#687076";
-  --color-light-border: "#aeaeb2";
-  --color-dark-accent: "#ff88b8";
-  --color-dark-gray: "#8e8e93";
-  --color-dark-text: "#ecedee";
-  --color-dark-background: "#151718";
-  --color-dark-tint: "#ffffff";
-  --color-dark-icon: "#9ba1a6";
-  --color-dark-border: "#636366";
+  --color-light-accent: oklch(0.8339 0.0821 351.07);
+  --color-light-gray: oklch(0.6483 0.0073 286.19);
+  --color-light-text: oklch(0.2038 0.0132 233.32);
+  --color-light-background: oklch(1 0 0);
+  --color-light-tint: oklch(0.5547 0.1066 228.5);
+  --color-light-icon: oklch(0.5404 0.0135 240.09);
+  --color-light-border: oklch(0.752 0.0057 286.26);
+  --color-dark-accent: oklch(0.7707 0.1527 355.74);
+  --color-dark-gray: oklch(0.6483 0.0073 286.19);
+  --color-dark-text: oklch(0.9456 0.0017 247.84);
+  --color-dark-background: oklch(0.2029 0.0037 229);
+  --color-dark-tint: oklch(1 0 0);
+  --color-dark-icon: oklch(0.7057 0.01 242.9);
+  --color-dark-border: oklch(0.5007 0.0047 286.23);
 }
