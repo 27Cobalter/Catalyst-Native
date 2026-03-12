@@ -8,7 +8,7 @@ import { accountAtom } from "@/models/atoms/account";
 import type { EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
 import { useLocalSearchParams } from "expo-router";
 import { useAtomValue } from "jotai";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { Animated, Dimensions, NativeScrollEvent, NativeSyntheticEvent, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 

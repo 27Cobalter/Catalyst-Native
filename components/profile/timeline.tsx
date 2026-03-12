@@ -58,7 +58,8 @@ export const UserTimeline = memo(
           until: lastItem.id,
         });
         if (result.statuses.length > 0) {
-          setItems((prev) => [...prev, ...result.statuses]);
+          const filtered = result.statuses.filter((w) => !items.find((v) => v.id === w.id));
+          setItems((prev) => [...prev, ...filtered]);
         }
       } finally {
         setIsLoading(false);
