@@ -1,6 +1,6 @@
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { cn } from "@/lib/utils";
-import { accountAtom } from "@/models/atoms/account";
+import { clientAtom } from "@/models/atoms/credential";
 import { CatalystStatus, EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
 import { useAtomValue } from "jotai";
 import React, { memo, useCallback, useImperativeHandle, useRef, useState } from "react";
@@ -22,29 +22,29 @@ const ItemSeparator = () => {
 
 export const UserTimeline = memo(
   React.forwardRef<UserTimelineHandle, Props>(({ user }, ref) => {
-    const account = useAtomValue(accountAtom);
+    const client = useAtomValue(clientAtom);
     const [items, setItems] = useState<CatalystStatus[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const isLoadingRef = useRef(false);
 
     const fetchItems = useCallback(async () => {
-      if (!account?.credential.client || !user) {
+      if (!user) {
         return;
       }
 
       setIsLoading(true);
       isLoadingRef.current = true;
       try {
-        const result = await account.credential.client.catalyst.userTimeline(user.screenName, {});
+        const result = await client.catalyst.userTimeline(user.screenName, {});
         setItems(result.statuses);
       } finally {
         setIsLoading(false);
         isLoadingRef.current = false;
       }
-    }, [account, user]);
+    }, [client, user]);
 
     const loadMore = useCallback(async () => {
-      if (!account?.credential.client || !user || isLoadingRef.current) {
+      if (!user || isLoadingRef.current) {
         return;
       }
 
@@ -54,7 +54,7 @@ export const UserTimeline = memo(
       setIsLoading(true);
       isLoadingRef.current = true;
       try {
-        const result = await account.credential.client.catalyst.userTimeline(user.screenName, {
+        const result = await client.catalyst.userTimeline(user.screenName, {
           until: lastItem.id,
         });
         if (result.statuses.length > 0) {
@@ -65,7 +65,7 @@ export const UserTimeline = memo(
         setIsLoading(false);
         isLoadingRef.current = false;
       }
-    }, [account, user, items]);
+    }, [user, items, client]);
 
     useImperativeHandle(ref, () => ({ loadMore }), [loadMore]);
 
