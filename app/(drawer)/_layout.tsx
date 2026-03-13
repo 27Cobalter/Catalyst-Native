@@ -7,7 +7,7 @@ import { Image } from "expo-image";
 import { router, useSegments } from "expo-router";
 import { Drawer } from "expo-router/drawer";
 import { useAtomValue } from "jotai";
-import { Cog, Hamburger, Images, Trophy, User } from "lucide-react-native";
+import { Cog, Images, Menu, Trophy, User } from "lucide-react-native";
 import { useCallback, useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -40,6 +40,7 @@ const UniUser = withUniwind(User);
 const UniTrophy = withUniwind(Trophy);
 const UniImages = withUniwind(Images);
 const UniCog = withUniwind(Cog);
+const UniMenu = withUniwind(Menu);
 
 export default function DrawerLayout() {
   const account = useAtomValue(accountAtom);
@@ -107,7 +108,7 @@ export default function DrawerLayout() {
                 </View>
               ) : (
                 <Pressable onPress={openDrawer}>
-                  <Hamburger />
+                  <UniMenu className="text-light-text dark:text-dark-text" />
                 </Pressable>
               )}
             </View>
