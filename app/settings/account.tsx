@@ -1,0 +1,128 @@
+import { accountAtom } from "@/models/atoms/account";
+import * as Credential from "@/models/credential";
+import { router } from "expo-router";
+import { useAtom } from "jotai";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Alert, Pressable, Text, TextInput, View } from "react-native";
+
+export default function AccountSettingsPage() {
+  const [account, setAccount] = useAtom(accountAtom);
+  const [screenName, setScreenName] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const user = account?.user;
+  const isLoggedIn = !!account;
+  const canEditScreenName = user ? user.screenName === user.id : false;
+
+  useEffect(() => {
+    if (screenName === "" && user) {
+      setScreenName(user.screenName);
+    }
+  }, [user, screenName]);
+
+  const trimmed = screenName.trim();
+  const isSaveDisabled = !user || !canEditScreenName || trimmed === "" || trimmed === user.screenName || isSaving;
+
+  const save = useCallback(async () => {
+    if (!account || !user || isSaveDisabled) return;
+
+    setIsSaving(true);
+    setErrorMessage(null);
+
+    try {
+      await account.credential.client.egeria.update({
+        screenName: trimmed,
+        displayName: user.displayName,
+        profile: user.profile,
+      });
+
+      const me = await account.credential.client.egeria.me();
+      if (me?.user) {
+        setAccount({ ...account, user: me.user });
+      }
+    } catch {
+      setErrorMessage("ユーザー名の更新に失敗しました。");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [account, user, trimmed, isSaveDisabled, setAccount]);
+
+  const handleLogout = useCallback(() => {
+    Alert.alert("ログアウトしますか？", undefined, [
+      { text: "キャンセル", style: "cancel" },
+      {
+        text: "ログアウト",
+        style: "destructive",
+        onPress: async () => {
+          await Credential.logout();
+          setAccount(null);
+          router.dismissAll();
+        },
+      },
+    ]);
+  }, [setAccount]);
+
+  const footerText = !canEditScreenName
+    ? "すでに1度ユーザー名を変更しているため、変更できません。"
+    : errorMessage;
+
+  if (!isLoggedIn) {
+    return (
+      <View className="flex-1 bg-light-background dark:bg-dark-background">
+        <View className="mt-4 mx-4 rounded-xl bg-white dark:bg-neutral-800 overflow-hidden">
+          <View className="px-4 py-3.5">
+            <Text className="text-base text-light-gray dark:text-dark-gray">ログインが必要です。</Text>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View className="flex-1 bg-light-background dark:bg-dark-background">
+      <View className="mt-4 mx-4">
+        <Text className="px-4 pb-1.5 text-xs text-light-gray dark:text-dark-gray uppercase">ユーザー名</Text>
+        <View className="rounded-xl bg-white dark:bg-neutral-800 overflow-hidden">
+          <View className="px-4 py-3 flex-row items-center border-b border-light-border dark:border-dark-border">
+            <Text className="text-base text-light-gray dark:text-dark-gray mr-2">@</Text>
+            <TextInput
+              className="flex-1 text-base text-light-text dark:text-dark-text"
+              value={screenName}
+              onChangeText={setScreenName}
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={canEditScreenName}
+              placeholder="ユーザー名"
+            />
+          </View>
+          <Pressable className="px-4 py-3.5" onPress={save} disabled={isSaveDisabled}>
+            {isSaving ? (
+              <View className="flex-row items-center gap-2">
+                <ActivityIndicator size="small" />
+                <Text className="text-base text-light-tint dark:text-dark-tint">保存中...</Text>
+              </View>
+            ) : (
+              <Text className={isSaveDisabled ? "text-base text-light-gray dark:text-dark-gray" : "text-base text-light-tint dark:text-dark-tint"}>
+                変更を保存
+              </Text>
+            )}
+          </Pressable>
+        </View>
+        {footerText && (
+          <Text className={`px-4 pt-1.5 text-xs ${errorMessage ? "text-red-500" : "text-light-gray dark:text-dark-gray"}`}>
+            {footerText}
+          </Text>
+        )}
+      </View>
+
+      <View className="mt-6 mx-4">
+        <View className="rounded-xl bg-white dark:bg-neutral-800 overflow-hidden">
+          <Pressable className="px-4 py-3.5" onPress={handleLogout}>
+            <Text className="text-base text-red-500">ログアウト</Text>
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
+}

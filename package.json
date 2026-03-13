@@ -5,15 +5,17 @@
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
+    "prebuilt": "run-s -c bin:*",
     "bin:emoji-gen": "tsx ./bin/emoji-gen.ts",
-    "run:android": "pnpm run bin:emoji-gen && expo run:android",
-    "run:ios": "pnpm run bin:emoji-gen && expo run:ios",
-    "build:android:development": "pnpm run bin:emoji-gen && eas build --platform android --profile development --local",
-    "build:android:preview": "pnpm run bin:emoji-gen && eas build --platform android --profile preview --local",
-    "build:android:production": "pnpm run bin:emoji-gen && eas build --platform android --profile production --local",
-    "build:ios:development": "pnpm run bin:emoji-gen && eas build --platform ios --profile development --local",
-    "build:ios:preview": "pnpm run bin:emoji-gen && eas build --platform ios --profile preview --local",
-    "build:ios:production": "pnpm run bin:emoji-gen && eas build --platform ios --profile production --local",
+    "bin:license-list": "tsx ./bin/license-list.ts",
+    "run:android": "pnpm run prebuilt && expo run:android",
+    "run:ios": "pnpm run prebuilt && expo run:ios",
+    "build:android:development": "pnpm run prebuilt && eas build --platform android --profile development --local",
+    "build:android:preview": "pnpm run prebuilt && eas build --platform android --profile preview --local",
+    "build:android:production": "pnpm run prebuilt && eas build --platform android --profile production --local",
+    "build:ios:development": "pnpm run prebuilt && eas build --platform ios --profile development --local",
+    "build:ios:preview": "pnpm run prebuilt && eas build --platform ios --profile preview --local",
+    "build:ios:production": "pnpm run prebuilt && eas build --platform ios --profile production --local",
     "lint": "expo lint",
     "expo": "expo"
   },
@@ -71,6 +73,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@callstack/licenses": "^0.3.1",
     "@types/react": "latest",
     "@types/twitter-text": "^3.1.10",
     "babel-preset-expo": "^55.0.10",
@@ -78,6 +81,7 @@
     "eas-cli-local-build-plugin": "^18.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~55.0.0",
+    "npm-run-all2": "^8.0.4",
     "oxfmt": "^0.36.0",
     "tsx": "^4.21.0",
     "typescript": "~5.9.2"
