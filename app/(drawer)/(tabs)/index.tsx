@@ -29,7 +29,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <View>
+    <View className="flex-1 bg-light-background dark:bg-dark-background">
       <FirehoseTimeline />
     </View>
   );

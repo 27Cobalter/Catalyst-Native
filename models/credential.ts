@@ -63,7 +63,6 @@ export const init = async (): Promise<{
 
       try {
         const me = await newCredential.client.egeria.me();
-        console.log({ me });
 
         if (me?.user) {
           _currentUser = me.user;
