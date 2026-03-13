@@ -5,10 +5,7 @@ import { CatalystSmartAlbum } from "@natsuneko-laboratory/catalyst-sdk";
 import { FlashList, ListRenderItem } from "@shopify/flash-list";
 import { useAtomValue } from "jotai";
 import { useCallback, useState } from "react";
-
 import { AlbumsEmptyResult } from "./empty-result";
-
-import "@/global.css";
 
 type Props = {
   query: string;
