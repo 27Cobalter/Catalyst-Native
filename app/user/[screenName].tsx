@@ -5,14 +5,13 @@ import { ProfileTabs } from "@/components/profile/tabs";
 import { UserTimelineHandle } from "@/components/profile/timeline";
 import { useAsyncEffect } from "@/hooks/use-async-effect";
 import { accountAtom } from "@/models/atoms/account";
+import { clientAtom } from "@/models/atoms/credential";
 import type { EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
 import { useLocalSearchParams } from "expo-router";
 import { useAtomValue } from "jotai";
 import React, { useMemo, useRef, useState } from "react";
 import { Animated, Dimensions, NativeScrollEvent, NativeSyntheticEvent, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import "../../global.css";
 
 type Tab = {
   route: string;
@@ -33,6 +32,7 @@ export default function UserProfilePage() {
   const { screenName } = useLocalSearchParams<{ screenName: string }>();
   const insets = useSafeAreaInsets();
   const account = useAtomValue(accountAtom);
+  const client = useAtomValue(clientAtom);
   const [user, setUser] = useState<EgeriaUser | null>(null);
   const [activeTab, setActiveTab] = useState(0);
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -57,12 +57,11 @@ export default function UserProfilePage() {
       : 0;
 
   useAsyncEffect(async () => {
-    if (!screenName || !account?.credential.client) {
+    if (!screenName) {
       return;
     }
 
     try {
-      const client = account.credential.client;
       const user = await client.egeria.userByUsername(screenName);
       if (user) {
         setUser(user?.user);
