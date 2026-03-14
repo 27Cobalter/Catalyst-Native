@@ -1,13 +1,12 @@
 import { licenses } from "@/lib/licenses";
-import { FlashList } from "@shopify/flash-list";
-import { Pressable, Text } from "react-native";
-
-import "@/global.css";
 import { cn } from "@/lib/utils";
+import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import { ChevronRight } from "lucide-react-native";
+import { Pressable, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
+
 const UniChevronRight = withUniwind(ChevronRight);
 
 export type LicenseKey = keyof typeof licenses;

@@ -1,7 +1,11 @@
 import { EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { UserAlbums } from "./albums";
+import { UserGallery } from "./gallery";
 import { UserTimeline, UserTimelineHandle } from "./timeline";
+
+import "@/global.css";
 
 type Props = {
   tab: { route: string };
@@ -10,15 +14,19 @@ type Props = {
 
 export const TabContent = React.forwardRef<UserTimelineHandle, Props>(({ tab, user }, ref) => {
   if (user) {
-    if (tab.route === "posts") {
-      return <UserTimeline ref={ref} user={user} />;
-    }
+    switch (tab.route) {
+      case "posts":
+        return <UserTimeline ref={ref} user={user} />;
 
-    return (
-      <View>
-        <Text>{tab.route}</Text>
-      </View>
-    );
+      case "gallery":
+        return <UserGallery ref={ref} user={user} />;
+
+      case "album":
+        return <UserAlbums user={user} />;
+
+      case "like":
+        return <View />;
+    }
   }
 
   return null;
