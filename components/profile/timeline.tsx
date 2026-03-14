@@ -1,11 +1,18 @@
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
-import { cn } from "@/lib/utils";
+import { getCdnUrl } from "@/lib/media";
 import { clientAtom } from "@/models/atoms/credential";
 import { CatalystStatus, EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
+import { Image } from "expo-image";
+import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
+import { MessageSquare } from "lucide-react-native";
 import React, { memo, useCallback, useImperativeHandle, useRef, useState } from "react";
-import { ActivityIndicator, useColorScheme, View } from "react-native";
-import { TimelineStatus } from "../timeline/status";
+import { ActivityIndicator, Dimensions, Pressable, View } from "react-native";
+
+const COLUMNS = 3;
+const GAP = 1;
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const CELL_SIZE = (SCREEN_WIDTH - GAP * (COLUMNS - 1)) / COLUMNS;
 
 type Props = {
   user?: EgeriaUser | null;
@@ -15,10 +22,33 @@ export type UserTimelineHandle = {
   loadMore: () => void;
 };
 
-const ItemSeparator = () => {
-  const theme = useColorScheme();
-  return <View className={cn("h-px", theme === "dark" ? "bg-gray-700" : "bg-gray-300")} />;
-};
+const ThumbnailCell = memo(({ status }: { status: CatalystStatus }) => {
+  const router = useRouter();
+  const media = status.medias[0];
+
+  return (
+    <Pressable onPress={() => router.push(`/status/${status.id}`)} style={{ width: CELL_SIZE, height: CELL_SIZE }}>
+      {media ? (
+        <Image
+          source={{
+            uri: getCdnUrl({
+              src: media.url,
+              variant: "tiny",
+              width: CELL_SIZE,
+            }),
+          }}
+          style={{ width: CELL_SIZE, height: CELL_SIZE }}
+          contentFit="cover"
+        />
+      ) : (
+        <View className="flex-1 items-center justify-center bg-gray-200 dark:bg-gray-800">
+          <MessageSquare size={24} color="#9CA3AF" />
+        </View>
+      )}
+    </Pressable>
+  );
+});
+ThumbnailCell.displayName = "ThumbnailCell";
 
 export const UserTimeline = memo(
   React.forwardRef<UserTimelineHandle, Props>(({ user }, ref) => {
@@ -71,12 +101,20 @@ export const UserTimeline = memo(
 
     useAsyncOneTimeEffect(fetchItems);
 
+    const rows: CatalystStatus[][] = [];
+    for (let i = 0; i < items.length; i += COLUMNS) {
+      rows.push(items.slice(i, i + COLUMNS));
+    }
+
     return (
       <View>
-        {items.map((item, i) => (
-          <View key={item.id}>
-            {i > 0 && <ItemSeparator />}
-            <TimelineStatus status={item} />
+        {rows.map((row, rowIndex) => (
+          <View key={rowIndex} className="flex-row" style={{ marginTop: rowIndex > 0 ? GAP : 0 }}>
+            {row.map((item, colIndex) => (
+              <View key={item.id} style={{ marginLeft: colIndex > 0 ? GAP : 0 }}>
+                <ThumbnailCell status={item} />
+              </View>
+            ))}
           </View>
         ))}
         {isLoading && (
