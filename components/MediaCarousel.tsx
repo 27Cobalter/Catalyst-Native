@@ -1,10 +1,11 @@
 import { getCdnUrl } from "@/lib/media";
+import { ImageZoom } from "@likashefqet/react-native-image-zoom";
 import type { Media } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
 import { EyeOff } from "lucide-react-native";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Dimensions, Modal, Pressable, ScrollView, Text, View } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -25,6 +26,9 @@ export const MediaCarousel = ({ medias }: Props) => {
   const [presentedMediaIndex, setPresentedMediaIndex] = useState<number | null>(null);
   const [isBlurRemoved, setIsBlurRemoved] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [modalIndex, setModalIndex] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const len = medias.length;
   const translateX = useSharedValue(0);
@@ -46,6 +50,7 @@ export const MediaCarousel = ({ medias }: Props) => {
   const handleMediaPress = (index: number) => {
     if (hasSensitiveContent && !isBlurRemoved) return;
     setPresentedMediaIndex(index);
+    setModalIndex(index);
   };
 
   const panGesture = Gesture.Pan()
@@ -213,36 +218,71 @@ export const MediaCarousel = ({ medias }: Props) => {
         animationType="fade"
         onRequestClose={() => setPresentedMediaIndex(null)}
       >
-        <View style={{ flex: 1, backgroundColor: "black" }}>
+        <GestureHandlerRootView style={{ flex: 1, backgroundColor: "black" }}>
           <Pressable
             onPress={() => setPresentedMediaIndex(null)}
             style={{ position: "absolute", top: 48, right: 16, zIndex: 10, padding: 8 }}
           >
             <Text style={{ color: "white", fontSize: 20 }}>✕</Text>
           </Pressable>
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            contentOffset={{ x: (presentedMediaIndex ?? 0) * SCREEN_WIDTH, y: 0 }}
-          >
-            {medias.map((media) => (
-              <Image
-                key={media.id}
-                source={{
-                  uri: getCdnUrl({
-                    src: media.url,
-                    variant: "medium",
-                    width: SCREEN_WIDTH,
-                    aspect: { w: media.metadata?.width ?? 1, h: media.metadata?.height ?? 1 },
-                  }),
-                }}
-                style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
-                contentFit="contain"
-              />
-            ))}
-          </ScrollView>
-        </View>
+          {presentedMediaIndex !== null && (
+            <ScrollView
+              ref={scrollViewRef}
+              horizontal
+              pagingEnabled
+              scrollEnabled={!isZoomed}
+              showsHorizontalScrollIndicator={false}
+              contentOffset={{ x: (presentedMediaIndex ?? 0) * SCREEN_WIDTH, y: 0 }}
+              onMomentumScrollEnd={(e) => {
+                const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+                setModalIndex(index);
+              }}
+            >
+              {medias.map((media, index) => (
+                <View key={media.id} style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT, justifyContent: "center" }}>
+                  {index === modalIndex ? (
+                    <ImageZoom
+                      uri={getCdnUrl({
+                        src: media.url,
+                        variant: "medium",
+                        width: SCREEN_WIDTH,
+                        aspect: { w: media.metadata?.width ?? 1, h: media.metadata?.height ?? 1 },
+                      })}
+                      style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
+                      minScale={1}
+                      maxScale={5}
+                      doubleTapScale={3}
+                      isDoubleTapEnabled
+                      isPinchEnabled
+                      isPanEnabled
+                      resizeMode="contain"
+                      onInteractionStart={() => setIsZoomed(true)}
+                      onResetAnimationEnd={() => setIsZoomed(false)}
+                      onPinchEnd={(event) => {
+                        if (event.scale <= 1) {
+                          setIsZoomed(false);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <Image
+                      source={{
+                        uri: getCdnUrl({
+                          src: media.url,
+                          variant: "medium",
+                          width: SCREEN_WIDTH,
+                          aspect: { w: media.metadata?.width ?? 1, h: media.metadata?.height ?? 1 },
+                        }),
+                      }}
+                      style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
+                      contentFit="contain"
+                    />
+                  )}
+                </View>
+              ))}
+            </ScrollView>
+          )}
+        </GestureHandlerRootView>
       </Modal>
     </>
   );
