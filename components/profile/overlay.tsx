@@ -12,9 +12,10 @@ const UniArrowLeft = withUniwind(ArrowLeft);
 type Props = {
   user: EgeriaUser | null;
   scrollY: Animated.Value;
+  showBackButton?: boolean;
 };
 
-export const ProfileOverlay = ({ user, scrollY }: Props) => {
+export const ProfileOverlay = ({ user, scrollY, showBackButton = true }: Props) => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const overlayHeight = insets.top + 44;
@@ -43,11 +44,13 @@ export const ProfileOverlay = ({ user, scrollY }: Props) => {
           {user?.displayName}
         </Animated.Text>
 
-        <TouchableOpacity className="absolute p-2 m-2" onPress={handleBack}>
-          <View className="w-9 h-9 rounded-full bg-black/75 items-center justify-center">
-            <UniArrowLeft size={18} className="text-white" />
-          </View>
-        </TouchableOpacity>
+        {showBackButton && (
+          <TouchableOpacity className="absolute p-2 m-2" onPress={handleBack}>
+            <View className="w-9 h-9 rounded-full bg-black/75 items-center justify-center">
+              <UniArrowLeft size={18} className="text-white" />
+            </View>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
