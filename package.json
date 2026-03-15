@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
+    "@gorhom/bottom-sheet": "^5.2.8",
     "@natsuneko-laboratory/catalyst-sdk": "^0.1.0",
     "@react-navigation/bottom-tabs": "^7.15.3",
     "@react-navigation/drawer": "^7.9.4",
