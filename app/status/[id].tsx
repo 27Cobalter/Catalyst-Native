@@ -5,6 +5,7 @@ import { StatusText } from "@/components/status/text";
 import { abs, rel } from "@/lib/dayjs";
 import { getCdnUrl } from "@/lib/media";
 import { accountAtom } from "@/models/atoms/account";
+import { openUrlWithBrowser } from "@/models/browser-settings";
 import type { CatalystReaction, CatalystStatus } from "@natsuneko-laboratory/catalyst-sdk";
 import * as Clipboard from "expo-clipboard";
 import { Image } from "expo-image";
@@ -17,7 +18,6 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
-  Linking,
   Modal,
   Platform,
   Pressable,
@@ -168,7 +168,7 @@ export default function StatusDetailsPage() {
           ]);
           break;
         case "ブラウザで開く":
-          Linking.openURL(statusUrl);
+          openUrlWithBrowser(statusUrl);
           break;
         case "URL をコピー":
           Clipboard.setStringAsync(statusUrl);

@@ -1,6 +1,7 @@
+import { openUrlWithBrowser } from "@/models/browser-settings";
 import { Link } from "expo-router";
 import React, { Fragment, useCallback, useMemo } from "react";
-import { Linking, Text } from "react-native";
+import { Text } from "react-native";
 import { jsx, jsxs } from "react/jsx-runtime";
 import RehypeRaw from "rehype-raw";
 import RehypeReact from "rehype-react";
@@ -17,7 +18,7 @@ const UniLink = withUniwind(Link);
 export const StatusText = React.memo(
   ({ status }: { status: string }) => {
     const handleLinkPress = useCallback((url: string) => {
-      Linking.openURL(url);
+      openUrlWithBrowser(url);
     }, []);
 
     const val = useMemo(() => {

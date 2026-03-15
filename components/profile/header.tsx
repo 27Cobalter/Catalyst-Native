@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { accountAtom } from "@/models/atoms/account";
 import { CatalystRelationships, EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
-import * as Linking from "expo-linking";
+import { openUrlWithBrowser } from "@/models/browser-settings";
 import { useAtomValue } from "jotai";
 import { LinkIcon } from "lucide-react-native";
 import { useCallback, useState } from "react";
@@ -145,7 +145,7 @@ export const ProfileHeader = ({ user, onLayout }: Props) => {
           {user?.profile?.website ? (
             <TouchableOpacity
               className="flex flex-row items-center"
-              onPress={() => Linking.openURL(user.profile!.website)}
+              onPress={() => openUrlWithBrowser(user.profile!.website)}
             >
               <UniLinkIcon size={14} className="text-neutral-500" />
               <SecondaryText className="ml-1">{user.profile.website}</SecondaryText>
@@ -159,7 +159,7 @@ export const ProfileHeader = ({ user, onLayout }: Props) => {
                 <TouchableOpacity
                   className="flex flex-row items-center"
                   key={`${website}-${i}`}
-                  onPress={() => Linking.openURL(website)}
+                  onPress={() => openUrlWithBrowser(website)}
                 >
                   <UniLinkIcon size={14} className="text-neutral-500" />
                   <SecondaryText className="ml-1">{website}</SecondaryText>

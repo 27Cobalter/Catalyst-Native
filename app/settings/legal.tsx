@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
+import { openUrlWithBrowser } from "@/models/browser-settings";
 import { router } from "expo-router";
-import { openBrowserAsync, WebBrowserPresentationStyle } from "expo-web-browser";
 import { ChevronRight, ExternalLink } from "lucide-react-native";
 import { Pressable, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
@@ -45,9 +45,7 @@ export default function LegalSettingsPage() {
             )}
             onPress={async () => {
               if (item.type === "link") {
-                await openBrowserAsync(item.url, {
-                  presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
-                });
+                await openUrlWithBrowser(item.url);
               } else {
                 router.push(item.route as never);
               }
