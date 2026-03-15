@@ -2,18 +2,381 @@
 @import "uniwind";
 
 @theme {
+  /* =========================================================
+   * Light
+   * ========================================================= */
+
+  /* brand accent
+   * 主要CTA、強調ボタン、選択状態のブランド表現
+   */
   --color-light-accent: oklch(0.8339 0.0821 351.07);
+
+  /* neutral gray
+   * 補助的なニュートラル色。必要に応じてプレースホルダーや補助表現に利用
+   */
   --color-light-gray: oklch(0.6483 0.0073 286.19);
+
+  /* primary text
+   * 本文、見出し、ユーザー名など主要テキスト
+   */
   --color-light-text: oklch(0.2038 0.0132 233.32);
+
+  /* app background
+   * 画面全体の背景色
+   */
   --color-light-background: oklch(1 0 0);
+
+  /* brand tint
+   * リンク、軽めのアクセント、iOS的な tint 的用途
+   */
   --color-light-tint: oklch(0.5547 0.1066 228.5);
+
+  /* default icon
+   * 通常アイコン、ナビゲーションアイコン、補助アイコン
+   */
   --color-light-icon: oklch(0.5404 0.0135 240.09);
+
+  /* default border
+   * 通常の枠線、入力欄、カード枠、チップ枠
+   */
   --color-light-border: oklch(0.752 0.0057 286.26);
+
+  /* surface
+   * カード、セル、タブバー、入力面などの基本面
+   */
+  --color-light-surface: oklch(0.985 0.002 260);
+
+  /* elevated surface
+   * モーダル、ボトムシート、ポップオーバーなど浮いた面
+   */
+  --color-light-surface-elevated: oklch(0.965 0.004 260);
+
+  /* muted surface
+   * セカンダリーボタン、弱い背景、区別したい控えめな面
+   */
+  --color-light-surface-muted: oklch(0.945 0.006 260);
+
+  /* accent foreground
+   * accent 背景の上に載せる文字やアイコン
+   */
+  --color-light-accent-foreground: oklch(0.23 0.02 340);
+
+  /* tint foreground
+   * tint 背景の上に載せる文字やアイコン
+   */
+  --color-light-tint-foreground: oklch(0.985 0.002 0);
+
+  /* inverse foreground
+   * 写真上オーバーレイや暗背景上に置く明暗反転色
+   */
+  --color-light-inverse: oklch(0.24 0.01 240);
+
+  /* muted text
+   * 日付、件数、説明文、補助ラベルなど
+   */
+  --color-light-text-muted: oklch(0.52 0.01 245);
+
+  /* subtle text
+   * さらに弱い補助文、プレースホルダー、非アクティブ表示
+   */
+  --color-light-text-subtle: oklch(0.67 0.008 245);
+
+  /* divider
+   * セクション区切り線、リストの境界線
+   */
+  --color-light-divider: oklch(0.88 0.004 286);
+
+  /* strong border
+   * 強調したい枠線、フォーカス周辺、選択状態の枠
+   */
+  --color-light-border-strong: oklch(0.68 0.007 286);
+
+  /* success
+   * 成功通知、保存完了、正常状態の強調
+   */
+  --color-light-success: oklch(0.72 0.14 154);
+
+  /* success background
+   * 成功バッジ、成功トースト、成功状態の淡い背景
+   */
+  --color-light-success-background: oklch(0.95 0.03 154);
+
+  /* success foreground
+   * success background 上の文字やアイコン
+   */
+  --color-light-success-foreground: oklch(0.34 0.08 154);
+
+  /* warning
+   * 注意喚起、未完了、軽い警告
+   */
+  --color-light-warning: oklch(0.82 0.15 85);
+
+  /* warning background
+   * 注意バッジ、注意トーストの背景
+   */
+  --color-light-warning-background: oklch(0.96 0.04 90);
+
+  /* warning foreground
+   * warning background 上の文字やアイコン
+   */
+  --color-light-warning-foreground: oklch(0.42 0.09 80);
+
+  /* error
+   * エラー、削除、危険操作、失敗通知
+   */
+  --color-light-error: oklch(0.64 0.21 25);
+
+  /* error background
+   * エラーアラート、危険状態の淡い背景
+   */
+  --color-light-error-background: oklch(0.95 0.03 20);
+
+  /* error foreground
+   * error background 上の文字やアイコン
+   */
+  --color-light-error-foreground: oklch(0.38 0.12 25);
+
+  /* info
+   * 情報通知、tips、補助的な案内
+   */
+  --color-light-info: oklch(0.68 0.12 235);
+
+  /* info background
+   * 情報バッジ、info トーストの背景
+   */
+  --color-light-info-background: oklch(0.95 0.02 235);
+
+  /* info foreground
+   * info background 上の文字やアイコン
+   */
+  --color-light-info-foreground: oklch(0.36 0.08 235);
+
+  /* overlay
+   * モーダル背面、ライトボックス、写真拡大時の暗幕
+   */
+  --color-light-overlay: oklch(0 0 0 / 0.08);
+
+  /* skeleton
+   * ローディングプレースホルダー、スケルトンUI
+   */
+  --color-light-skeleton: oklch(0.92 0.004 260);
+
+  /* toggle selected background
+   * リアクション済み、選択済みトグル、フィルター選択中の背景
+   */
+  --color-light-toggle: oklch(0.96 0.01 340);
+
+  /* toggle selected hover
+   * 選択済みトグルにホバーした時の背景
+   */
+  --color-light-toggle-hover: oklch(0.93 0.02 345);
+
+  /* toggle selected active
+   * 選択済みトグルを押し込んだ時の背景
+   */
+  --color-light-toggle-active: oklch(0.89 0.04 348);
+
+  /* toggle selected border
+   * リアクション済みや選択済み状態を示す枠線
+   */
+  --color-light-toggle-border: oklch(0.78 0.05 350);
+
+  /* toggle selected foreground
+   * toggle 背景上の件数、文字、ラベル
+   */
+  --color-light-toggle-foreground: oklch(0.38 0.05 340);
+
+  /* toggle selected icon
+   * toggle 背景上のアイコン、補助記号
+   */
+  --color-light-toggle-icon: oklch(0.48 0.07 345);
+
+  /* =========================================================
+   * Dark
+   * ========================================================= */
+
+  /* brand accent
+   * 主要CTA、強調ボタン、選択状態のブランド表現
+   */
   --color-dark-accent: oklch(0.7707 0.1527 355.74);
+
+  /* neutral gray
+   * 補助的なニュートラル色。必要に応じてプレースホルダーや補助表現に利用
+   */
   --color-dark-gray: oklch(0.6483 0.0073 286.19);
+
+  /* primary text
+   * 本文、見出し、ユーザー名など主要テキスト
+   */
   --color-dark-text: oklch(0.9456 0.0017 247.84);
+
+  /* app background
+   * 画面全体の背景色
+   */
   --color-dark-background: oklch(0.2029 0.0037 229);
+
+  /* brand tint
+   * リンク、軽めのアクセント、iOS的な tint 的用途
+   */
   --color-dark-tint: oklch(1 0 0);
+
+  /* default icon
+   * 通常アイコン、ナビゲーションアイコン、補助アイコン
+   */
   --color-dark-icon: oklch(0.7057 0.01 242.9);
+
+  /* default border
+   * 通常の枠線、入力欄、カード枠、チップ枠
+   */
   --color-dark-border: oklch(0.5007 0.0047 286.23);
+
+  /* surface
+   * カード、セル、タブバー、入力面などの基本面
+   */
+  --color-dark-surface: oklch(0.245 0.004 229);
+
+  /* elevated surface
+   * モーダル、ボトムシート、ポップオーバーなど浮いた面
+   */
+  --color-dark-surface-elevated: oklch(0.285 0.005 229);
+
+  /* muted surface
+   * セカンダリーボタン、弱い背景、区別したい控えめな面
+   */
+  --color-dark-surface-muted: oklch(0.325 0.006 229);
+
+  /* accent foreground
+   * accent 背景の上に載せる文字やアイコン
+   */
+  --color-dark-accent-foreground: oklch(0.985 0.002 0);
+
+  /* tint foreground
+   * tint 背景の上に載せる文字やアイコン
+   */
+  --color-dark-tint-foreground: oklch(0.23 0.01 240);
+
+  /* inverse foreground
+   * 写真上オーバーレイや明背景上に置く反転色
+   */
+  --color-dark-inverse: oklch(0.98 0.002 0);
+
+  /* muted text
+   * 日付、件数、説明文、補助ラベルなど
+   */
+  --color-dark-text-muted: oklch(0.78 0.008 245);
+
+  /* subtle text
+   * さらに弱い補助文、プレースホルダー、非アクティブ表示
+   */
+  --color-dark-text-subtle: oklch(0.64 0.007 245);
+
+  /* divider
+   * セクション区切り線、リストの境界線
+   */
+  --color-dark-divider: oklch(0.36 0.004 286);
+
+  /* strong border
+   * 強調したい枠線、フォーカス周辺、選択状態の枠
+   */
+  --color-dark-border-strong: oklch(0.58 0.005 286);
+
+  /* success
+   * 成功通知、保存完了、正常状態の強調
+   */
+  --color-dark-success: oklch(0.78 0.13 154);
+
+  /* success background
+   * 成功バッジ、成功トースト、成功状態の淡い背景
+   */
+  --color-dark-success-background: oklch(0.30 0.04 154);
+
+  /* success foreground
+   * success background 上の文字やアイコン
+   */
+  --color-dark-success-foreground: oklch(0.93 0.02 154);
+
+  /* warning
+   * 注意喚起、未完了、軽い警告
+   */
+  --color-dark-warning: oklch(0.84 0.13 85);
+
+  /* warning background
+   * 注意バッジ、注意トーストの背景
+   */
+  --color-dark-warning-background: oklch(0.34 0.04 85);
+
+  /* warning foreground
+   * warning background 上の文字やアイコン
+   */
+  --color-dark-warning-foreground: oklch(0.95 0.02 90);
+
+  /* error
+   * エラー、削除、危険操作、失敗通知
+   */
+  --color-dark-error: oklch(0.70 0.19 25);
+
+  /* error background
+   * エラーアラート、危険状態の淡い背景
+   */
+  --color-dark-error-background: oklch(0.30 0.04 20);
+
+  /* error foreground
+   * error background 上の文字やアイコン
+   */
+  --color-dark-error-foreground: oklch(0.94 0.02 20);
+
+  /* info
+   * 情報通知、tips、補助的な案内
+   */
+  --color-dark-info: oklch(0.76 0.10 235);
+
+  /* info background
+   * 情報バッジ、info トーストの背景
+   */
+  --color-dark-info-background: oklch(0.30 0.03 235);
+
+  /* info foreground
+   * info background 上の文字やアイコン
+   */
+  --color-dark-info-foreground: oklch(0.94 0.02 235);
+
+  /* overlay
+   * モーダル背面、ライトボックス、写真拡大時の暗幕
+   */
+  --color-dark-overlay: oklch(0 0 0 / 0.32);
+
+  /* skeleton
+   * ローディングプレースホルダー、スケルトンUI
+   */
+  --color-dark-skeleton: oklch(0.32 0.004 229);
+
+  /* toggle selected background
+   * リアクション済み、選択済みトグル、フィルター選択中の背景
+   */
+  --color-dark-toggle: oklch(0.30 0.03 345);
+
+  /* toggle selected hover
+   * 選択済みトグルにホバーした時の背景
+   */
+  --color-dark-toggle-hover: oklch(0.34 0.04 347);
+
+  /* toggle selected active
+   * 選択済みトグルを押し込んだ時の背景
+   */
+  --color-dark-toggle-active: oklch(0.40 0.06 350);
+
+  /* toggle selected border
+   * リアクション済みや選択済み状態を示す枠線
+   */
+  --color-dark-toggle-border: oklch(0.62 0.08 352);
+
+  /* toggle selected foreground
+   * toggle 背景上の件数、文字、ラベル
+   */
+  --color-dark-toggle-foreground: oklch(0.93 0.02 0);
+
+  /* toggle selected icon
+   * toggle 背景上のアイコン、補助記号
+   */
+  --color-dark-toggle-icon: oklch(0.86 0.05 352);
 }

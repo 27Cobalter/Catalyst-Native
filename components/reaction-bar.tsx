@@ -5,6 +5,9 @@ import { Image } from "expo-image";
 import { Plus } from "lucide-react-native";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { withUniwind } from "uniwind";
+
+const UniPlus = withUniwind(Plus);
 
 const isUnicodeCodepoint = (symbol: string): boolean => {
   return /^[0-9a-f]+$/i.test(symbol);
@@ -17,12 +20,7 @@ type Props = {
   onAddReaction?: () => void;
 };
 
-export const ReactionBar = ({
-  reactions,
-  onReact,
-  onUnreact,
-  onAddReaction,
-}: Props) => {
+export const ReactionBar = ({ reactions, onReact, onUnreact, onAddReaction }: Props) => {
   const entries = Object.values(reactions);
 
   return (
@@ -32,16 +30,12 @@ export const ReactionBar = ({
         .map((reaction) => (
           <Pressable
             key={reaction.symbol}
-            onPress={() =>
-              reaction.hasSelfReaction
-                ? onUnreact(reaction.symbol)
-                : onReact(reaction.symbol)
-            }
+            onPress={() => (reaction.hasSelfReaction ? onUnreact(reaction.symbol) : onReact(reaction.symbol))}
             className={cn(
               "flex-row items-center gap-1 px-2.5 py-1 rounded-full border",
               reaction.hasSelfReaction
-                ? "border-[#007AFF]"
-                : "border-[#E5E5EA]",
+                ? "border-light-toggle-border dark:border-dark-toggle-border bg-light-toggle-active dark:bg-dark-toggle-active"
+                : "border-light-border dark:border-dark-border",
             )}
           >
             {isUnicodeCodepoint(reaction.symbol) ? (
@@ -59,22 +53,15 @@ export const ReactionBar = ({
                 contentFit="contain"
               />
             )}
-            <Text
-              className={cn(
-                "text-base",
-                reaction.hasSelfReaction ? "text-[#007AFF]" : "text-[#3C3C43]",
-              )}
-            >
-              {reaction.count}
-            </Text>
+            <Text className="text-base text-light-text dark:text-dark-text">{reaction.count}</Text>
           </Pressable>
         ))}
       {onAddReaction && (
         <Pressable
           onPress={onAddReaction}
-          className="items-center justify-center px-2.5 py-1 rounded-full border border-[#E5E5EA]"
+          className="items-center justify-center px-2.5 py-1 rounded-full border border-light-border dark:border-dark-border"
         >
-          <Plus size={20} color="#8E8E93" />
+          <UniPlus size={20} className="text-light-icon dark:text-dark-icon" />
         </Pressable>
       )}
     </View>
