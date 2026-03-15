@@ -9,7 +9,7 @@ export const API_KEY = Platform.select({
   android: {
     clientId: process.env.EXPO_PUBLIC_CATALYST_FOR_ANDROID_CLIENT_ID,
     clientSecret: process.env.EXPO_PUBLIC_CATALYST_FOR_ANDROID_CLIENT_SECRET,
-    redirectUri: process.env.NODE_ENV === "development" ? "exp+catalyst-native://authorize" : "com.natsuneko.catalyst://authorize",
+    redirectUri: __DEV__ ? "exp+catalyst-native://authorize" : "com.natsuneko.catalyst://authorize",
   },
   web: {
     clientId: "",
