@@ -47,7 +47,7 @@ const GalleryCell = memo(({ status }: { status: CatalystStatus }) => {
           onLoadEnd={() => setIsImageLoading(false)}
         />
         {isImageLoading && (
-          <View className="absolute inset-0 items-center justify-center bg-gray-200 dark:bg-gray-800">
+          <View className="absolute inset-0 items-center justify-center bg-light-skeleton dark:bg-dark-skeleton">
             <ActivityIndicator />
           </View>
         )}

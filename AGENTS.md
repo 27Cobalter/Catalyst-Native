@@ -27,6 +27,12 @@ There are no automated tests in this project.
 
 このプロジェクトは Expo と expo-router を使用した React Native モバイルアプリで、ソーシャルネットワーククライアント「Catalyst」の実装です。
 
+### カラーパレット
+
+Catalyst React Native では、カラーパレットを @global.css に定義しています。
+特に理由がない限り、カラーパレットの定義とそのコメントから適切な使い方をして色を使ってください。
+
+
 ### SDK
 
 このアプリは `@natsuneko-laboratory/catalyst-sdk` に依存しており、これは [CatalystSDK](https://github.com/mika-f/CatalystSDK) を指します。
