@@ -1,36 +1,24 @@
+import { SystemNotificationList } from "@/components/notification/system";
+import { UserMessageList } from "@/components/notification/user-message";
 import { Tab, Tabs } from "@/components/tabs";
-import { FirehoseTimeline } from "@/components/timeline/firehose";
-import { FollowingTimeline } from "@/components/timeline/following";
-import { accountAtom } from "@/models/atoms/account";
-import { useAtomValue } from "jotai";
 import React from "react";
 import { View } from "react-native";
 
 const TABS: Tab[] = [
-  { key: "following", label: "フォロー中" },
-  { key: "firehose", label: "グローバル" },
+  { key: "system", label: "システム通知" },
+  { key: "message", label: "メッセージ" },
 ];
 
-export default function HomeScreen() {
-  const account = useAtomValue(accountAtom);
-
-  if (account) {
-    return (
-      <View className="flex-1 bg-light-background dark:bg-dark-background">
-        <Tabs
-          tabs={TABS}
-          renderScene={(tab) => {
-            if (tab.key === "firehose") return <FirehoseTimeline />;
-            return <FollowingTimeline />;
-          }}
-        />
-      </View>
-    );
-  }
-
+export default function NotificationsScreen() {
   return (
-    <View>
-      <FirehoseTimeline />
+    <View className="flex-1 bg-light-background dark:bg-dark-background">
+      <Tabs
+        tabs={TABS}
+        renderScene={(tab) => {
+          if (tab.key === "message") return <UserMessageList />;
+          return <SystemNotificationList />;
+        }}
+      />
     </View>
   );
 }
