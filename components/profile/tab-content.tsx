@@ -1,8 +1,8 @@
 import { EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
 import React from "react";
-import { View } from "react-native";
 import { UserAlbums } from "./albums";
 import { UserGallery } from "./gallery";
+import { UserLikes } from "./likes";
 import { UserTimeline, UserTimelineHandle } from "./timeline";
 
 import "@/global.css";
@@ -24,8 +24,8 @@ export const TabContent = React.forwardRef<UserTimelineHandle, Props>(({ tab, us
       case "album":
         return <UserAlbums user={user} />;
 
-      case "like":
-        return <View />;
+      case "likes":
+        return <UserLikes ref={ref} />;
     }
   }
 
