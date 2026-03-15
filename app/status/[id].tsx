@@ -1,23 +1,39 @@
 import { EmojiPickerSheet, type EmojiPickerSheetRef } from "@/components/emoji-verse";
 import { ReactionBar } from "@/components/reaction-bar";
+import { ActionBar } from "@/components/status/action-bar";
 import { StatusText } from "@/components/status/text";
 import { MediaCarousel } from "@/components/ui/media-carousel";
 import { abs, rel } from "@/lib/dayjs";
 import { getCdnUrl } from "@/lib/media";
+import { cn } from "@/lib/utils";
 import { accountAtom } from "@/models/atoms/account";
 import { openUrlWithBrowser } from "@/models/browser-settings";
+import {
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetView,
+  type BottomSheetBackdropProps,
+} from "@gorhom/bottom-sheet";
 import type { CatalystReaction, CatalystStatus } from "@natsuneko-laboratory/catalyst-sdk";
 import * as Clipboard from "expo-clipboard";
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
-import { ArrowLeft, Check, MoreHorizontal } from "lucide-react-native";
+import {
+  ArrowLeft,
+  Bookmark,
+  Check,
+  Clipboard as ClipboardIcon,
+  ExternalLink,
+  MoreHorizontal,
+  Pencil,
+  Send,
+  Trash2,
+} from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActionSheetIOS,
   ActivityIndicator,
   Alert,
-  Animated,
   Modal,
   Platform,
   Pressable,
@@ -32,11 +48,55 @@ import {
 } from "react-native";
 import { withUniwind } from "uniwind";
 
-import { ActionBar } from "@/components/status/action-bar";
 import "@/global.css";
+
+const UniBookmark = withUniwind(Bookmark);
+const UniClipboardIcon = withUniwind(ClipboardIcon);
+const UniExternalLink = withUniwind(ExternalLink);
+const UniPencil = withUniwind(Pencil);
+const UniSend = withUniwind(Send);
+const UniTrash2 = withUniwind(Trash2);
 
 const UniImage = withUniwind(Image);
 const UniMoreHorizontal = withUniwind(MoreHorizontal);
+
+function MenuItem({
+  label,
+  icon: Icon,
+  theme,
+  onPress,
+  destructive,
+}: {
+  label: string;
+  icon: React.ComponentType<{ size: number; className?: string }>;
+  theme: string;
+  onPress: () => void;
+  destructive?: boolean;
+}) {
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.menuItem,
+        pressed && { backgroundColor: theme === "dark" ? "#38383A" : "#E5E5EA" },
+      ]}
+      className="rounded-sm bg-light-surface dark:bg-dark-surface mx-2 my-1"
+      onPress={onPress}
+    >
+      <Icon
+        size={20}
+        className={cn(
+          "text-light-accent dark:text-dark-accent",
+          destructive && "text-light-error dark:text-dark-error",
+        )}
+      />
+      <Text
+        className={cn("text-light-text dark:text-dark-text", destructive && "text-light-error dark:text-dark-error")}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
 
 export default function StatusDetailsPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -49,11 +109,9 @@ export default function StatusDetailsPage() {
   const [editingCaption, setEditingCaption] = useState("");
   const [isEditSheetVisible, setIsEditSheetVisible] = useState(false);
   const [isEditingSaving, setIsEditingSaving] = useState(false);
-  const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const emojiPickerRef = useRef<EmojiPickerSheetRef>(null);
-  const menuOverlayOpacity = useRef(new Animated.Value(0)).current;
-  const menuSheetTranslateY = useRef(new Animated.Value(300)).current;
+  const menuSheetRef = useRef<BottomSheetModal>(null);
 
   const isMyself = account?.user?.id === status?.user?.id;
   const isLoggedIn = account !== null;
@@ -139,6 +197,9 @@ export default function StatusDetailsPage() {
   const handleMenuAction = useCallback(
     (action: string) => {
       switch (action) {
+        case "アルバムへ追加":
+          // TODO: アルバムへ追加の実装
+          break;
         case "編集する":
           setEditingCaption(status?.body ?? "");
           setIsEditSheetVisible(true);
@@ -169,45 +230,22 @@ export default function StatusDetailsPage() {
     [status, statusUrl, handleDeleteStatus],
   );
 
-  const closeMenu = useCallback(
-    (onClosed?: () => void) => {
-      Animated.parallel([
-        Animated.timing(menuOverlayOpacity, { toValue: 0, duration: 150, useNativeDriver: true }),
-        Animated.timing(menuSheetTranslateY, { toValue: 300, duration: 200, useNativeDriver: true }),
-      ]).start(() => {
-        setIsMenuVisible(false);
-        onClosed?.();
-      });
+  const showMenu = useCallback(() => {
+    menuSheetRef.current?.present();
+  }, []);
+
+  const handleMenuItemPress = useCallback(
+    (action: string) => {
+      menuSheetRef.current?.dismiss();
+      handleMenuAction(action);
     },
-    [menuOverlayOpacity, menuSheetTranslateY],
+    [handleMenuAction],
   );
 
-  const showMenu = useCallback(() => {
-    if (Platform.OS === "ios") {
-      const options: string[] = ["キャンセル", "ブラウザで開く", "URL をコピー", "投稿をコピー", "共有"];
-      if (isMyself) {
-        options.splice(1, 0, "編集する", "削除する");
-      }
-      const cancelIndex = 0;
-      const destructiveIndex = isMyself ? options.indexOf("削除する") : -1;
-
-      ActionSheetIOS.showActionSheetWithOptions(
-        { options, cancelButtonIndex: cancelIndex, destructiveButtonIndex: destructiveIndex },
-        (buttonIndex) => {
-          const label = options[buttonIndex];
-          handleMenuAction(label);
-        },
-      );
-    } else {
-      menuSheetTranslateY.setValue(300);
-      menuOverlayOpacity.setValue(0);
-      setIsMenuVisible(true);
-      Animated.parallel([
-        Animated.timing(menuOverlayOpacity, { toValue: 1, duration: 350, useNativeDriver: true }),
-        Animated.timing(menuSheetTranslateY, { toValue: 0, duration: 350, useNativeDriver: true }),
-      ]).start();
-    }
-  }, [isMyself, handleMenuAction, menuOverlayOpacity, menuSheetTranslateY]);
+  const renderMenuBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />,
+    [],
+  );
 
   const user = status?.user;
 
@@ -352,56 +390,68 @@ export default function StatusDetailsPage() {
       {/* Reaction picker sheet */}
       <EmojiPickerSheet ref={emojiPickerRef} onReact={handleReact} />
 
-      {/* Android menu modal */}
-      {Platform.OS !== "ios" && (
-        <Modal visible={isMenuVisible} transparent animationType="none" onRequestClose={() => closeMenu()}>
-          <Animated.View style={[styles.menuOverlay, { opacity: menuOverlayOpacity }]}>
-            <Pressable style={styles.menuOverlayPressable} onPress={() => closeMenu()} />
-            <Animated.View
-              className="bg-light-background dark:bg-dark-background"
-              style={[styles.menuSheet, { transform: [{ translateY: menuSheetTranslateY }] }]}
-            >
-              {isMyself && (
-                <>
-                  <TouchableOpacity
-                    style={styles.menuItem}
-                    onPress={() => closeMenu(() => handleMenuAction("編集する"))}
-                  >
-                    <Text style={styles.menuItemText}>編集する</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.menuItem}
-                    onPress={() => closeMenu(() => handleMenuAction("削除する"))}
-                  >
-                    <Text style={[styles.menuItemText, styles.destructiveText]}>削除する</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => closeMenu(() => handleMenuAction("ブラウザで開く"))}
-              >
-                <Text style={styles.menuItemText}>ブラウザで開く</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => closeMenu(() => handleMenuAction("URL をコピー"))}
-              >
-                <Text style={styles.menuItemText}>URL をコピー</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => closeMenu(() => handleMenuAction("投稿をコピー"))}
-              >
-                <Text style={styles.menuItemText}>投稿をコピー</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.menuItem} onPress={() => closeMenu(() => handleMenuAction("共有"))}>
-                <Text style={styles.menuItemText}>共有</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          </Animated.View>
-        </Modal>
-      )}
+      {/* Action menu */}
+      <BottomSheetModal
+        ref={menuSheetRef}
+        enableDynamicSizing
+        enablePanDownToClose
+        backdropComponent={renderMenuBackdrop}
+        backgroundStyle={{
+          backgroundColor: theme === "dark" ? "#1C1C1E" : "#FFFFFF",
+        }}
+        handleIndicatorStyle={{
+          backgroundColor: theme === "dark" ? "#48484A" : "#C7C7CC",
+        }}
+      >
+        <BottomSheetView style={styles.menuContent}>
+          <View className="px-2 mb-2">
+            <MenuItem
+              icon={UniBookmark}
+              label="アルバムへ追加"
+              theme={theme}
+              onPress={() => handleMenuItemPress("アルバムへ追加")}
+            />
+          </View>
+          {isMyself && (
+            <View className="px-2 my-2">
+              <MenuItem
+                icon={UniPencil}
+                label="編集する"
+                theme={theme}
+                onPress={() => handleMenuItemPress("編集する")}
+              />
+              <MenuItem
+                icon={UniTrash2}
+                label="削除する"
+                theme={theme}
+                onPress={() => handleMenuItemPress("削除する")}
+                destructive
+              />
+            </View>
+          )}
+          <View className="px-2 mt-2">
+            <MenuItem
+              icon={UniExternalLink}
+              label="ブラウザで開く"
+              theme={theme}
+              onPress={() => handleMenuItemPress("ブラウザで開く")}
+            />
+            <MenuItem
+              icon={UniClipboardIcon}
+              label="URL をコピー"
+              theme={theme}
+              onPress={() => handleMenuItemPress("URL をコピー")}
+            />
+            <MenuItem
+              icon={UniClipboardIcon}
+              label="投稿をコピー"
+              theme={theme}
+              onPress={() => handleMenuItemPress("投稿をコピー")}
+            />
+            <MenuItem icon={UniSend} label="共有" theme={theme} onPress={() => handleMenuItemPress("共有")} />
+          </View>
+        </BottomSheetView>
+      </BottomSheetModal>
     </>
   );
 }
@@ -473,29 +523,18 @@ const styles = StyleSheet.create({
   toolbarSaveButtonDisabled: {
     backgroundColor: "#90CAF9",
   },
-  menuOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "flex-end",
-  },
-  menuOverlayPressable: {
-    flex: 1,
-  },
-  menuSheet: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+  menuContent: {
     paddingBottom: 32,
   },
   menuItem: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E5EA",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 8,
   },
   menuItemText: {
     fontSize: 17,
-  },
-  destructiveText: {
-    color: "#FF3B30",
   },
 });
