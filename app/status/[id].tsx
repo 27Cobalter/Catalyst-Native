@@ -1,3 +1,4 @@
+import { AlbumSelectionModal } from "@/components/album/selection-modal";
 import { EmojiPickerSheet, type EmojiPickerSheetRef } from "@/components/emoji-verse";
 import { ReactionBar } from "@/components/reaction-bar";
 import { ActionBar } from "@/components/status/action-bar";
@@ -22,6 +23,7 @@ import { useAtomValue } from "jotai";
 import {
   ArrowLeft,
   Bookmark,
+  BookmarkMinus,
   Check,
   Clipboard as ClipboardIcon,
   ExternalLink,
@@ -52,6 +54,7 @@ import { withUniwind } from "uniwind";
 import "@/global.css";
 
 const UniBookmark = withUniwind(Bookmark);
+const UniBookmarkMinus = withUniwind(BookmarkMinus);
 const UniClipboardIcon = withUniwind(ClipboardIcon);
 const UniExternalLink = withUniwind(ExternalLink);
 const UniImage = withUniwind(Image);
@@ -109,6 +112,8 @@ export default function StatusDetailsPage() {
   const [reactions, setReactions] = useState<Record<string, CatalystReaction>>({});
   const [editingCaption, setEditingCaption] = useState("");
   const [isEditSheetVisible, setIsEditSheetVisible] = useState(false);
+  const [isAlbumSelectionVisible, setIsAlbumSelectionVisible] = useState(false);
+  const [albumSelectionMode, setAlbumSelectionMode] = useState<"add" | "remove">("add");
   const [isEditingSaving, setIsEditingSaving] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const emojiPickerRef = useRef<EmojiPickerSheetRef>(null);
@@ -199,7 +204,12 @@ export default function StatusDetailsPage() {
     (action: string) => {
       switch (action) {
         case "アルバムへ追加":
-          // TODO: アルバムへ追加の実装
+          setAlbumSelectionMode("add");
+          setIsAlbumSelectionVisible(true);
+          break;
+        case "アルバムから削除":
+          setAlbumSelectionMode("remove");
+          setIsAlbumSelectionVisible(true);
           break;
         case "編集する":
           setEditingCaption(status?.body ?? "");
@@ -391,6 +401,14 @@ export default function StatusDetailsPage() {
         </Modal>
       )}
 
+      {/* Album selection modal */}
+      <AlbumSelectionModal
+        visible={isAlbumSelectionVisible}
+        statusId={id}
+        mode={albumSelectionMode}
+        onClose={() => setIsAlbumSelectionVisible(false)}
+      />
+
       {/* Reaction picker sheet */}
       <EmojiPickerSheet ref={emojiPickerRef} onReact={handleReact} />
 
@@ -414,6 +432,12 @@ export default function StatusDetailsPage() {
               label="アルバムへ追加"
               theme={theme}
               onPress={() => handleMenuItemPress("アルバムへ追加")}
+            />
+            <MenuItem
+              icon={UniBookmarkMinus}
+              label="アルバムから削除"
+              theme={theme}
+              onPress={() => handleMenuItemPress("アルバムから削除")}
             />
           </View>
           {isMyself && (

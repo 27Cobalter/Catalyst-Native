@@ -177,60 +177,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
-  "@natsuneko-laboratory/catalyst-sdk@0.1.0": { id: "@natsuneko-laboratory/catalyst-sdk@0.1.0", name: "@natsuneko-laboratory/catalyst-sdk", content: `undefined` },
+  "@natsuneko-laboratory/catalyst-sdk@0.1.2": { id: "@natsuneko-laboratory/catalyst-sdk@0.1.2", name: "@natsuneko-laboratory/catalyst-sdk", content: `undefined` },
   "js-sha256@0.11.1": { id: "js-sha256@0.11.1", name: "js-sha256", content: `undefined` },
-  "@react-native-async-storage/async-storage@2.2.0": { id: "@react-native-async-storage/async-storage@2.2.0", name: "@react-native-async-storage/async-storage", content: `MIT License
+  "@react-native-async-storage/async-storage@3.0.1": { id: "@react-native-async-storage/async-storage@3.0.1", name: "@react-native-async-storage/async-storage", content: `undefined` },
+  "idb@8.0.3": { id: "idb@8.0.3", name: "idb", content: `ISC License (ISC)
+Copyright (c) 2016, Jake Archibald <jaffathecake@gmail.com>
 
-Copyright (c) 2015-present, Facebook, Inc.
+Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.` },
-  "merge-options@3.0.4": { id: "merge-options@3.0.4", name: "merge-options", content: `The MIT License (MIT)
-
-Copyright (c) Michael Mayer <michael@schnittstabil.de>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-` },
-  "is-plain-obj@2.1.0": { id: "is-plain-obj@2.1.0", name: "is-plain-obj", content: `MIT License
-
-Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ` },
   "@react-native-async-storage/expo-with-async-storage@1.0.0": { id: "@react-native-async-storage/expo-with-async-storage@1.0.0", name: "@react-native-async-storage/expo-with-async-storage", content: `undefined` },
   "@react-native-firebase/app@23.8.8": { id: "@react-native-firebase/app@23.8.8", name: "@react-native-firebase/app", content: `Apache-2.0 License
@@ -1904,7 +1859,7 @@ You may obtain a copy of the Creative Commons Attribution 3.0 License at
 
     https://creativecommons.org/licenses/by/3.0/
 ` },
-  "@react-navigation/bottom-tabs@7.15.3": { id: "@react-navigation/bottom-tabs@7.15.3", name: "@react-navigation/bottom-tabs", content: `MIT License
+  "@react-navigation/bottom-tabs@7.15.5": { id: "@react-navigation/bottom-tabs@7.15.5", name: "@react-navigation/bottom-tabs", content: `MIT License
 
 Copyright (c) 2017 React Navigation Contributors
 
@@ -1926,7 +1881,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
-  "@react-navigation/elements@2.9.8": { id: "@react-navigation/elements@2.9.8", name: "@react-navigation/elements", content: `MIT License
+  "@react-navigation/elements@2.9.10": { id: "@react-navigation/elements@2.9.10", name: "@react-navigation/elements", content: `MIT License
 
 Copyright (c) 2017 React Navigation Contributors
 
@@ -2102,28 +2057,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.` },
   "@react-navigation/drawer@7.9.4": { id: "@react-navigation/drawer@7.9.4", name: "@react-navigation/drawer", content: `MIT License
-
-Copyright (c) 2017 React Navigation Contributors
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-` },
-  "@react-navigation/elements@2.9.10": { id: "@react-navigation/elements@2.9.10", name: "@react-navigation/elements", content: `MIT License
 
 Copyright (c) 2017 React Navigation Contributors
 
@@ -2361,7 +2294,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
-  "@sentry/react-native@8.3.0": { id: "@sentry/react-native@8.3.0", name: "@sentry/react-native", content: `The MIT License (MIT)
+  "@sentry/react-native@8.4.0": { id: "@sentry/react-native@8.4.0", name: "@sentry/react-native", content: `The MIT License (MIT)
 
 Copyright (c) 2017-2024 Sentry
 
@@ -2413,7 +2346,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ` },
-  "@sentry/browser@10.42.0": { id: "@sentry/browser@10.42.0", name: "@sentry/browser", content: `MIT License
+  "@sentry/browser@10.43.0": { id: "@sentry/browser@10.43.0", name: "@sentry/browser", content: `MIT License
 
 Copyright (c) 2019 Functional Software, Inc. dba Sentry
 
@@ -2435,7 +2368,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
-  "@sentry-internal/browser-utils@10.42.0": { id: "@sentry-internal/browser-utils@10.42.0", name: "@sentry-internal/browser-utils", content: `MIT License
+  "@sentry-internal/browser-utils@10.43.0": { id: "@sentry-internal/browser-utils@10.43.0", name: "@sentry-internal/browser-utils", content: `MIT License
 
 Copyright (c) 2020 Functional Software, Inc. dba Sentry
 
@@ -2457,7 +2390,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
-  "@sentry/core@10.42.0": { id: "@sentry/core@10.42.0", name: "@sentry/core", content: `MIT License
+  "@sentry/core@10.43.0": { id: "@sentry/core@10.43.0", name: "@sentry/core", content: `MIT License
 
 Copyright (c) 2019 Functional Software, Inc. dba Sentry
 
@@ -2479,7 +2412,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
-  "@sentry-internal/feedback@10.42.0": { id: "@sentry-internal/feedback@10.42.0", name: "@sentry-internal/feedback", content: `MIT License
+  "@sentry-internal/feedback@10.43.0": { id: "@sentry-internal/feedback@10.43.0", name: "@sentry-internal/feedback", content: `MIT License
 
 Copyright (c) 2023 Functional Software, Inc. dba Sentry
 
@@ -2501,7 +2434,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
-  "@sentry-internal/replay@10.42.0": { id: "@sentry-internal/replay@10.42.0", name: "@sentry-internal/replay", content: `MIT License
+  "@sentry-internal/replay@10.43.0": { id: "@sentry-internal/replay@10.43.0", name: "@sentry-internal/replay", content: `MIT License
 
 Copyright (c) 2022 Functional Software, Inc. dba Sentry
 
@@ -2523,7 +2456,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
-  "@sentry-internal/replay-canvas@10.42.0": { id: "@sentry-internal/replay-canvas@10.42.0", name: "@sentry-internal/replay-canvas", content: `MIT License
+  "@sentry-internal/replay-canvas@10.43.0": { id: "@sentry-internal/replay-canvas@10.43.0", name: "@sentry-internal/replay-canvas", content: `MIT License
 
 Copyright (c) 2024 Functional Software, Inc. dba Sentry
 
@@ -2545,7 +2478,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
-  "@sentry/cli@3.3.0": { id: "@sentry/cli@3.3.0", name: "@sentry/cli", content: `# Functional Source License, Version 1.1, MIT Future License
+  "@sentry/cli@3.3.3": { id: "@sentry/cli@3.3.3", name: "@sentry/cli", content: `# Functional Source License, Version 1.1, MIT Future License
 
 ## Abbreviation
 
@@ -2700,7 +2633,7 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ` },
-  "undici@6.23.0": { id: "undici@6.23.0", name: "undici", content: `MIT License
+  "undici@6.24.1": { id: "undici@6.24.1", name: "undici", content: `MIT License
 
 Copyright (c) Matteo Collina and Undici contributors
 
@@ -2754,8 +2687,8 @@ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ` },
-  "@sentry/cli-linux-x64@3.3.0": { id: "@sentry/cli-linux-x64@3.3.0", name: "@sentry/cli-linux-x64", content: `undefined` },
-  "@sentry/react@10.42.0": { id: "@sentry/react@10.42.0", name: "@sentry/react", content: `MIT License
+  "@sentry/cli-linux-x64@3.3.3": { id: "@sentry/cli-linux-x64@3.3.3", name: "@sentry/cli-linux-x64", content: `undefined` },
+  "@sentry/react@10.43.0": { id: "@sentry/react@10.43.0", name: "@sentry/react", content: `MIT License
 
 Copyright (c) 2019 Functional Software, Inc. dba Sentry
 
@@ -2777,7 +2710,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
-  "@sentry/types@10.42.0": { id: "@sentry/types@10.42.0", name: "@sentry/types", content: `MIT License
+  "@sentry/types@10.43.0": { id: "@sentry/types@10.43.0", name: "@sentry/types", content: `MIT License
 
 Copyright (c) 2019 Functional Software, Inc. dba Sentry
 
@@ -2817,7 +2750,7 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ` },
-  "dayjs@1.11.19": { id: "dayjs@1.11.19", name: "dayjs", content: `MIT License
+  "dayjs@1.11.20": { id: "dayjs@1.11.20", name: "dayjs", content: `MIT License
 
 Copyright (c) 2018-present, iamkun
 
@@ -2839,7 +2772,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
-  "expo@55.0.4": { id: "expo@55.0.4", name: "expo", content: `undefined` },
+  "expo@55.0.6": { id: "expo@55.0.6", name: "expo", content: `undefined` },
   "@babel/runtime@7.28.6": { id: "@babel/runtime@7.28.6", name: "@babel/runtime", content: `MIT License
 
 Copyright (c) 2014-present Sebastian McKenzie and other contributors
@@ -2863,7 +2796,7 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ` },
-  "@expo/cli@55.0.14": { id: "@expo/cli@55.0.14", name: "@expo/cli", content: `undefined` },
+  "@expo/cli@55.0.16": { id: "@expo/cli@55.0.16", name: "@expo/cli", content: `undefined` },
   "@expo/code-signing-certificates@0.0.6": { id: "@expo/code-signing-certificates@0.0.6", name: "@expo/code-signing-certificates", content: `The MIT License (MIT)
 
 Copyright (c) 2020-present 650 Industries, Inc. (aka Expo)
@@ -7553,7 +7486,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
-  "lightningcss@1.31.1": { id: "lightningcss@1.31.1", name: "lightningcss", content: ` Mozilla Public License Version 2.0
+  "lightningcss@1.32.0": { id: "lightningcss@1.32.0", name: "lightningcss", content: ` Mozilla Public License Version 2.0
 ==================================
 
 1. Definitions
@@ -8129,7 +8062,7 @@ defined by the Mozilla Public License, v. 2.0.
    See the License for the specific language governing permissions and
    limitations under the License.
 ` },
-  "lightningcss-linux-x64-gnu@1.31.1": { id: "lightningcss-linux-x64-gnu@1.31.1", name: "lightningcss-linux-x64-gnu", content: ` Mozilla Public License Version 2.0
+  "lightningcss-linux-x64-gnu@1.32.0": { id: "lightningcss-linux-x64-gnu@1.32.0", name: "lightningcss-linux-x64-gnu", content: ` Mozilla Public License Version 2.0
 ==================================
 
 1. Definitions
@@ -9005,7 +8938,7 @@ SOFTWARE.
 
 ` },
   "@react-native/normalize-colors@0.83.2": { id: "@react-native/normalize-colors@0.83.2", name: "@react-native/normalize-colors", content: `undefined` },
-  "@expo/router-server@55.0.9": { id: "@expo/router-server@55.0.9", name: "@expo/router-server", content: `undefined` },
+  "@expo/router-server@55.0.10": { id: "@expo/router-server@55.0.10", name: "@expo/router-server", content: `undefined` },
   "@expo/schema-utils@55.0.2": { id: "@expo/schema-utils@55.0.2", name: "@expo/schema-utils", content: `The MIT License (MIT)
 
 Copyright (c) 2025-present 650 Industries, Inc. (aka Expo)
@@ -10993,7 +10926,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
   "expo-server@55.0.6": { id: "expo-server@55.0.6", name: "expo-server", content: `undefined` },
-  "fetch-nodeshim@0.4.8": { id: "fetch-nodeshim@0.4.8", name: "fetch-nodeshim", content: `MIT License
+  "fetch-nodeshim@0.4.9": { id: "fetch-nodeshim@0.4.9", name: "fetch-nodeshim", content: `MIT License
 
 Copyright (c) Phil Pluckthun,
 Copyright (c) 650 Industries, Inc. (aka Expo),
@@ -11260,7 +11193,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ` },
-  "@expo/fingerprint@0.16.5": { id: "@expo/fingerprint@0.16.5", name: "@expo/fingerprint", content: `The MIT License (MIT)
+  "@expo/fingerprint@0.16.6": { id: "@expo/fingerprint@0.16.6", name: "@expo/fingerprint", content: `The MIT License (MIT)
 
 Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)
 
@@ -11323,7 +11256,7 @@ LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
 OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 ` },
-  "babel-preset-expo@55.0.10": { id: "babel-preset-expo@55.0.10", name: "babel-preset-expo", content: `undefined` },
+  "babel-preset-expo@55.0.11": { id: "babel-preset-expo@55.0.11", name: "babel-preset-expo", content: `undefined` },
   "@babel/plugin-proposal-decorators@7.29.0": { id: "@babel/plugin-proposal-decorators@7.29.0", name: "@babel/plugin-proposal-decorators", content: `MIT License
 
 Copyright (c) 2014-present Sebastian McKenzie and other contributors
@@ -13099,7 +13032,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ` },
   "expo-keep-awake@55.0.4": { id: "expo-keep-awake@55.0.4", name: "expo-keep-awake", content: `undefined` },
-  "expo-modules-autolinking@55.0.8": { id: "expo-modules-autolinking@55.0.8", name: "expo-modules-autolinking", content: `undefined` },
+  "expo-modules-autolinking@55.0.9": { id: "expo-modules-autolinking@55.0.9", name: "expo-modules-autolinking", content: `undefined` },
   "commander@7.2.0": { id: "commander@7.2.0", name: "commander", content: `(The MIT License)
 
 Copyright (c) 2011 TJ Holowaychuk <tj@vision-media.ca>
@@ -13123,7 +13056,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ` },
-  "expo-modules-core@55.0.13": { id: "expo-modules-core@55.0.13", name: "expo-modules-core", content: `undefined` },
+  "expo-modules-core@55.0.15": { id: "expo-modules-core@55.0.15", name: "expo-modules-core", content: `undefined` },
   "whatwg-url-minimum@0.1.1": { id: "whatwg-url-minimum@0.1.1", name: "whatwg-url-minimum", content: `MIT License
 
 Copyright (c) Phil Pluckthun,
@@ -13150,17 +13083,17 @@ SOFTWARE.
 ` },
   "expo-build-properties@55.0.9": { id: "expo-build-properties@55.0.9", name: "expo-build-properties", content: `undefined` },
   "expo-clipboard@55.0.8": { id: "expo-clipboard@55.0.8", name: "expo-clipboard", content: `undefined` },
-  "expo-dev-client@55.0.10": { id: "expo-dev-client@55.0.10", name: "expo-dev-client", content: `undefined` },
-  "expo-dev-launcher@55.0.11": { id: "expo-dev-launcher@55.0.11", name: "expo-dev-launcher", content: `undefined` },
-  "expo-dev-menu@55.0.10": { id: "expo-dev-menu@55.0.10", name: "expo-dev-menu", content: `undefined` },
+  "expo-dev-client@55.0.16": { id: "expo-dev-client@55.0.16", name: "expo-dev-client", content: `undefined` },
+  "expo-dev-launcher@55.0.17": { id: "expo-dev-launcher@55.0.17", name: "expo-dev-launcher", content: `undefined` },
+  "expo-dev-menu@55.0.14": { id: "expo-dev-menu@55.0.14", name: "expo-dev-menu", content: `undefined` },
   "expo-dev-menu-interface@55.0.1": { id: "expo-dev-menu-interface@55.0.1", name: "expo-dev-menu-interface", content: `undefined` },
   "expo-manifests@55.0.9": { id: "expo-manifests@55.0.9", name: "expo-manifests", content: `undefined` },
   "expo-json-utils@55.0.0": { id: "expo-json-utils@55.0.0", name: "expo-json-utils", content: `undefined` },
   "expo-updates-interface@55.1.3": { id: "expo-updates-interface@55.1.3", name: "expo-updates-interface", content: `undefined` },
   "expo-haptics@55.0.8": { id: "expo-haptics@55.0.8", name: "expo-haptics", content: `undefined` },
-  "expo-image@55.0.5": { id: "expo-image@55.0.5", name: "expo-image", content: `undefined` },
+  "expo-image@55.0.6": { id: "expo-image@55.0.6", name: "expo-image", content: `undefined` },
   "expo-linking@55.0.7": { id: "expo-linking@55.0.7", name: "expo-linking", content: `undefined` },
-  "expo-router@55.0.4": { id: "expo-router@55.0.4", name: "expo-router", content: `undefined` },
+  "expo-router@55.0.5": { id: "expo-router@55.0.5", name: "expo-router", content: `undefined` },
   "@expo/metro-runtime@6.1.2": { id: "@expo/metro-runtime@6.1.2", name: "@expo/metro-runtime", content: `undefined` },
   "whatwg-fetch@3.6.20": { id: "whatwg-fetch@3.6.20", name: "whatwg-fetch", content: `Copyright (c) 2014-2023 GitHub, Inc.
 
@@ -13409,7 +13342,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
-  "@react-navigation/native-stack@7.14.4": { id: "@react-navigation/native-stack@7.14.4", name: "@react-navigation/native-stack", content: `MIT License
+  "@react-navigation/native-stack@7.14.5": { id: "@react-navigation/native-stack@7.14.5", name: "@react-navigation/native-stack", content: `MIT License
 
 Copyright (c) 2017 React Navigation Contributors
 
@@ -13454,10 +13387,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
   "client-only@0.0.1": { id: "client-only@0.0.1", name: "client-only", content: `undefined` },
-  "expo-glass-effect@55.0.7": { id: "expo-glass-effect@55.0.7", name: "expo-glass-effect", content: `undefined` },
-  "expo-image@55.0.6": { id: "expo-image@55.0.6", name: "expo-image", content: `undefined` },
+  "expo-glass-effect@55.0.8": { id: "expo-glass-effect@55.0.8", name: "expo-glass-effect", content: `undefined` },
   "expo-symbols@55.0.5": { id: "expo-symbols@55.0.5", name: "expo-symbols", content: `undefined` },
-  "@expo-google-fonts/material-symbols@0.4.25": { id: "@expo-google-fonts/material-symbols@0.4.25", name: "@expo-google-fonts/material-symbols", content: `MIT License
+  "@expo-google-fonts/material-symbols@0.4.26": { id: "@expo-google-fonts/material-symbols@0.4.26", name: "@expo-google-fonts/material-symbols", content: `MIT License
 
 Copyright (c) 2020 Expo
 
@@ -13842,10 +13774,9 @@ SOFTWARE.
   "expo-secure-store@55.0.8": { id: "expo-secure-store@55.0.8", name: "expo-secure-store", content: `undefined` },
   "expo-splash-screen@55.0.10": { id: "expo-splash-screen@55.0.10", name: "expo-splash-screen", content: `undefined` },
   "expo-status-bar@55.0.4": { id: "expo-status-bar@55.0.4", name: "expo-status-bar", content: `undefined` },
-  "expo-symbols@55.0.4": { id: "expo-symbols@55.0.4", name: "expo-symbols", content: `undefined` },
   "expo-system-ui@55.0.9": { id: "expo-system-ui@55.0.9", name: "expo-system-ui", content: `undefined` },
   "expo-web-browser@55.0.9": { id: "expo-web-browser@55.0.9", name: "expo-web-browser", content: `undefined` },
-  "jotai@2.18.0": { id: "jotai@2.18.0", name: "jotai", content: `MIT License
+  "jotai@2.18.1": { id: "jotai@2.18.1", name: "jotai", content: `MIT License
 
 Copyright (c) 2020 Poimandres
 
@@ -13867,7 +13798,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
-  "lucide-react-native@0.576.0": { id: "lucide-react-native@0.576.0", name: "lucide-react-native", content: `ISC License
+  "lucide-react-native@0.577.0": { id: "lucide-react-native@0.577.0", name: "lucide-react-native", content: `ISC License
 
 Copyright (c) for portions of Lucide are held by Cole Bemis 2013-2026 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2026.
 
@@ -15644,7 +15575,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
   "fast-base64-decode@1.0.0": { id: "fast-base64-decode@1.0.0", name: "fast-base64-decode", content: `undefined` },
-  "react-native-reanimated@4.2.1": { id: "react-native-reanimated@4.2.1", name: "react-native-reanimated", content: `The MIT License (MIT)
+  "react-native-reanimated@4.2.2": { id: "react-native-reanimated@4.2.2", name: "react-native-reanimated", content: `The MIT License (MIT)
 
 Copyright (c) 2016 Software Mansion <swmansion.com>
 
@@ -16126,7 +16057,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
-  "react-native-worklets@0.7.2": { id: "react-native-worklets@0.7.2", name: "react-native-worklets", content: `MIT License
+  "react-native-worklets@0.7.4": { id: "react-native-worklets@0.7.4", name: "react-native-worklets", content: `MIT License
 
 Copyright (c) 2024 nobody
 Permission is hereby granted, free of charge, to any person obtaining a copy
