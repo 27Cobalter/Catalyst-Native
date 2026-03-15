@@ -14,6 +14,7 @@ import { ArrowLeft, Check, Heart, MoreHorizontal } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActionSheetIOS,
+  ActivityIndicator,
   Alert,
   Animated,
   Linking,
@@ -240,6 +241,11 @@ export default function StatusDetailsPage() {
         }}
       />
 
+      {!status ? (
+        <View className="flex-1 bg-light-background dark:bg-dark-background items-center justify-center">
+          <ActivityIndicator size="large" />
+        </View>
+      ) : (
       <ScrollView className="flex-1 bg-light-background dark:bg-dark-background">
         {/* User header */}
         <View className="flex-row items-center px-4 pt-4 pb-2">
@@ -304,6 +310,7 @@ export default function StatusDetailsPage() {
           )}
         </View>
       </ScrollView>
+      )}
 
       {/* Edit caption sheet */}
       {Platform.OS === "ios" ? (
