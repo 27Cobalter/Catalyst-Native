@@ -28,6 +28,7 @@ export const MediaCarousel = ({ medias }: Props) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [modalIndex, setModalIndex] = useState(0);
+  const [activeTouches, setActiveTouches] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
 
   const len = medias.length;
@@ -230,13 +231,16 @@ export const MediaCarousel = ({ medias }: Props) => {
               ref={scrollViewRef}
               horizontal
               pagingEnabled
-              scrollEnabled={!isZoomed}
+              scrollEnabled={!isZoomed && activeTouches < 2}
               showsHorizontalScrollIndicator={false}
               contentOffset={{ x: (presentedMediaIndex ?? 0) * SCREEN_WIDTH, y: 0 }}
               onMomentumScrollEnd={(e) => {
                 const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
                 setModalIndex(index);
               }}
+              onTouchStart={(e) => setActiveTouches(e.nativeEvent.touches.length)}
+              onTouchMove={(e) => setActiveTouches(e.nativeEvent.touches.length)}
+              onTouchEnd={() => setActiveTouches(0)}
             >
               {medias.map((media, index) => (
                 <View key={media.id} style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT, justifyContent: "center" }}>
@@ -254,12 +258,13 @@ export const MediaCarousel = ({ medias }: Props) => {
                       doubleTapScale={3}
                       isDoubleTapEnabled
                       isPinchEnabled
-                      isPanEnabled
+                      isPanEnabled={isZoomed}
                       resizeMode="contain"
-                      onInteractionStart={() => setIsZoomed(true)}
                       onResetAnimationEnd={() => setIsZoomed(false)}
                       onPinchEnd={(event) => {
-                        if (event.scale <= 1) {
+                        if (event.scale > 1) {
+                          setIsZoomed(true);
+                        } else {
                           setIsZoomed(false);
                         }
                       }}
