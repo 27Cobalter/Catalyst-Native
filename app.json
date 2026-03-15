@@ -71,6 +71,7 @@
           ]
         }
       ],
+      "@react-native-async-storage/expo-with-async-storage",
       "@react-native-firebase/app",
       "@react-native-firebase/messaging",
       [

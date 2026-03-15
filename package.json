@@ -24,6 +24,7 @@
     "@gorhom/bottom-sheet": "^5.2.8",
     "@natsuneko-laboratory/catalyst-sdk": "^0.1.0",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-async-storage/expo-with-async-storage": "^1.0.0",
     "@react-native-firebase/app": "^23.8.8",
     "@react-native-firebase/messaging": "^23.8.8",
     "@react-navigation/bottom-tabs": "^7.15.3",
