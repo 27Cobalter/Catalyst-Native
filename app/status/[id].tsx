@@ -11,7 +11,7 @@ import * as Clipboard from "expo-clipboard";
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
-import { ArrowLeft, Check, Heart, MoreHorizontal } from "lucide-react-native";
+import { ArrowLeft, Check, MoreHorizontal } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActionSheetIOS,
@@ -32,6 +32,7 @@ import {
 } from "react-native";
 import { withUniwind } from "uniwind";
 
+import { ActionBar } from "@/components/status/action-bar";
 import "@/global.css";
 
 const UniImage = withUniwind(Image);
@@ -44,13 +45,12 @@ export default function StatusDetailsPage() {
   const account = useAtomValue(accountAtom);
 
   const [status, setStatus] = useState<CatalystStatus | null>(null);
-  const [isFavorited, setIsFavorited] = useState(false);
-  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   const [reactions, setReactions] = useState<Record<string, CatalystReaction>>({});
   const [editingCaption, setEditingCaption] = useState("");
   const [isEditSheetVisible, setIsEditSheetVisible] = useState(false);
   const [isEditingSaving, setIsEditingSaving] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
   const emojiPickerRef = useRef<EmojiPickerSheetRef>(null);
   const menuOverlayOpacity = useRef(new Animated.Value(0)).current;
   const menuSheetTranslateY = useRef(new Animated.Value(300)).current;
@@ -79,24 +79,6 @@ export default function StatusDetailsPage() {
 
     fetchData();
   }, [id, account]);
-
-  const toggleFavorite = useCallback(async () => {
-    if (!account?.credential.client || !id || isTogglingFavorite) return;
-    setIsTogglingFavorite(true);
-    try {
-      if (isFavorited) {
-        await account.credential.client.catalyst.unfavorite(id);
-        setIsFavorited(false);
-      } else {
-        await account.credential.client.catalyst.favorite(id);
-        setIsFavorited(true);
-      }
-    } catch (e) {
-      Alert.alert("エラー", "お気に入りの操作に失敗しました");
-    } finally {
-      setIsTogglingFavorite(false);
-    }
-  }, [account, id, isFavorited, isTogglingFavorite]);
 
   const handleReact = useCallback(
     async (symbol: string) => {
@@ -288,15 +270,7 @@ export default function StatusDetailsPage() {
 
                 <View className="border-t border-light-border dark:border-dark-border my-2" />
 
-                <View style={styles.actionsRow}>
-                  <TouchableOpacity
-                    onPress={toggleFavorite}
-                    disabled={isTogglingFavorite || !isLoggedIn}
-                    style={[styles.actionButton, (!isLoggedIn || isTogglingFavorite) && styles.actionButtonDisabled]}
-                  >
-                    <Heart size={22} color={isFavorited ? "#FF3B30" : "#000"} fill={isFavorited ? "#FF3B30" : "none"} />
-                  </TouchableOpacity>
-                </View>
+                <ActionBar isDefaultFavorited={isFavorited} status={status} />
 
                 <View className="border-t border-light-border dark:border-dark-border my-2" />
 
@@ -433,17 +407,6 @@ export default function StatusDetailsPage() {
 }
 
 const styles = StyleSheet.create({
-  actionsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 4,
-  },
-  actionButton: {
-    padding: 4,
-  },
-  actionButtonDisabled: {
-    opacity: 0.2,
-  },
   editSheetContainer: {
     flex: 1,
   },

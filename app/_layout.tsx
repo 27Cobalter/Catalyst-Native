@@ -19,6 +19,7 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import "react-native-reanimated";
+import Toast from "react-native-toast-message";
 
 // バックグラウンドでの通知受信ハンドラ
 setBackgroundMessageHandler(getMessaging(getApp()), async (_remoteMessage) => {
@@ -92,6 +93,7 @@ export default Sentry.wrap(function RootLayout() {
           />
         </Stack>
         <StatusBar style="auto" />
+        <Toast />
       </ThemeProvider>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
