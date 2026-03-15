@@ -1,0 +1,120 @@
+diff --git a/lib/commonjs/hooks/useGestures.js b/lib/commonjs/hooks/useGestures.js
+index 0a4f543274ad8be987cdc4a0039bd7f46e7c276d..7f286b13464b2ee43500764c0c411f98b28c1005 100644
+--- a/lib/commonjs/hooks/useGestures.js
++++ b/lib/commonjs/hooks/useGestures.js
+@@ -194,7 +194,7 @@ const useGestures = ({
+     if (scale.value > 1 && isDoubleTapEnabled) {
+       translate.x.value = (0, _reactNativeReanimated.withDecay)({
+         velocity: event.velocityX,
+-        velocityFactor: 0.6,
++        velocityFactor: 0.2,
+         rubberBandEffect: true,
+         rubberBandFactor: 0.9,
+         clamp: [leftLimit - focal.x.value, rightLimit - focal.x.value]
+@@ -205,7 +205,7 @@ const useGestures = ({
+       });
+       translate.y.value = (0, _reactNativeReanimated.withDecay)({
+         velocity: event.velocityY,
+-        velocityFactor: 0.6,
++        velocityFactor: 0.2,
+         rubberBandEffect: true,
+         rubberBandFactor: 0.9,
+         clamp: [topLimit - focal.y.value, bottomLimit - focal.y.value]
+@@ -237,7 +237,7 @@ const useGestures = ({
+     if (scale.value > 1 && isDoubleTapEnabled) {
+       translate.x.value = (0, _reactNativeReanimated.withDecay)({
+         velocity: event.velocityX,
+-        velocityFactor: 0.6,
++        velocityFactor: 0.2,
+         rubberBandEffect: true,
+         rubberBandFactor: 0.9,
+         clamp: [leftLimit - focal.x.value, rightLimit - focal.x.value]
+@@ -248,7 +248,7 @@ const useGestures = ({
+       });
+       translate.y.value = (0, _reactNativeReanimated.withDecay)({
+         velocity: event.velocityY,
+-        velocityFactor: 0.6,
++        velocityFactor: 0.2,
+         rubberBandEffect: true,
+         rubberBandFactor: 0.9,
+         clamp: [topLimit - focal.y.value, bottomLimit - focal.y.value]
+diff --git a/lib/module/hooks/useGestures.js b/lib/module/hooks/useGestures.js
+index 4847f0d2204d41a1e6a49f520b69c28deea6b4f5..f01a73e054457b43a3bb4b338ad9af2eeacc3983 100644
+--- a/lib/module/hooks/useGestures.js
++++ b/lib/module/hooks/useGestures.js
+@@ -188,7 +188,7 @@ export const useGestures = ({
+     if (scale.value > 1 && isDoubleTapEnabled) {
+       translate.x.value = withDecay({
+         velocity: event.velocityX,
+-        velocityFactor: 0.6,
++        velocityFactor: 0.2,
+         rubberBandEffect: true,
+         rubberBandFactor: 0.9,
+         clamp: [leftLimit - focal.x.value, rightLimit - focal.x.value]
+@@ -199,7 +199,7 @@ export const useGestures = ({
+       });
+       translate.y.value = withDecay({
+         velocity: event.velocityY,
+-        velocityFactor: 0.6,
++        velocityFactor: 0.2,
+         rubberBandEffect: true,
+         rubberBandFactor: 0.9,
+         clamp: [topLimit - focal.y.value, bottomLimit - focal.y.value]
+@@ -231,7 +231,7 @@ export const useGestures = ({
+     if (scale.value > 1 && isDoubleTapEnabled) {
+       translate.x.value = withDecay({
+         velocity: event.velocityX,
+-        velocityFactor: 0.6,
++        velocityFactor: 0.2,
+         rubberBandEffect: true,
+         rubberBandFactor: 0.9,
+         clamp: [leftLimit - focal.x.value, rightLimit - focal.x.value]
+@@ -242,7 +242,7 @@ export const useGestures = ({
+       });
+       translate.y.value = withDecay({
+         velocity: event.velocityY,
+-        velocityFactor: 0.6,
++        velocityFactor: 0.2,
+         rubberBandEffect: true,
+         rubberBandFactor: 0.9,
+         clamp: [topLimit - focal.y.value, bottomLimit - focal.y.value]
+diff --git a/src/hooks/useGestures.ts b/src/hooks/useGestures.ts
+index 39f920f6a20343256410bf908d1af7678e3711c1..d3e90de60a6c0860f7d6a4e7d8dde9493a8d3209 100644
+--- a/src/hooks/useGestures.ts
++++ b/src/hooks/useGestures.ts
+@@ -261,7 +261,7 @@ export const useGestures = ({
+         translate.x.value = withDecay(
+           {
+             velocity: event.velocityX,
+-            velocityFactor: 0.6,
++            velocityFactor: 0.2,
+             rubberBandEffect: true,
+             rubberBandFactor: 0.9,
+             clamp: [leftLimit - focal.x.value, rightLimit - focal.x.value],
+@@ -275,7 +275,7 @@ export const useGestures = ({
+         translate.y.value = withDecay(
+           {
+             velocity: event.velocityY,
+-            velocityFactor: 0.6,
++            velocityFactor: 0.2,
+             rubberBandEffect: true,
+             rubberBandFactor: 0.9,
+             clamp: [topLimit - focal.y.value, bottomLimit - focal.y.value],
+@@ -321,7 +321,7 @@ export const useGestures = ({
+         translate.x.value = withDecay(
+           {
+             velocity: event.velocityX,
+-            velocityFactor: 0.6,
++            velocityFactor: 0.2,
+             rubberBandEffect: true,
+             rubberBandFactor: 0.9,
+             clamp: [leftLimit - focal.x.value, rightLimit - focal.x.value],
+@@ -335,7 +335,7 @@ export const useGestures = ({
+         translate.y.value = withDecay(
+           {
+             velocity: event.velocityY,
+-            velocityFactor: 0.6,
++            velocityFactor: 0.2,
+             rubberBandEffect: true,
+             rubberBandFactor: 0.9,
+             clamp: [topLimit - focal.y.value, bottomLimit - focal.y.value],
