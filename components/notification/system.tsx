@@ -77,10 +77,11 @@ export const SystemNotificationList = () => {
         const unique = newItems.filter((n) => !existingIds.has(n.id));
         setItems((prev) => [...unique, ...prev]);
       }
+      await markAllAsRead();
     } finally {
       setIsRefreshing(false);
     }
-  }, [items, fetchNotifications]);
+  }, [items, fetchNotifications, markAllAsRead]);
 
   const onLoadMore = useCallback(async () => {
     if (isLoading || items.length === 0) return;
