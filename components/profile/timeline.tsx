@@ -25,21 +25,30 @@ export type UserTimelineHandle = {
 const ThumbnailCell = memo(({ status }: { status: CatalystStatus }) => {
   const router = useRouter();
   const media = status.medias[0];
+  const [isImageLoading, setIsImageLoading] = useState(true);
 
   return (
     <Pressable onPress={() => router.push(`/status/${status.id}`)} style={{ width: CELL_SIZE, height: CELL_SIZE }}>
       {media ? (
-        <Image
-          source={{
-            uri: getCdnUrl({
-              src: media.url,
-              variant: "tiny",
-              width: CELL_SIZE,
-            }),
-          }}
-          style={{ width: CELL_SIZE, height: CELL_SIZE }}
-          contentFit="cover"
-        />
+        <View style={{ width: CELL_SIZE, height: CELL_SIZE }}>
+          <Image
+            source={{
+              uri: getCdnUrl({
+                src: media.url,
+                variant: "tiny",
+                width: CELL_SIZE,
+              }),
+            }}
+            style={{ width: CELL_SIZE, height: CELL_SIZE }}
+            contentFit="cover"
+            onLoadEnd={() => setIsImageLoading(false)}
+          />
+          {isImageLoading && (
+            <View className="absolute inset-0 items-center justify-center bg-gray-200 dark:bg-gray-800">
+              <ActivityIndicator />
+            </View>
+          )}
+        </View>
       ) : (
         <View className="flex-1 items-center justify-center bg-gray-200 dark:bg-gray-800">
           <MessageSquare size={24} color="#9CA3AF" />

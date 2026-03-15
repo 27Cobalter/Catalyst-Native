@@ -24,6 +24,7 @@ export type UserGalleryHandle = {
 const GalleryCell = memo(({ status }: { status: CatalystStatus }) => {
   const router = useRouter();
   const media = status.medias[0];
+  const [isImageLoading, setIsImageLoading] = useState(true);
   if (!media) return null;
 
   const aspectRatio =
@@ -32,17 +33,25 @@ const GalleryCell = memo(({ status }: { status: CatalystStatus }) => {
 
   return (
     <Pressable onPress={() => router.push(`/status/${status.id}`)} style={{ marginBottom: GAP }}>
-      <Image
-        source={{
-          uri: getCdnUrl({
-            src: media.url,
-            variant: "xsmall",
-            width: COLUMN_WIDTH,
-          }),
-        }}
-        style={{ width: COLUMN_WIDTH, height: cellHeight, borderRadius: 4 }}
-        contentFit="cover"
-      />
+      <View style={{ width: COLUMN_WIDTH, height: cellHeight, borderRadius: 4, overflow: "hidden" }}>
+        <Image
+          source={{
+            uri: getCdnUrl({
+              src: media.url,
+              variant: "xsmall",
+              width: COLUMN_WIDTH,
+            }),
+          }}
+          style={{ width: COLUMN_WIDTH, height: cellHeight }}
+          contentFit="cover"
+          onLoadEnd={() => setIsImageLoading(false)}
+        />
+        {isImageLoading && (
+          <View className="absolute inset-0 items-center justify-center bg-gray-200 dark:bg-gray-800">
+            <ActivityIndicator />
+          </View>
+        )}
+      </View>
     </Pressable>
   );
 });
