@@ -13,6 +13,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import "react-native-reanimated";
@@ -62,6 +63,7 @@ export default Sentry.wrap(function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <BottomSheetModalProvider>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(drawer)" options={{ headerShown: false, gestureEnabled: false }} />
@@ -84,6 +86,7 @@ export default Sentry.wrap(function RootLayout() {
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>
+      </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );
 });

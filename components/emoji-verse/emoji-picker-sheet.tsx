@@ -1,13 +1,22 @@
 import { accountAtom } from "@/models/atoms/account";
+import {
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetView,
+  type BottomSheetBackdropProps,
+} from "@gorhom/bottom-sheet";
 import type { CatalystCustomReaction } from "@natsuneko-laboratory/catalyst-sdk";
 import { useAtomValue } from "jotai";
-import React, { useCallback, useEffect, useState } from "react";
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
-  Animated,
-  Modal,
-  Platform,
-  Pressable,
   StyleSheet,
   Text,
   View,
@@ -19,200 +28,136 @@ import { recordUnicodeUsage, recordUrlUsage } from "./frequency-manager";
 import type { EmojiCategory, EmojiItem } from "./types";
 import { emojiToCodepoints } from "./unicode";
 
+export type EmojiPickerSheetRef = {
+  open: () => void;
+  close: () => void;
+};
+
 type Props = {
-  visible: boolean;
-  onClose: () => void;
   onReact: (symbol: string) => void;
 };
 
-export function EmojiPickerSheet({ visible, onClose, onReact }: Props) {
-  const theme = useColorScheme() ?? "light";
-  const account = useAtomValue(accountAtom);
-  const [categories, setCategories] = useState<EmojiCategory[]>([]);
-  const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
-  const [overlayOpacity] = useState(() => new Animated.Value(0));
-  const [sheetTranslateY] = useState(() => new Animated.Value(600));
-  const { categories: defaultCategories, isLoading: isEmojiDataLoading } =
-    useDefaultCategories();
+export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
+  function EmojiPickerSheet({ onReact }, ref) {
+    const theme = useColorScheme() ?? "light";
+    const account = useAtomValue(accountAtom);
+    const [categories, setCategories] = useState<EmojiCategory[]>([]);
+    const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
+    const [isPresented, setIsPresented] = useState(false);
+    const bottomSheetRef = useRef<BottomSheetModal>(null);
+    const { categories: defaultCategories, isLoading: isEmojiDataLoading } =
+      useDefaultCategories();
 
-  useEffect(() => {
-    if (!visible || isEmojiDataLoading) return;
+    useImperativeHandle(ref, () => ({
+      open: () => {
+        setIsPresented(true);
+        bottomSheetRef.current?.present();
+      },
+      close: () => {
+        bottomSheetRef.current?.dismiss();
+      },
+    }));
 
-    setIsCategoriesLoading(true);
+    useEffect(() => {
+      if (!isPresented || isEmojiDataLoading) return;
 
-    const load = async () => {
-      try {
-        const customReactions = account?.credential.client
-          ? await account.credential.client.catalyst
-              .customReactions()
-              .catch(() => [] as CatalystCustomReaction[])
-          : [];
+      setIsCategoriesLoading(true);
 
-        const builtCategories: EmojiCategory[] = [];
+      const load = async () => {
+        try {
+          const customReactions = account?.credential.client
+            ? await account.credential.client.catalyst
+                .customReactions()
+                .catch(() => [] as CatalystCustomReaction[])
+            : [];
 
-        if (customReactions.length > 0) {
-          builtCategories.push({
-            id: "catalyst",
-            title: "Catalyst",
-            icon: "star",
-            emojis: customReactions.map((r) => ({
-              id: r.symbol,
-              type: { kind: "url" as const, url: r.url },
-              keywords: [r.name],
-            })),
-          });
-        }
+          const builtCategories: EmojiCategory[] = [];
 
-        const filtered = getFilteredCategories(
-          ["flags", "smileys_and_people"],
-          defaultCategories,
-        );
-        builtCategories.push(...filtered);
+          if (customReactions.length > 0) {
+            builtCategories.push({
+              id: "catalyst",
+              title: "Catalyst",
+              icon: "star",
+              emojis: customReactions.map((r) => ({
+                id: r.symbol,
+                type: { kind: "url" as const, url: r.url },
+                keywords: [r.name],
+              })),
+            });
+          }
 
-        setCategories(builtCategories);
-      } catch (e) {
-        console.error("Failed to load emoji data:", e);
-        setCategories(
-          getFilteredCategories(
+          const filtered = getFilteredCategories(
             ["flags", "smileys_and_people"],
             defaultCategories,
-          ),
-        );
-      } finally {
-        setIsCategoriesLoading(false);
-      }
-    };
+          );
+          builtCategories.push(...filtered);
 
-    load();
-  }, [visible, account, isEmojiDataLoading, defaultCategories]);
+          setCategories(builtCategories);
+        } catch (e) {
+          console.error("Failed to load emoji data:", e);
+          setCategories(
+            getFilteredCategories(
+              ["flags", "smileys_and_people"],
+              defaultCategories,
+            ),
+          );
+        } finally {
+          setIsCategoriesLoading(false);
+        }
+      };
 
-  useEffect(() => {
-    if (visible && Platform.OS !== "ios") {
-      overlayOpacity.setValue(0);
-      sheetTranslateY.setValue(600);
-      Animated.parallel([
-        Animated.timing(overlayOpacity, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(sheetTranslateY, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [visible, overlayOpacity, sheetTranslateY]);
+      load();
+    }, [isPresented, account, isEmojiDataLoading, defaultCategories]);
 
-  const handleClose = useCallback(() => {
-    if (Platform.OS === "ios") {
-      onClose();
-      return;
-    }
-    Animated.parallel([
-      Animated.timing(overlayOpacity, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(sheetTranslateY, {
-        toValue: 600,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-    ]).start(() => onClose());
-  }, [onClose, overlayOpacity, sheetTranslateY]);
+    const handleDismiss = useCallback(() => {
+      setIsPresented(false);
+    }, []);
 
-  const handleEmojiSelected = useCallback(
-    async (emoji: EmojiItem) => {
-      if (emoji.type.kind === "unicode") {
-        const codepoints = emojiToCodepoints(emoji.type.emoji);
-        onReact(codepoints);
-        recordUnicodeUsage(emoji.type.emoji).catch(() => {});
-      } else if (emoji.type.kind === "url") {
-        onReact(emoji.id);
-        recordUrlUsage(emoji.id, emoji.type.url).catch(() => {});
-      }
-      handleClose();
-    },
-    [onReact, handleClose],
-  );
-
-
-  if (Platform.OS === "ios") {
-    return (
-      <Modal
-        visible={visible}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={handleClose}
-      >
-        <View className="flex-1 bg-light-background dark:bg-dark-background">
-          <View className="flex-row items-center justify-between px-4 py-4">
-            <Pressable onPress={handleClose}>
-              <Text style={styles.cancelText}>キャンセル</Text>
-            </Pressable>
-            <Text
-              style={[
-                styles.title,
-                { color: theme === "dark" ? "#FFFFFF" : "#000000" },
-              ]}
-            >
-              リアクションを追加
-            </Text>
-            <View style={{ width: 80 }} />
-          </View>
-          <View
-            style={[
-              styles.headerDivider,
-              { backgroundColor: theme === "dark" ? "#38383A" : "#E5E5EA" },
-            ]}
-          />
-          {isCategoriesLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator />
-            </View>
-          ) : (
-            <EmojiPickerView
-              categories={categories}
-              onEmojiSelected={handleEmojiSelected}
-            />
-          )}
-        </View>
-      </Modal>
+    const handleEmojiSelected = useCallback(
+      async (emoji: EmojiItem) => {
+        if (emoji.type.kind === "unicode") {
+          const codepoints = emojiToCodepoints(emoji.type.emoji);
+          onReact(codepoints);
+          recordUnicodeUsage(emoji.type.emoji).catch(() => {});
+        } else if (emoji.type.kind === "url") {
+          onReact(emoji.id);
+          recordUrlUsage(emoji.id, emoji.type.url).catch(() => {});
+        }
+        bottomSheetRef.current?.dismiss();
+      },
+      [onReact],
     );
-  }
 
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="none"
-      onRequestClose={handleClose}
-    >
-      <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
-        <Pressable style={styles.overlayPressable} onPress={handleClose} />
-        <Animated.View
-          className="bg-light-background dark:bg-dark-background"
-          style={[
-            styles.androidSheet,
-            {
-              transform: [{ translateY: sheetTranslateY }],
-            },
-          ]}
-        >
-          <View style={styles.androidHandle}>
-            <View
-              style={[
-                styles.handleBar,
-                { backgroundColor: theme === "dark" ? "#48484A" : "#C7C7CC" },
-              ]}
-            />
-          </View>
+    const renderBackdrop = useCallback(
+      (props: BottomSheetBackdropProps) => (
+        <BottomSheetBackdrop
+          {...props}
+          disappearsOnIndex={-1}
+          appearsOnIndex={0}
+        />
+      ),
+      [],
+    );
+
+    return (
+      <BottomSheetModal
+        ref={bottomSheetRef}
+        enableDynamicSizing={false}
+        snapPoints={["75%"]}
+        enablePanDownToClose
+        backdropComponent={renderBackdrop}
+        onDismiss={handleDismiss}
+        backgroundStyle={{
+          backgroundColor: theme === "dark" ? "#1C1C1E" : "#FFFFFF",
+        }}
+        handleIndicatorStyle={{
+          backgroundColor: theme === "dark" ? "#48484A" : "#C7C7CC",
+        }}
+      >
+        <BottomSheetView style={styles.content}>
           <Text
             style={[
-              styles.androidTitle,
+              styles.title,
               { color: theme === "dark" ? "#FFFFFF" : "#000000" },
             ]}
           >
@@ -234,22 +179,21 @@ export function EmojiPickerSheet({ visible, onClose, onReact }: Props) {
               onEmojiSelected={handleEmojiSelected}
             />
           )}
-        </Animated.View>
-      </Animated.View>
-    </Modal>
-  );
-}
+        </BottomSheetView>
+      </BottomSheetModal>
+    );
+  },
+);
 
 const styles = StyleSheet.create({
-  cancelText: {
-    fontSize: 17,
-    color: "#007AFF",
-    width: 80,
+  content: {
+    flex: 1,
   },
   title: {
     fontSize: 17,
     fontWeight: "600",
     textAlign: "center",
+    paddingBottom: 8,
   },
   headerDivider: {
     height: StyleSheet.hairlineWidth,
@@ -258,33 +202,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "flex-end",
-  },
-  overlayPressable: {
-    flex: 1,
-  },
-  androidSheet: {
-    height: "75%",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  },
-  androidHandle: {
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  handleBar: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-  },
-  androidTitle: {
-    fontSize: 17,
-    fontWeight: "600",
-    textAlign: "center",
-    paddingBottom: 8,
   },
 });

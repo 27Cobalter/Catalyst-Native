@@ -1,4 +1,4 @@
-import { EmojiPickerSheet } from "@/components/emoji-verse";
+import { EmojiPickerSheet, type EmojiPickerSheetRef } from "@/components/emoji-verse";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import { ReactionBar } from "@/components/reaction-bar";
 import { StatusText } from "@/components/status/text";
@@ -31,6 +31,9 @@ import {
 } from "react-native";
 import { withUniwind } from "uniwind";
 
+import "@/global.css";
+
+const UniImage = withUniwind(Image);
 const UniMoreHorizontal = withUniwind(MoreHorizontal);
 
 export default function StatusDetailsPage() {
@@ -47,7 +50,7 @@ export default function StatusDetailsPage() {
   const [isEditSheetVisible, setIsEditSheetVisible] = useState(false);
   const [isEditingSaving, setIsEditingSaving] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
-  const [isReactionSheetVisible, setIsReactionSheetVisible] = useState(false);
+  const emojiPickerRef = useRef<EmojiPickerSheetRef>(null);
   const menuOverlayOpacity = useRef(new Animated.Value(0)).current;
   const menuSheetTranslateY = useRef(new Animated.Value(300)).current;
 
@@ -237,32 +240,27 @@ export default function StatusDetailsPage() {
         }}
       />
 
-      <ScrollView
-        className="bg-light-background dark:bg-dark-background"
-        style={{
-          ...styles.container,
-        }}
-      >
+      <ScrollView className="flex-1 bg-light-background dark:bg-dark-background">
         {/* User header */}
-        <View style={styles.header}>
+        <View className="flex-row items-center px-4 pt-4 pb-2">
           <TouchableOpacity onPress={() => user && router.push(`/user/${user.screenName}`)} activeOpacity={0.7}>
             {user?.profile?.iconUrl ? (
-              <Image
+              <UniImage
                 source={{ uri: getCdnUrl({ src: user.profile.iconUrl, variant: "icon", width: 96 }) }}
-                style={styles.avatar}
+                className="h-12 w-12 rounded-full"
                 contentFit="cover"
               />
             ) : (
-              <View style={[styles.avatar, styles.avatarPlaceholder]} />
+              <View className="h-12 w-12 rounded-full" />
             )}
           </TouchableOpacity>
 
-          <View style={styles.userInfo}>
+          <View className="flex-1 ml-3">
             <TouchableOpacity onPress={() => user && router.push(`/user/${user.screenName}`)} activeOpacity={0.7}>
-              <Text style={styles.displayName} numberOfLines={1}>
+              <Text className="text-light-text dark:text-dark-text font-semibold text-base" numberOfLines={1}>
                 {user?.displayName ?? ""}
               </Text>
-              <Text style={styles.screenName} numberOfLines={1}>
+              <Text className="text-neutral-500" numberOfLines={1}>
                 @{user?.screenName ?? ""}
               </Text>
             </TouchableOpacity>
@@ -273,16 +271,16 @@ export default function StatusDetailsPage() {
         {status && status.medias.length > 0 && <MediaCarousel medias={status.medias} />}
 
         {/* Body and actions */}
-        <View style={styles.bodyContainer}>
+        <View className="p-4">
           {status && status.body.length > 0 && <StatusText status={status.body} />}
 
           {status && (
             <>
-              <Text style={styles.timestamp}>
-                {abs(status.createdAt)} · {rel(status.createdAt)}
+              <Text className="text-sm text-neutral-500 mt-2">
+                {abs(status.createdAt)} - {rel(status.createdAt)}
               </Text>
 
-              <View style={styles.divider} />
+              <View className="border-t border-light-border dark:border-dark-border my-2" />
 
               <View style={styles.actionsRow}>
                 <TouchableOpacity
@@ -294,13 +292,13 @@ export default function StatusDetailsPage() {
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.divider} />
+              <View className="border-t border-light-border dark:border-dark-border my-2" />
 
               <ReactionBar
                 reactions={reactions}
                 onReact={handleReact}
                 onUnreact={handleUnreact}
-                onAddReaction={isLoggedIn ? () => setIsReactionSheetVisible(true) : undefined}
+                onAddReaction={isLoggedIn ? () => emojiPickerRef.current?.open() : undefined}
               />
             </>
           )}
@@ -310,12 +308,7 @@ export default function StatusDetailsPage() {
       {/* Edit caption sheet */}
       {Platform.OS === "ios" ? (
         <Modal visible={isEditSheetVisible} animationType="slide" presentationStyle="pageSheet">
-          <View
-            className="bg-light-background dark:bg-dark-background"
-            style={[
-              styles.editSheetContainer,
-            ]}
-          >
+          <View className="bg-light-background dark:bg-dark-background" style={[styles.editSheetContainer]}>
             <View style={styles.editSheetHeader}>
               <TouchableOpacity onPress={() => setIsEditSheetVisible(false)}>
                 <Text style={styles.editSheetCancel}>キャンセル</Text>
@@ -344,12 +337,7 @@ export default function StatusDetailsPage() {
         </Modal>
       ) : (
         <Modal visible={isEditSheetVisible} animationType="fade" statusBarTranslucent>
-          <View
-               className="bg-light-background dark:bg-dark-background"
-         style={[
-              styles.editSheetContainerAndroid,
-            ]}
-          >
+          <View className="bg-light-background dark:bg-dark-background" style={[styles.editSheetContainerAndroid]}>
             <View style={[styles.editSheetToolbar, { backgroundColor: theme === "dark" ? "#1E1E1E" : "#FFFFFF" }]}>
               <TouchableOpacity onPress={() => setIsEditSheetVisible(false)} style={styles.toolbarIconButton}>
                 <ArrowLeft size={24} color={theme === "dark" ? "#FFFFFF" : "#000000"} />
@@ -382,8 +370,7 @@ export default function StatusDetailsPage() {
 
       {/* Reaction picker sheet */}
       <EmojiPickerSheet
-        visible={isReactionSheetVisible}
-        onClose={() => setIsReactionSheetVisible(false)}
+        ref={emojiPickerRef}
         onReact={handleReact}
       />
 
@@ -394,10 +381,7 @@ export default function StatusDetailsPage() {
             <Pressable style={styles.menuOverlayPressable} onPress={() => closeMenu()} />
             <Animated.View
               className="bg-light-background dark:bg-dark-background"
-              style={[
-                styles.menuSheet,
-                { transform: [{ translateY: menuSheetTranslateY }] },
-              ]}
+              style={[styles.menuSheet, { transform: [{ translateY: menuSheetTranslateY }] }]}
             >
               {isMyself && (
                 <>
@@ -445,48 +429,6 @@ export default function StatusDetailsPage() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  avatarPlaceholder: {},
-  userInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  displayName: {
-    fontSize: 15,
-    fontWeight: "bold",
-  },
-  screenName: {
-    fontSize: 14,
-    color: "#8E8E93",
-  },
-  bodyContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  timestamp: {
-    fontSize: 14,
-    color: "#8E8E93",
-    marginTop: 8,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "#E5E5EA",
-    marginVertical: 8,
-  },
   actionsRow: {
     flexDirection: "row",
     alignItems: "center",
