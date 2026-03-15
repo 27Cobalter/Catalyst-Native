@@ -1,5 +1,5 @@
 import { getCdnUrl } from "@/lib/media";
-import { ImageZoom } from "@likashefqet/react-native-image-zoom";
+import { Zoomable } from "@likashefqet/react-native-image-zoom";
 import type { Media } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
 import { EyeOff } from "lucide-react-native";
@@ -245,21 +245,13 @@ export const MediaCarousel = ({ medias }: Props) => {
               {medias.map((media, index) => (
                 <View key={media.id} style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT, justifyContent: "center" }}>
                   {index === modalIndex ? (
-                    <ImageZoom
-                      uri={getCdnUrl({
-                        src: media.url,
-                        variant: "medium",
-                        width: SCREEN_WIDTH,
-                        aspect: { w: media.metadata?.width ?? 1, h: media.metadata?.height ?? 1 },
-                      })}
-                      style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
+                    <Zoomable
                       minScale={1}
                       maxScale={5}
                       doubleTapScale={3}
                       isDoubleTapEnabled
                       isPinchEnabled
                       isPanEnabled={isZoomed}
-                      resizeMode="contain"
                       onResetAnimationEnd={() => setIsZoomed(false)}
                       onPinchEnd={(event) => {
                         if (event.scale > 1) {
@@ -268,7 +260,21 @@ export const MediaCarousel = ({ medias }: Props) => {
                           setIsZoomed(false);
                         }
                       }}
-                    />
+                      style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT, justifyContent: "center", alignItems: "center" }}
+                    >
+                      <Image
+                        source={{
+                          uri: getCdnUrl({
+                            src: media.url,
+                            variant: "medium",
+                            width: SCREEN_WIDTH,
+                            aspect: { w: media.metadata?.width ?? 1, h: media.metadata?.height ?? 1 },
+                          }),
+                        }}
+                        style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
+                        contentFit="contain"
+                      />
+                    </Zoomable>
                   ) : (
                     <Image
                       source={{
