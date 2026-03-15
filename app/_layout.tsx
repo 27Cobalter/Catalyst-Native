@@ -6,6 +6,8 @@ import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { accountAtom } from "@/models/atoms/account";
 import * as Credential from "@/models/credential";
+import { getApp } from "@react-native-firebase/app";
+import { getMessaging, setBackgroundMessageHandler } from "@react-native-firebase/messaging";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import * as Sentry from "@sentry/react-native";
 import { Stack } from "expo-router";
@@ -17,6 +19,11 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import "react-native-reanimated";
+
+// バックグラウンドでの通知受信ハンドラ
+setBackgroundMessageHandler(getMessaging(getApp()), async (_remoteMessage) => {
+  // バックグラウンド通知の処理（現時点では特別な処理は不要）
+});
 
 // import "@/global.css";
 

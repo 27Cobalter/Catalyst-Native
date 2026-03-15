@@ -5,7 +5,7 @@ import type { Notification } from "@natsuneko-laboratory/catalyst-sdk";
 import { FlashList } from "@shopify/flash-list";
 import { useAtomValue } from "jotai";
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, RefreshControl, Text, View, useColorScheme } from "react-native";
+import { ActivityIndicator, Platform, PushNotificationIOS, RefreshControl, Text, View, useColorScheme } from "react-native";
 import { FollowNotification } from "./follow";
 import { ReactionNotification } from "./reaction";
 
@@ -33,6 +33,7 @@ export const SystemNotificationList = () => {
   const fetchNotifications = useCallback(
     async (since: string | null, until: string | null) => {
       if (!client) return [];
+
       const result = await client.steambird.notifications(client.steambird.ISSUER_CATALYST_SYSTEM_MESSAGE, {
         ...(since ? { since } : {}),
         ...(until ? { until } : {}),
@@ -42,12 +43,25 @@ export const SystemNotificationList = () => {
     [client],
   );
 
+  const markAllAsRead = useCallback(async () => {
+    if (!client) return;
+    try {
+      await client.steambird.readAll(client.steambird.ISSUER_CATALYST_SYSTEM_MESSAGE);
+      if (Platform.OS === "ios") {
+        PushNotificationIOS.setApplicationIconBadgeNumber(0);
+      }
+    } catch {
+      // 既読処理の失敗は無視
+    }
+  }, [client]);
+
   useAsyncOneTimeEffect(async () => {
     if (!client) return;
     setIsLoading(true);
     try {
       const notifications = await fetchNotifications(null, null);
       setItems(notifications);
+      await markAllAsRead();
     } finally {
       setIsLoading(false);
     }
