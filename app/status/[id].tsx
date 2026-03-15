@@ -1,7 +1,7 @@
 import { EmojiPickerSheet, type EmojiPickerSheetRef } from "@/components/emoji-verse";
-import { MediaCarousel } from "@/components/MediaCarousel";
 import { ReactionBar } from "@/components/reaction-bar";
 import { StatusText } from "@/components/status/text";
+import { MediaCarousel } from "@/components/ui/media-carousel";
 import { abs, rel } from "@/lib/dayjs";
 import { getCdnUrl } from "@/lib/media";
 import { accountAtom } from "@/models/atoms/account";
@@ -246,70 +246,70 @@ export default function StatusDetailsPage() {
           <ActivityIndicator size="large" />
         </View>
       ) : (
-      <ScrollView className="flex-1 bg-light-background dark:bg-dark-background">
-        {/* User header */}
-        <View className="flex-row items-center px-4 pt-4 pb-2">
-          <TouchableOpacity onPress={() => user && router.push(`/user/${user.screenName}`)} activeOpacity={0.7}>
-            {user?.profile?.iconUrl ? (
-              <UniImage
-                source={{ uri: getCdnUrl({ src: user.profile.iconUrl, variant: "icon", width: 96 }) }}
-                className="h-12 w-12 rounded-full"
-                contentFit="cover"
-              />
-            ) : (
-              <View className="h-12 w-12 rounded-full" />
-            )}
-          </TouchableOpacity>
-
-          <View className="flex-1 ml-3">
+        <ScrollView className="flex-1 bg-light-background dark:bg-dark-background">
+          {/* User header */}
+          <View className="flex-row items-center px-4 pt-4 pb-2">
             <TouchableOpacity onPress={() => user && router.push(`/user/${user.screenName}`)} activeOpacity={0.7}>
-              <Text className="text-light-text dark:text-dark-text font-semibold text-base" numberOfLines={1}>
-                {user?.displayName ?? ""}
-              </Text>
-              <Text className="text-neutral-500" numberOfLines={1}>
-                @{user?.screenName ?? ""}
-              </Text>
+              {user?.profile?.iconUrl ? (
+                <UniImage
+                  source={{ uri: getCdnUrl({ src: user.profile.iconUrl, variant: "icon", width: 96 }) }}
+                  className="h-12 w-12 rounded-full"
+                  contentFit="cover"
+                />
+              ) : (
+                <View className="h-12 w-12 rounded-full" />
+              )}
             </TouchableOpacity>
+
+            <View className="flex-1 ml-3">
+              <TouchableOpacity onPress={() => user && router.push(`/user/${user.screenName}`)} activeOpacity={0.7}>
+                <Text className="text-light-text dark:text-dark-text font-semibold text-base" numberOfLines={1}>
+                  {user?.displayName ?? ""}
+                </Text>
+                <Text className="text-neutral-500" numberOfLines={1}>
+                  @{user?.screenName ?? ""}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
 
-        {/* Media */}
-        {status && status.medias.length > 0 && <MediaCarousel medias={status.medias} />}
+          {/* Media */}
+          {status && status.medias.length > 0 && <MediaCarousel medias={status.medias} />}
 
-        {/* Body and actions */}
-        <View className="p-4">
-          {status && status.body.length > 0 && <StatusText status={status.body} />}
+          {/* Body and actions */}
+          <View className="p-4">
+            {status && status.body.length > 0 && <StatusText status={status.body} />}
 
-          {status && (
-            <>
-              <Text className="text-sm text-neutral-500 mt-2">
-                {abs(status.createdAt)} - {rel(status.createdAt)}
-              </Text>
+            {status && (
+              <>
+                <Text className="text-sm text-neutral-500 mt-2">
+                  {abs(status.createdAt)} - {rel(status.createdAt)}
+                </Text>
 
-              <View className="border-t border-light-border dark:border-dark-border my-2" />
+                <View className="border-t border-light-border dark:border-dark-border my-2" />
 
-              <View style={styles.actionsRow}>
-                <TouchableOpacity
-                  onPress={toggleFavorite}
-                  disabled={isTogglingFavorite || !isLoggedIn}
-                  style={[styles.actionButton, (!isLoggedIn || isTogglingFavorite) && styles.actionButtonDisabled]}
-                >
-                  <Heart size={22} color={isFavorited ? "#FF3B30" : "#000"} fill={isFavorited ? "#FF3B30" : "none"} />
-                </TouchableOpacity>
-              </View>
+                <View style={styles.actionsRow}>
+                  <TouchableOpacity
+                    onPress={toggleFavorite}
+                    disabled={isTogglingFavorite || !isLoggedIn}
+                    style={[styles.actionButton, (!isLoggedIn || isTogglingFavorite) && styles.actionButtonDisabled]}
+                  >
+                    <Heart size={22} color={isFavorited ? "#FF3B30" : "#000"} fill={isFavorited ? "#FF3B30" : "none"} />
+                  </TouchableOpacity>
+                </View>
 
-              <View className="border-t border-light-border dark:border-dark-border my-2" />
+                <View className="border-t border-light-border dark:border-dark-border my-2" />
 
-              <ReactionBar
-                reactions={reactions}
-                onReact={handleReact}
-                onUnreact={handleUnreact}
-                onAddReaction={isLoggedIn ? () => emojiPickerRef.current?.open() : undefined}
-              />
-            </>
-          )}
-        </View>
-      </ScrollView>
+                <ReactionBar
+                  reactions={reactions}
+                  onReact={handleReact}
+                  onUnreact={handleUnreact}
+                  onAddReaction={isLoggedIn ? () => emojiPickerRef.current?.open() : undefined}
+                />
+              </>
+            )}
+          </View>
+        </ScrollView>
       )}
 
       {/* Edit caption sheet */}
@@ -376,10 +376,7 @@ export default function StatusDetailsPage() {
       )}
 
       {/* Reaction picker sheet */}
-      <EmojiPickerSheet
-        ref={emojiPickerRef}
-        onReact={handleReact}
-      />
+      <EmojiPickerSheet ref={emojiPickerRef} onReact={handleReact} />
 
       {/* Android menu modal */}
       {Platform.OS !== "ios" && (

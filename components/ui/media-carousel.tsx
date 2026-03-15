@@ -6,7 +6,14 @@ import { EyeOff } from "lucide-react-native";
 import React, { useRef, useState } from "react";
 import { Dimensions, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import Animated, {
+  interpolate,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const MAX_HEIGHT = SCREEN_HEIGHT / 2;
@@ -36,6 +43,43 @@ export const MediaCarousel = ({ medias }: Props) => {
   // Settled integer index, readable from worklet
   const currentIndexSV = useSharedValue(0);
 
+  // Modal dismiss gesture
+  const modalTranslateY = useSharedValue(0);
+  const zoomScale = useSharedValue(1);
+
+  const dismissModal = () => setPresentedMediaIndex(null);
+
+  const dismissPanGesture = Gesture.Pan()
+    .activeOffsetY([-12, 12])
+    .failOffsetX([-6, 6])
+    .onUpdate((event) => {
+      if (zoomScale.value > 1.01) return;
+      modalTranslateY.value = event.translationY;
+    })
+    .onEnd((event) => {
+      if (zoomScale.value > 1.01) {
+        modalTranslateY.value = withSpring(0, SPRING_CONFIG);
+        return;
+      }
+      const shouldDismiss = Math.abs(event.translationY) > SCREEN_HEIGHT * 0.15 || Math.abs(event.velocityY) > 800;
+      if (shouldDismiss) {
+        const direction = event.translationY > 0 ? 1 : -1;
+        modalTranslateY.value = withTiming(direction * SCREEN_HEIGHT, { duration: 200 }, () => {
+          runOnJS(dismissModal)();
+        });
+      } else {
+        modalTranslateY.value = withSpring(0, SPRING_CONFIG);
+      }
+    });
+
+  const modalContentStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: modalTranslateY.value }],
+  }));
+
+  const modalBgStyle = useAnimatedStyle(() => ({
+    backgroundColor: `rgba(0,0,0,${interpolate(Math.abs(modalTranslateY.value), [0, SCREEN_HEIGHT * 0.4], [1, 0.2], "clamp")})`,
+  }));
+
   const hasSensitiveContent = medias.some((m) => m.metadata?.isSensitive || m.metadata?.isSpoiler);
   const isSensitive = medias.some((m) => m.metadata?.isSensitive);
   const isSpoiler = medias.some((m) => m.metadata?.isSpoiler);
@@ -50,6 +94,7 @@ export const MediaCarousel = ({ medias }: Props) => {
 
   const handleMediaPress = (index: number) => {
     if (hasSensitiveContent && !isBlurRemoved) return;
+    modalTranslateY.value = 0;
     setPresentedMediaIndex(index);
     setModalIndex(index);
   };
@@ -219,80 +264,87 @@ export const MediaCarousel = ({ medias }: Props) => {
         animationType="fade"
         onRequestClose={() => setPresentedMediaIndex(null)}
       >
-        <GestureHandlerRootView style={{ flex: 1, backgroundColor: "black" }}>
-          <Pressable
-            onPress={() => setPresentedMediaIndex(null)}
-            style={{ position: "absolute", top: 48, right: 16, zIndex: 10, padding: 8 }}
-          >
-            <Text style={{ color: "white", fontSize: 20 }}>✕</Text>
-          </Pressable>
-          {presentedMediaIndex !== null && (
-            <ScrollView
-              ref={scrollViewRef}
-              horizontal
-              pagingEnabled
-              scrollEnabled={!isZoomed && activeTouches < 2}
-              showsHorizontalScrollIndicator={false}
-              contentOffset={{ x: (presentedMediaIndex ?? 0) * SCREEN_WIDTH, y: 0 }}
-              onMomentumScrollEnd={(e) => {
-                const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-                setModalIndex(index);
-              }}
-              onTouchStart={(e) => setActiveTouches(e.nativeEvent.touches.length)}
-              onTouchMove={(e) => setActiveTouches(e.nativeEvent.touches.length)}
-              onTouchEnd={() => setActiveTouches(0)}
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Animated.View style={[{ flex: 1 }, modalBgStyle]}>
+            <Pressable
+              onPress={() => setPresentedMediaIndex(null)}
+              style={{ position: "absolute", top: 48, right: 16, zIndex: 10, padding: 8 }}
             >
-              {medias.map((media, index) => (
-                <View key={media.id} style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT, justifyContent: "center" }}>
-                  {index === modalIndex ? (
-                    <Zoomable
-                      minScale={1}
-                      maxScale={5}
-                      doubleTapScale={3}
-                      isDoubleTapEnabled
-                      isPinchEnabled
-                      isPanEnabled={isZoomed}
-                      onResetAnimationEnd={() => setIsZoomed(false)}
-                      onPinchEnd={(event) => {
-                        if (event.scale > 1) {
-                          setIsZoomed(true);
-                        } else {
-                          setIsZoomed(false);
-                        }
-                      }}
-                      style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT, justifyContent: "center", alignItems: "center" }}
-                    >
-                      <Image
-                        source={{
-                          uri: getCdnUrl({
-                            src: media.url,
-                            variant: "medium",
-                            width: SCREEN_WIDTH,
-                            aspect: { w: media.metadata?.width ?? 1, h: media.metadata?.height ?? 1 },
-                          }),
-                        }}
-                        style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
-                        contentFit="contain"
-                      />
-                    </Zoomable>
-                  ) : (
-                    <Image
-                      source={{
-                        uri: getCdnUrl({
-                          src: media.url,
-                          variant: "medium",
-                          width: SCREEN_WIDTH,
-                          aspect: { w: media.metadata?.width ?? 1, h: media.metadata?.height ?? 1 },
-                        }),
-                      }}
-                      style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
-                      contentFit="contain"
-                    />
-                  )}
-                </View>
-              ))}
-            </ScrollView>
-          )}
+              <Text style={{ color: "white", fontSize: 20 }}>✕</Text>
+            </Pressable>
+            <GestureDetector gesture={dismissPanGesture}>
+              <Animated.View style={[{ flex: 1 }, modalContentStyle]}>
+                {presentedMediaIndex !== null && (
+                  <ScrollView
+                    ref={scrollViewRef}
+                    horizontal
+                    pagingEnabled
+                    scrollEnabled={!isZoomed && activeTouches < 2}
+                    showsHorizontalScrollIndicator={false}
+                    contentOffset={{ x: (presentedMediaIndex ?? 0) * SCREEN_WIDTH, y: 0 }}
+                    onMomentumScrollEnd={(e) => {
+                      const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+                      setModalIndex(index);
+                    }}
+                    onTouchStart={(e) => setActiveTouches(e.nativeEvent.touches.length)}
+                    onTouchMove={(e) => setActiveTouches(e.nativeEvent.touches.length)}
+                    onTouchEnd={() => setActiveTouches(0)}
+                  >
+                    {medias.map((media, index) => (
+                      <View key={media.id} style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT, justifyContent: "center" }}>
+                        {index === modalIndex ? (
+                          <Zoomable
+                            minScale={1}
+                            maxScale={5}
+                            scale={zoomScale}
+                            doubleTapScale={3}
+                            isDoubleTapEnabled
+                            isPinchEnabled
+                            isPanEnabled={isZoomed}
+                            onResetAnimationEnd={() => setIsZoomed(false)}
+                            onPinchEnd={(event) => {
+                              if (event.scale > 1) {
+                                setIsZoomed(true);
+                              } else {
+                                setIsZoomed(false);
+                              }
+                            }}
+                            style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT, justifyContent: "center", alignItems: "center" }}
+                          >
+                            <Image
+                              source={{
+                                uri: getCdnUrl({
+                                  src: media.url,
+                                  variant: "medium",
+                                  width: SCREEN_WIDTH,
+                                  aspect: { w: media.metadata?.width ?? 1, h: media.metadata?.height ?? 1 },
+                                }),
+                              }}
+                              style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
+                              contentFit="contain"
+                            />
+                          </Zoomable>
+                        ) : (
+                          <Image
+                            source={{
+                              uri: getCdnUrl({
+                                src: media.url,
+                                variant: "medium",
+                                width: SCREEN_WIDTH,
+                                aspect: { w: media.metadata?.width ?? 1, h: media.metadata?.height ?? 1 },
+                              }),
+                            }}
+                            style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
+                            contentFit="contain"
+                          />
+                        )}
+                      </View>
+                    ))}
+                  </ScrollView>
+                )}
+              </Animated.View>
+            </GestureDetector>
+          </Animated.View>
         </GestureHandlerRootView>
       </Modal>
     </>
