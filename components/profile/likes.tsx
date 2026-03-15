@@ -9,8 +9,6 @@ import { ActivityIndicator, Text, useColorScheme, View } from "react-native";
 import { TimelineStatus } from "../timeline/status";
 import { UserTimelineHandle } from "./timeline";
 
-import "@/global.css";
-
 const ItemSeparator = () => {
   const theme = useColorScheme();
   return <View className={cn("h-px", theme === "dark" ? "bg-gray-700" : "bg-gray-300")} />;
