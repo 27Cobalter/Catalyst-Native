@@ -7,7 +7,7 @@ import {
   hasPermission,
   requestPermission,
 } from "@react-native-firebase/messaging";
-import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert, Linking, PermissionsAndroid, Platform } from "react-native";
 
 // Push通知の種類
@@ -106,16 +106,16 @@ export function onTokenRefresh(callback: (token: string) => void) {
 }
 
 export async function loadPushEnabled(): Promise<boolean> {
-  const value = await SecureStore.getItemAsync(STORAGE_KEYS.pushEnabled);
+  const value = await AsyncStorage.getItem(STORAGE_KEYS.pushEnabled);
   return value === "true";
 }
 
 export async function savePushEnabled(enabled: boolean): Promise<void> {
-  await SecureStore.setItemAsync(STORAGE_KEYS.pushEnabled, enabled ? "true" : "false");
+  await AsyncStorage.setItem(STORAGE_KEYS.pushEnabled, enabled ? "true" : "false");
 }
 
 export async function loadEnabledTypes(): Promise<Set<string>> {
-  const value = await SecureStore.getItemAsync(STORAGE_KEYS.enabledTypes);
+  const value = await AsyncStorage.getItem(STORAGE_KEYS.enabledTypes);
   if (value) {
     const keys: string[] = JSON.parse(value);
     return new Set(keys);
@@ -125,19 +125,19 @@ export async function loadEnabledTypes(): Promise<Set<string>> {
 }
 
 export async function saveEnabledTypes(types: Set<string>): Promise<void> {
-  await SecureStore.setItemAsync(STORAGE_KEYS.enabledTypes, JSON.stringify([...types]));
+  await AsyncStorage.setItem(STORAGE_KEYS.enabledTypes, JSON.stringify([...types]));
 }
 
 export async function loadSavedFcmToken(): Promise<string | null> {
-  return SecureStore.getItemAsync(STORAGE_KEYS.fcmToken);
+  return AsyncStorage.getItem(STORAGE_KEYS.fcmToken);
 }
 
 export async function saveFcmToken(token: string): Promise<void> {
-  await SecureStore.setItemAsync(STORAGE_KEYS.fcmToken, token);
+  await AsyncStorage.setItem(STORAGE_KEYS.fcmToken, token);
 }
 
 export async function clearFcmToken(): Promise<void> {
-  await SecureStore.deleteItemAsync(STORAGE_KEYS.fcmToken);
+  await AsyncStorage.removeItem(STORAGE_KEYS.fcmToken);
 }
 
 // バックエンドAPI
