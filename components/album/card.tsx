@@ -18,7 +18,7 @@ export const AlbumCard = ({ album }: Props) => {
   const pictures = album.statuses.flatMap((w) => w.medias).slice(0, 3);
 
   return (
-    <View className="p-2 m-2 bg-white dark:bg-neutral-900 rounded-xl shadow-sm">
+    <View className="p-2 m-2 bg-light-surface dark:bg-dark-surface rounded-xl">
       {/* サムネイル画像 */}
       <View className="h-50 rounded-lg overflow-hidden bg-neutral-200 dark:bg-neutral-800">
         {pictures.length === 0 && <EmptyThumbnail />}
