@@ -46,6 +46,7 @@ import {
   useColorScheme,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
 import "@/global.css";
@@ -53,12 +54,12 @@ import "@/global.css";
 const UniBookmark = withUniwind(Bookmark);
 const UniClipboardIcon = withUniwind(ClipboardIcon);
 const UniExternalLink = withUniwind(ExternalLink);
-const UniPencil = withUniwind(Pencil);
-const UniSend = withUniwind(Send);
-const UniTrash2 = withUniwind(Trash2);
-
 const UniImage = withUniwind(Image);
 const UniMoreHorizontal = withUniwind(MoreHorizontal);
+const UniPencil = withUniwind(Pencil);
+const UniSafeAreaView = withUniwind(SafeAreaView);
+const UniSend = withUniwind(Send);
+const UniTrash2 = withUniwind(Trash2);
 
 function MenuItem({
   label,
@@ -355,8 +356,11 @@ export default function StatusDetailsPage() {
           </View>
         </Modal>
       ) : (
-        <Modal visible={isEditSheetVisible} animationType="fade" statusBarTranslucent>
-          <View className="bg-light-background dark:bg-dark-background" style={[styles.editSheetContainerAndroid]}>
+        <Modal visible={isEditSheetVisible} animationType="fade">
+          <UniSafeAreaView
+            className="bg-light-background dark:bg-dark-background"
+            style={[styles.editSheetContainerAndroid]}
+          >
             <View style={[styles.editSheetToolbar, { backgroundColor: theme === "dark" ? "#1E1E1E" : "#FFFFFF" }]}>
               <TouchableOpacity onPress={() => setIsEditSheetVisible(false)} style={styles.toolbarIconButton}>
                 <ArrowLeft size={24} color={theme === "dark" ? "#FFFFFF" : "#000000"} />
@@ -383,7 +387,7 @@ export default function StatusDetailsPage() {
               autoFocus
               textAlignVertical="top"
             />
-          </View>
+          </UniSafeAreaView>
         </Modal>
       )}
 
