@@ -1,8 +1,9 @@
 import { getCdnUrl } from "@/lib/media";
 import type { CatalystSmartAlbum, Media } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
+import { useRouter } from "expo-router";
 import { Globe, Images, Lock } from "lucide-react-native";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
 
 const UniGlobe = withUniwind(Globe);
@@ -15,10 +16,13 @@ type Props = {
 };
 
 export const AlbumCard = ({ album }: Props) => {
+  const router = useRouter();
   const pictures = album.statuses.flatMap((w) => w.medias).slice(0, 3);
 
+  const route = album.type !== "album" ? `/smart-album/${album.id}` : `/album/${album.id}`;
+
   return (
-    <View className="p-2 m-2 bg-light-surface dark:bg-dark-surface rounded-xl">
+    <Pressable onPress={() => router.push(route as never)} className="p-2 m-2 bg-light-surface dark:bg-dark-surface rounded-xl">
       {/* サムネイル画像 */}
       <View className="h-50 rounded-lg overflow-hidden bg-neutral-200 dark:bg-neutral-800">
         {pictures.length === 0 && <EmptyThumbnail />}
@@ -60,7 +64,7 @@ export const AlbumCard = ({ album }: Props) => {
           )}
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 };
 
