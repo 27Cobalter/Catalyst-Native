@@ -1,12 +1,10 @@
-import {
-  ContentTypeSelectorSheet,
-  type ContentTypeSelectorSheetRef,
-} from "@/components/content-type-selector-sheet";
+import { ContentTypeSelectorSheet, type ContentTypeSelectorSheetRef } from "@/components/content-type-selector-sheet";
 import { Tab, Tabs } from "@/components/tabs";
 import { FirehoseTimeline } from "@/components/timeline/firehose";
 import { FollowingTimeline } from "@/components/timeline/following";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";
 import { accountAtom } from "@/models/atoms/account";
+import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import React, { useCallback, useRef } from "react";
 import { View } from "react-native";
@@ -18,20 +16,33 @@ const TABS: Tab[] = [
 
 export default function HomeScreen() {
   const account = useAtomValue(accountAtom);
+  const router = useRouter();
   const selectorSheetRef = useRef<ContentTypeSelectorSheetRef>(null);
 
   const handleFabPress = useCallback(() => {
     selectorSheetRef.current?.open();
   }, []);
 
-  const handleContentTypeSelect = useCallback((contentType: string) => {
-    // TODO: Navigate to the corresponding composer screen
-    console.log("Selected content type:", contentType);
-  }, []);
+  const handleContentTypeSelect = useCallback(
+    (contentType: string) => {
+      switch (contentType) {
+        case "post":
+          router.push("/compose/post");
+          break;
+        case "album":
+          // TODO: Navigate to album composer
+          break;
+        case "smartAlbum":
+          // TODO: Navigate to smart album composer
+          break;
+      }
+    },
+    [router],
+  );
 
-  if (account) {
-    return (
-      <View className="flex-1 bg-light-background dark:bg-dark-background">
+  return (
+    <View className="flex-1 bg-light-background dark:bg-dark-background">
+      {account ? (
         <Tabs
           tabs={TABS}
           renderScene={(tab) => {
@@ -39,18 +50,15 @@ export default function HomeScreen() {
             return <FollowingTimeline />;
           }}
         />
-        <FloatingActionButton onPress={handleFabPress} />
-        <ContentTypeSelectorSheet
-          ref={selectorSheetRef}
-          onSelect={handleContentTypeSelect}
-        />
-      </View>
-    );
-  }
-
-  return (
-    <View className="flex-1 bg-light-background dark:bg-dark-background">
-      <FirehoseTimeline />
+      ) : (
+        <FirehoseTimeline />
+      )}
+      {account !== null && (
+        <>
+          <FloatingActionButton onPress={handleFabPress} />
+          <ContentTypeSelectorSheet ref={selectorSheetRef} onSelect={handleContentTypeSelect} />
+        </>
+      )}
     </View>
   );
 }

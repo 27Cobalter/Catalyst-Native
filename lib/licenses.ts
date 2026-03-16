@@ -13092,6 +13092,8 @@ SOFTWARE.
   "expo-updates-interface@55.1.3": { id: "expo-updates-interface@55.1.3", name: "expo-updates-interface", content: `undefined` },
   "expo-haptics@55.0.8": { id: "expo-haptics@55.0.8", name: "expo-haptics", content: `undefined` },
   "expo-image@55.0.6": { id: "expo-image@55.0.6", name: "expo-image", content: `undefined` },
+  "expo-image-picker@55.0.12": { id: "expo-image-picker@55.0.12", name: "expo-image-picker", content: `undefined` },
+  "expo-image-loader@55.0.0": { id: "expo-image-loader@55.0.0", name: "expo-image-loader", content: `undefined` },
   "expo-linking@55.0.7": { id: "expo-linking@55.0.7", name: "expo-linking", content: `undefined` },
   "expo-router@55.0.5": { id: "expo-router@55.0.5", name: "expo-router", content: `undefined` },
   "@expo/metro-runtime@6.1.2": { id: "@expo/metro-runtime@6.1.2", name: "@expo/metro-runtime", content: `undefined` },
