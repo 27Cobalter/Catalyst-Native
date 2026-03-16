@@ -1,9 +1,14 @@
+import {
+  ContentTypeSelectorSheet,
+  type ContentTypeSelectorSheetRef,
+} from "@/components/content-type-selector-sheet";
 import { Tab, Tabs } from "@/components/tabs";
 import { FirehoseTimeline } from "@/components/timeline/firehose";
 import { FollowingTimeline } from "@/components/timeline/following";
+import { FloatingActionButton } from "@/components/ui/floating-action-button";
 import { accountAtom } from "@/models/atoms/account";
 import { useAtomValue } from "jotai";
-import React from "react";
+import React, { useCallback, useRef } from "react";
 import { View } from "react-native";
 
 const TABS: Tab[] = [
@@ -13,6 +18,16 @@ const TABS: Tab[] = [
 
 export default function HomeScreen() {
   const account = useAtomValue(accountAtom);
+  const selectorSheetRef = useRef<ContentTypeSelectorSheetRef>(null);
+
+  const handleFabPress = useCallback(() => {
+    selectorSheetRef.current?.open();
+  }, []);
+
+  const handleContentTypeSelect = useCallback((contentType: string) => {
+    // TODO: Navigate to the corresponding composer screen
+    console.log("Selected content type:", contentType);
+  }, []);
 
   if (account) {
     return (
@@ -23,6 +38,11 @@ export default function HomeScreen() {
             if (tab.key === "firehose") return <FirehoseTimeline />;
             return <FollowingTimeline />;
           }}
+        />
+        <FloatingActionButton onPress={handleFabPress} />
+        <ContentTypeSelectorSheet
+          ref={selectorSheetRef}
+          onSelect={handleContentTypeSelect}
         />
       </View>
     );
