@@ -89,6 +89,13 @@
             "useFrameworks": "static"
           }
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "miccophonePermission": false,
+          "cameraPermission": false
+        }
       ]
     ],
     "experiments": {
