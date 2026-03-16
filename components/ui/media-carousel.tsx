@@ -1,9 +1,10 @@
 import { getCdnUrl } from "@/lib/media";
+import { cn } from "@/lib/utils";
 import { Zoomable } from "@likashefqet/react-native-image-zoom";
 import type { Media } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
 import { EyeOff } from "lucide-react-native";
-import React, { useRef, useState } from "react";
+import React, { memo, useRef, useState } from "react";
 import { Dimensions, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, {
@@ -29,7 +30,7 @@ type Props = {
   medias: Media[];
 };
 
-export const MediaCarousel = ({ medias }: Props) => {
+export const MediaCarousel = memo(({ medias }: Props) => {
   const [presentedMediaIndex, setPresentedMediaIndex] = useState<number | null>(null);
   const [isBlurRemoved, setIsBlurRemoved] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -231,26 +232,16 @@ export const MediaCarousel = ({ medias }: Props) => {
 
         {/* Indicator dots */}
         {len > 1 && (
-          <View
-            style={{
-              width: SCREEN_WIDTH,
-              height: 32,
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
+          <View className="h-8 flex-row justify-center items-center" style={{ width: SCREEN_WIDTH }}>
             {medias.map((_, index) => (
               <Pressable
                 key={index}
                 onPress={() => navigateToIndex(index)}
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 4,
-                  margin: 2,
-                  backgroundColor: index === currentIndex ? "#007AFF" : "#8E8E93",
-                }}
+                hitSlop={8}
+                className={cn(
+                  "w-2 h-2 rounded-full p-1 mx-2",
+                  index === currentIndex ? "bg-light-tint dark:bg-dark-tint" : "bg-light-icon dark:bg-dark-icon",
+                )}
               />
             ))}
           </View>
@@ -291,7 +282,10 @@ export const MediaCarousel = ({ medias }: Props) => {
                     onTouchEnd={() => setActiveTouches(0)}
                   >
                     {medias.map((media, index) => (
-                      <View key={media.id} style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT, justifyContent: "center" }}>
+                      <View
+                        key={media.id}
+                        style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT, justifyContent: "center" }}
+                      >
                         {index === modalIndex ? (
                           <Zoomable
                             minScale={1}
@@ -309,7 +303,12 @@ export const MediaCarousel = ({ medias }: Props) => {
                                 setIsZoomed(false);
                               }
                             }}
-                            style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT, justifyContent: "center", alignItems: "center" }}
+                            style={{
+                              width: SCREEN_WIDTH,
+                              height: SCREEN_HEIGHT,
+                              justifyContent: "center",
+                              alignItems: "center",
+                            }}
                           >
                             <Image
                               source={{
@@ -349,4 +348,5 @@ export const MediaCarousel = ({ medias }: Props) => {
       </Modal>
     </>
   );
-};
+});
+MediaCarousel.displayName = "MediaCarousel";
