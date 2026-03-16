@@ -5,31 +5,34 @@ import { CatalystStatus } from "@natsuneko-laboratory/catalyst-sdk";
 import { useAtomValue } from "jotai";
 import { HeartOff, Lock } from "lucide-react-native";
 import React, { memo, useCallback, useImperativeHandle, useRef, useState } from "react";
-import { ActivityIndicator, Text, useColorScheme, View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
+import { withUniwind } from "uniwind";
 import { TimelineStatus } from "../timeline/status";
 import { UserTimelineHandle } from "./timeline";
 
+const UniHeartOff = withUniwind(HeartOff);
+const UniLock = withUniwind(Lock);
+
 const ItemSeparator = () => {
-  const theme = useColorScheme();
-  return <View className={cn("h-px", theme === "dark" ? "bg-gray-700" : "bg-gray-300")} />;
+  return <View className={cn("h-px bg-light-border dark:bg-dark-border")} />;
 };
 
 const PrivacyNotice = () => {
-  const theme = useColorScheme();
   return (
-    <View className="flex-row items-center justify-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800">
-      <Lock size={14} color={theme === "dark" ? "#9CA3AF" : "#6B7280"} />
-      <Text className="text-sm text-gray-500 dark:text-gray-400">いいねは非公開です。自分にのみ表示されます。</Text>
+    <View className="flex-row items-center justify-center gap-2 px-4 py-3 bg-light-surface dark:bg-dark-surface">
+      <UniLock size={14} className="text-light-text-muted dark:text-dark-text-muted" />
+      <Text className="text-sm text-light-text-muted dark:text-dark-text-muted">
+        いいねは非公開です。自分にのみ表示されます。
+      </Text>
     </View>
   );
 };
 
 const EmptyState = () => {
-  const theme = useColorScheme();
   return (
     <View className="items-center justify-center py-16">
-      <HeartOff size={48} color={theme === "dark" ? "#6B7280" : "#9CA3AF"} />
-      <Text className="mt-4 text-base text-gray-500 dark:text-gray-400">いいねした投稿がありません</Text>
+      <UniHeartOff size={48} className="text-light-text-muted dark:text-dark-text-muted" />
+      <Text className="mt-4 text-base text-light-text-muted dark:text-dark-text-muted">いいねした投稿がありません</Text>
     </View>
   );
 };
