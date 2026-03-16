@@ -102,6 +102,10 @@
           "miccophonePermission": false,
           "cameraPermission": false
         }
+      ],
+      [
+        "expo-file-system",
+        {}
       ]
     ],
     "experiments": {

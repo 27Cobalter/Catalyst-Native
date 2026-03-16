@@ -43,6 +43,7 @@
     "expo-clipboard": "^55.0.8",
     "expo-constants": "~55.0.7",
     "expo-dev-client": "~55.0.16",
+    "expo-file-system": "^55.0.10",
     "expo-font": "~55.0.4",
     "expo-haptics": "~55.0.8",
     "expo-image": "~55.0.6",

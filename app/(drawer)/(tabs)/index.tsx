@@ -3,7 +3,6 @@ import { Tab, Tabs } from "@/components/tabs";
 import { FirehoseTimeline } from "@/components/timeline/firehose";
 import { FollowingTimeline } from "@/components/timeline/following";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";
-import { accountAtom } from "@/models/atoms/account";
 import { credentialAtom } from "@/models/atoms/credential";
 import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
@@ -16,7 +15,6 @@ const TABS: Tab[] = [
 ];
 
 export default function HomeScreen() {
-  const account = useAtomValue(accountAtom);
   const credential = useAtomValue(credentialAtom);
   const router = useRouter();
   const selectorSheetRef = useRef<ContentTypeSelectorSheetRef>(null);

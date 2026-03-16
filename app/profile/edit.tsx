@@ -1,10 +1,12 @@
 import { getCdnUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import { accountAtom } from "@/models/atoms/account";
-import type { EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
-import { Image } from "expo-image";
+import { clientAtom } from "@/models/atoms/credential";
+import type { EgeriaUser, EgeriaUserProfile } from "@natsuneko-laboratory/catalyst-sdk";
+import * as FileSystem from "expo-file-system";
+import { Image as ExpoImage } from "expo-image";
 import { Stack, useRouter } from "expo-router";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { Camera, Plus, Trash2 } from "lucide-react-native";
 import React, { useCallback, useMemo, useState } from "react";
 import {
@@ -19,11 +21,11 @@ import {
   View,
   useColorScheme,
 } from "react-native";
-import ImageCropPicker from "react-native-image-crop-picker";
+import ImageCropPicker, { Image } from "react-native-image-crop-picker";
 import Toast from "react-native-toast-message";
 import { withUniwind } from "uniwind";
 
-const UniImage = withUniwind(Image);
+const UniImage = withUniwind(ExpoImage);
 const UniCamera = withUniwind(Camera);
 const UniPlus = withUniwind(Plus);
 const UniTrash2 = withUniwind(Trash2);
@@ -35,11 +37,6 @@ const BANNER_WIDTH = 1500;
 const BANNER_CROP_HEIGHT = 500;
 const ICON_SIZE = 512;
 const MAX_ADDITIONAL_WEBSITES = 4;
-
-type ImageSelection = {
-  uri: string;
-  mime: string;
-} | null;
 
 function isValidUrl(text: string): boolean {
   if (!text.trim()) return true;
@@ -55,6 +52,7 @@ export default function ProfileEditScreen() {
   const theme = useColorScheme() ?? "light";
   const router = useRouter();
   const [account, setAccount] = useAtom(accountAtom);
+  const client = useAtomValue(clientAtom);
   const user = account?.user as EgeriaUser | undefined;
 
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
@@ -64,9 +62,8 @@ export default function ProfileEditScreen() {
     user?.profile?.additionalWebsites?.filter((w) => !!w.trim()) ?? [],
   );
 
-  const [bannerImage, setBannerImage] = useState<ImageSelection>(null);
-  const [iconImage, setIconImage] = useState<ImageSelection>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const validationErrors = useMemo(() => {
     const errors: string[] = [];
@@ -81,7 +78,59 @@ export default function ProfileEditScreen() {
     return errors;
   }, [displayName, website, additionalWebsites]);
 
-  const canSave = validationErrors.length === 0 && !isSubmitting;
+  const canSave = validationErrors.length === 0 && !isSubmitting && !isUploadingImage;
+
+  const uploadImage = useCallback(
+    async (img: Image): Promise<string | null> => {
+      const file = new FileSystem.File(img.path);
+      const ab = await file.arrayBuffer();
+      const uploadUrls = await client.media.upload();
+      const uploadResponse = await fetch(uploadUrls.signedUrl, {
+        method: "PUT",
+        body: ab,
+        headers: { "Content-Type": img.mime || "image/jpeg" },
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error(`Upload failed: ${uploadResponse.status}`);
+      }
+
+      return uploadUrls.url;
+    },
+    [client],
+  );
+
+  const updateProfileImage = useCallback(
+    async (field: "iconUrl" | "bannerUrl", img: Image) => {
+      if (!account) return;
+
+      setIsUploadingImage(true);
+      try {
+        const uploaded = await uploadImage(img);
+        if (!uploaded) return;
+
+        await client.egeria.update({
+          displayName: account.user.displayName,
+          profile: { [field]: uploaded } as unknown as EgeriaUserProfile,
+        });
+
+        const me = await client.egeria.me();
+        if (me?.user) {
+          setAccount((w) => ({ ...w!, user: me.user }));
+        }
+      } catch (error) {
+        console.error(`Failed to upload ${field}:`, error);
+        Toast.show({
+          type: "error",
+          text1: "エラー",
+          text2: "画像のアップロードに失敗しました",
+        });
+      } finally {
+        setIsUploadingImage(false);
+      }
+    },
+    [account, client, uploadImage, setAccount],
+  );
 
   const handlePickBanner = useCallback(async () => {
     try {
@@ -92,13 +141,13 @@ export default function ProfileEditScreen() {
         cropperToolbarTitle: "ヘッダー画像を切り取り",
         mediaType: "photo",
       });
-      setBannerImage({ uri: image.path, mime: image.mime });
+      await updateProfileImage("bannerUrl", image);
     } catch (e: any) {
       if (e?.code !== "E_PICKER_CANCELLED") {
         console.error("Banner pick error:", e);
       }
     }
-  }, []);
+  }, [updateProfileImage]);
 
   const handlePickIcon = useCallback(async () => {
     try {
@@ -110,38 +159,13 @@ export default function ProfileEditScreen() {
         cropperToolbarTitle: "アイコン画像を切り取り",
         mediaType: "photo",
       });
-      setIconImage({ uri: image.path, mime: image.mime });
+      await updateProfileImage("iconUrl", image);
     } catch (e: any) {
       if (e?.code !== "E_PICKER_CANCELLED") {
         console.error("Icon pick error:", e);
       }
     }
-  }, []);
-
-  const uploadImage = useCallback(
-    async (imageSelection: ImageSelection): Promise<string | null> => {
-      if (!imageSelection || !account) return null;
-
-      const client = account.credential.client;
-      const uploadUrls = await client.media.upload();
-
-      const response = await fetch(imageSelection.uri);
-      const blob = await response.blob();
-
-      const uploadResponse = await fetch(uploadUrls.signedUrl, {
-        method: "PUT",
-        body: blob,
-        headers: { "Content-Type": imageSelection.mime || "image/jpeg" },
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error(`Upload failed: ${uploadResponse.status}`);
-      }
-
-      return uploadUrls.url;
-    },
-    [account],
-  );
+  }, [updateProfileImage]);
 
   const handleAddWebsite = useCallback(() => {
     if (additionalWebsites.length < MAX_ADDITIONAL_WEBSITES) {
@@ -163,35 +187,19 @@ export default function ProfileEditScreen() {
     setIsSubmitting(true);
 
     try {
-      const client = account.credential.client;
-
-      let iconUrl = user?.profile?.iconUrl ?? "";
-      let bannerUrl = user?.profile?.bannerUrl ?? "";
-
-      if (iconImage) {
-        const uploaded = await uploadImage(iconImage);
-        if (uploaded) iconUrl = uploaded;
-      }
-
-      if (bannerImage) {
-        const uploaded = await uploadImage(bannerImage);
-        if (uploaded) bannerUrl = uploaded;
-      }
-
       const filteredWebsites = additionalWebsites.filter((w) => !!w.trim());
 
       await client.egeria.update({
         displayName: displayName.trim(),
         profile: {
-          iconUrl,
-          bannerUrl,
+          iconUrl: user?.profile?.iconUrl ?? "",
+          bannerUrl: user?.profile?.bannerUrl ?? "",
           bio,
           website: website.trim(),
           additionalWebsites: filteredWebsites,
         },
       });
 
-      // ユーザー情報を更新
       const me = await client.egeria.me();
       if (me?.user) {
         setAccount({ user: me.user, credential: account.credential });
@@ -208,32 +216,15 @@ export default function ProfileEditScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [
-    canSave,
-    account,
-    user,
-    iconImage,
-    bannerImage,
-    displayName,
-    bio,
-    website,
-    additionalWebsites,
-    uploadImage,
-    setAccount,
-    router,
-  ]);
+  }, [canSave, account, user, displayName, bio, website, additionalWebsites, client, setAccount, router]);
 
-  const currentBannerUri = bannerImage
-    ? bannerImage.uri
-    : user?.profile?.bannerUrl
-      ? getCdnUrl({ src: user.profile.bannerUrl, variant: "header", width: SCREEN_WIDTH })
-      : null;
+  const currentBannerUri = user?.profile?.bannerUrl
+    ? getCdnUrl({ src: user.profile.bannerUrl, variant: "header", width: SCREEN_WIDTH })
+    : null;
 
-  const currentIconUri = iconImage
-    ? iconImage.uri
-    : user?.profile?.iconUrl
-      ? getCdnUrl({ src: user.profile.iconUrl, variant: "icon", width: 128 })
-      : null;
+  const currentIconUri = user?.profile?.iconUrl
+    ? getCdnUrl({ src: user.profile.iconUrl, variant: "icon", width: 128 })
+    : null;
 
   return (
     <>
@@ -258,7 +249,7 @@ export default function ProfileEditScreen() {
         }}
       />
       <View className="flex-1 bg-light-background dark:bg-dark-background">
-        {isSubmitting && (
+        {(isSubmitting || isUploadingImage) && (
           <View className="absolute inset-0 z-50 items-center justify-center bg-light-overlay dark:bg-dark-overlay">
             <ActivityIndicator size="large" />
           </View>
@@ -270,7 +261,7 @@ export default function ProfileEditScreen() {
         >
           <ScrollView className="flex-1" contentContainerClassName="pb-12">
             {/* ヘッダー画像 */}
-            <Pressable onPress={handlePickBanner}>
+            <Pressable onPress={handlePickBanner} disabled={isUploadingImage}>
               <View style={{ width: SCREEN_WIDTH, height: BANNER_HEIGHT }}>
                 {currentBannerUri ? (
                   <UniImage
@@ -292,7 +283,7 @@ export default function ProfileEditScreen() {
 
             {/* アイコン画像 */}
             <View className="px-4 -mt-10">
-              <Pressable onPress={handlePickIcon}>
+              <Pressable onPress={handlePickIcon} disabled={isUploadingImage}>
                 <View className="border-light-background dark:border-dark-background rounded-full border-4 w-24 h-24">
                   {currentIconUri ? (
                     <UniImage
