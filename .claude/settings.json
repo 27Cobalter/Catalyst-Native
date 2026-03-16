@@ -14,6 +14,7 @@
       "Edit(constants/**)",
       "Edit(hooks/**)",
       "Edit(lib/**)",
+      "Edit(models/**)",
       "Edit(package.json)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:npmjs.com)"
