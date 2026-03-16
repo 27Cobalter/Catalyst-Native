@@ -228,6 +228,22 @@ export default function ProfileEditScreen() {
     ? getCdnUrl({ src: user.profile.iconUrl, variant: "icon", width: 128 })
     : null;
 
+  if (!user) {
+    return (
+      <>
+        <Stack.Screen
+          options={{
+            title: "プロフィールを編集",
+            headerBackTitle: "キャンセル",
+          }}
+        />
+        <View className="flex-1 bg-light-background dark:bg-dark-background items-center justify-center">
+          <ActivityIndicator size="large" />
+        </View>
+      </>
+    );
+  }
+
   return (
     <>
       <Stack.Screen

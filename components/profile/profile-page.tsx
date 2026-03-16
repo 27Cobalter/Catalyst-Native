@@ -9,7 +9,7 @@ import { clientAtom } from "@/models/atoms/credential";
 import type { EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
 import { useAtomValue } from "jotai";
 import React, { useMemo, useRef, useState } from "react";
-import { Animated, Dimensions, NativeScrollEvent, NativeSyntheticEvent, View } from "react-native";
+import { ActivityIndicator, Animated, Dimensions, NativeScrollEvent, NativeSyntheticEvent, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Tab = {
@@ -88,6 +88,14 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
       }),
     [scrollY],
   );
+
+  if (!user) {
+    return (
+      <View className="flex-1 bg-light-background dark:bg-dark-background items-center justify-center">
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-light-background dark:bg-dark-background">
