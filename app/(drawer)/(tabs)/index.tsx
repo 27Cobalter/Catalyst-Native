@@ -43,20 +43,18 @@ export default function HomeScreen() {
   return (
     <View className="flex-1 bg-light-background dark:bg-dark-background">
       {credential ? (
-        <>
-          <Tabs
-            tabs={TABS}
-            renderScene={(tab) => {
-              if (tab.key === "firehose") return <FirehoseTimeline />;
-              return <FollowingTimeline />;
-            }}
-          />
-          <FloatingActionButton onPress={handleFabPress} />
-          <ContentTypeSelectorSheet ref={selectorSheetRef} onSelect={handleContentTypeSelect} />
-        </>
+        <Tabs
+          tabs={TABS}
+          renderScene={(tab) => {
+            if (tab.key === "firehose") return <FirehoseTimeline />;
+            return <FollowingTimeline />;
+          }}
+        />
       ) : (
         <FirehoseTimeline />
       )}
+      {credential && <FloatingActionButton onPress={handleFabPress} />}
+      {credential && <ContentTypeSelectorSheet ref={selectorSheetRef} onSelect={handleContentTypeSelect} />}
     </View>
   );
 }
