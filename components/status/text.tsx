@@ -9,7 +9,6 @@ import RehypeSanitize from "rehype-sanitize";
 import RemarkBreaks from "remark-breaks";
 import RemarkParse from "remark-parse";
 import RemarkRehype from "remark-rehype";
-import twitter from "twitter-text";
 import { unified } from "unified";
 import { withUniwind } from "uniwind";
 
@@ -22,9 +21,15 @@ export const StatusText = React.memo(
     }, []);
 
     const val = useMemo(() => {
-      const html = twitter.autoLink(status, {
-        hashtagUrlBase: "/search?tab=hashtag&exact=true&q=%23",
-      });
+      const html = status
+        .replace(
+          /https?:\/\/[^\s　\])<>]+/g,
+          (url) => `<a href="${url}">${url}</a>`,
+        )
+        .replace(
+          /(^|[\s　])#([\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\uFF65-\uFF9F]+)/g,
+          (_, prefix, tag) => `${prefix}<a href="/search?tab=hashtag&exact=true&q=%23${tag}">#${tag}</a>`,
+        );
       const u = unified()
         .use(RemarkParse)
         .use(RemarkBreaks)
