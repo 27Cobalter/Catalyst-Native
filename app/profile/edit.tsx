@@ -140,6 +140,7 @@ export default function ProfileEditScreen() {
         cropping: true,
         cropperToolbarTitle: "ヘッダー画像を切り取り",
         mediaType: "photo",
+        maxFiles: 1,
       });
       await updateProfileImage("bannerUrl", image);
     } catch (e: any) {
@@ -158,6 +159,7 @@ export default function ProfileEditScreen() {
         cropperCircleOverlay: true,
         cropperToolbarTitle: "アイコン画像を切り取り",
         mediaType: "photo",
+        maxFiles: 1,
       });
       await updateProfileImage("iconUrl", image);
     } catch (e: any) {
