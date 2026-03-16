@@ -92,6 +92,10 @@ export default Sentry.wrap(function RootLayout() {
             options={{ title: "オープンソースソフトウェア", headerBackTitle: "戻る" }}
           />
           <Stack.Screen name="compose/post" options={{ title: "新しい投稿", headerBackTitle: "キャンセル" }} />
+          <Stack.Screen
+            name="profile/edit"
+            options={{ title: "プロフィールを編集", headerBackTitle: "キャンセル" }}
+          />
         </Stack>
         <StatusBar style="auto" />
         <Toast />

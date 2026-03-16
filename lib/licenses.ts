@@ -177,6 +177,28 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
+  "@luccasr73/with-rn-image-crop-picker@0.1.5": { id: "@luccasr73/with-rn-image-crop-picker@0.1.5", name: "@luccasr73/with-rn-image-crop-picker", content: `MIT License
+
+Copyright (c) 2024 Luccas Robert
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+` },
   "@natsuneko-laboratory/catalyst-sdk@0.1.2": { id: "@natsuneko-laboratory/catalyst-sdk@0.1.2", name: "@natsuneko-laboratory/catalyst-sdk", content: `undefined` },
   "js-sha256@0.11.1": { id: "js-sha256@0.11.1", name: "js-sha256", content: `undefined` },
   "@react-native-async-storage/async-storage@3.0.1": { id: "@react-native-async-storage/async-storage@3.0.1", name: "@react-native-async-storage/async-storage", content: `undefined` },
@@ -15577,6 +15599,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
   "fast-base64-decode@1.0.0": { id: "fast-base64-decode@1.0.0", name: "fast-base64-decode", content: `undefined` },
+  "react-native-image-crop-picker@0.51.1": { id: "react-native-image-crop-picker@0.51.1", name: "react-native-image-crop-picker", content: `MIT License
+
+Copyright (c) 2017 Ivan Pusic
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+` },
   "react-native-reanimated@4.2.2": { id: "react-native-reanimated@4.2.2", name: "react-native-reanimated", content: `The MIT License (MIT)
 
 Copyright (c) 2016 Software Mansion <swmansion.com>

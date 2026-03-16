@@ -5,6 +5,7 @@ import { accountAtom } from "@/models/atoms/account";
 import { CatalystRelationships, EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
 import { openUrlWithBrowser } from "@/models/browser-settings";
+import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { LinkIcon } from "lucide-react-native";
 import { useCallback, useState } from "react";
@@ -25,6 +26,7 @@ type Props = {
 
 export const ProfileHeader = ({ user, onLayout }: Props) => {
   const account = useAtomValue(accountAtom);
+  const router = useRouter();
   const isLoggedIn = !!account?.user;
   const isMyself = account?.user.screenName === user?.screenName;
   const [relationships, setRelationships] = useState<CatalystRelationships | null>(null);
@@ -100,7 +102,10 @@ export const ProfileHeader = ({ user, onLayout }: Props) => {
         <View className="absolute top-12 right-2">
           {isLoggedIn &&
             (isMyself || relationships?.isMyself ? (
-              <TouchableOpacity className="border rounded-full px-4 py-2 mb-2 mr-4 border-neutral-400 dark:border-neutral-600">
+              <TouchableOpacity
+                className="border rounded-full px-4 py-2 mb-2 mr-4 border-neutral-400 dark:border-neutral-600"
+                onPress={() => router.push("/profile/edit")}
+              >
                 <Text className="font-bold text-black dark:text-white">編集</Text>
               </TouchableOpacity>
             ) : (

@@ -83,6 +83,12 @@
       "@react-native-firebase/app",
       "@react-native-firebase/messaging",
       [
+        "@luccasr73/with-rn-image-crop-picker",
+        {
+
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "ios": {

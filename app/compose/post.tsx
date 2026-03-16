@@ -1,10 +1,11 @@
 import { accountAtom } from "@/models/atoms/account";
+import * as ImagePicker from "expo-image-picker";
+import { Stack, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { Image as ImageIcon, X } from "lucide-react-native";
 import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -14,10 +15,8 @@ import {
   View,
   useColorScheme,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import { withUniwind } from "uniwind";
-
-import * as ImagePicker from "expo-image-picker";
-import { Stack, useRouter } from "expo-router";
 
 const UniImageIcon = withUniwind(ImageIcon);
 const UniX = withUniwind(X);
@@ -132,7 +131,7 @@ export default function PostComposerScreen() {
       router.back();
     } catch (error) {
       console.error("Failed to create status:", error);
-      Alert.alert("エラー", "投稿に失敗しました");
+      Toast.show({ type: "error", text1: "エラー", text2: "投稿に失敗しました" });
     } finally {
       setIsSubmitting(false);
     }

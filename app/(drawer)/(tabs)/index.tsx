@@ -4,6 +4,7 @@ import { FirehoseTimeline } from "@/components/timeline/firehose";
 import { FollowingTimeline } from "@/components/timeline/following";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";
 import { accountAtom } from "@/models/atoms/account";
+import { credentialAtom } from "@/models/atoms/credential";
 import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import React, { useCallback, useRef } from "react";
@@ -16,6 +17,7 @@ const TABS: Tab[] = [
 
 export default function HomeScreen() {
   const account = useAtomValue(accountAtom);
+  const credential = useAtomValue(credentialAtom);
   const router = useRouter();
   const selectorSheetRef = useRef<ContentTypeSelectorSheetRef>(null);
 
@@ -42,22 +44,20 @@ export default function HomeScreen() {
 
   return (
     <View className="flex-1 bg-light-background dark:bg-dark-background">
-      {account ? (
-        <Tabs
-          tabs={TABS}
-          renderScene={(tab) => {
-            if (tab.key === "firehose") return <FirehoseTimeline />;
-            return <FollowingTimeline />;
-          }}
-        />
-      ) : (
-        <FirehoseTimeline />
-      )}
-      {account !== null && (
+      {credential ? (
         <>
+          <Tabs
+            tabs={TABS}
+            renderScene={(tab) => {
+              if (tab.key === "firehose") return <FirehoseTimeline />;
+              return <FollowingTimeline />;
+            }}
+          />
           <FloatingActionButton onPress={handleFabPress} />
           <ContentTypeSelectorSheet ref={selectorSheetRef} onSelect={handleContentTypeSelect} />
         </>
+      ) : (
+        <FirehoseTimeline />
       )}
     </View>
   );

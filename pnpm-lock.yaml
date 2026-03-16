@@ -25,6 +25,9 @@ importers:
       '@likashefqet/react-native-image-zoom':
         specifier: ^4.3.0
         version: 4.3.0(patch_hash=7fe39025924f852ab1e8fc75a6ea7d7b6d566a9168f83e181c9a954458f77221)(react-native-gesture-handler@2.30.0(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native-reanimated@4.2.2(react-native-worklets@0.7.4(@babel/core@7.29.0)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
+      '@luccasr73/with-rn-image-crop-picker':
+        specifier: ^0.1.5
+        version: 0.1.5(expo@55.0.6)
       '@natsuneko-laboratory/catalyst-sdk':
         specifier: ^0.1.2
         version: 0.1.2
@@ -139,6 +142,9 @@ importers:
       react-native-get-random-values:
         specifier: ^2.0.0
         version: 2.0.0(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))
+      react-native-image-crop-picker:
+        specifier: ^0.51.1
+        version: 0.51.1(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
       react-native-reanimated:
         specifier: ~4.2.2
         version: 4.2.2(react-native-worklets@0.7.4(@babel/core@7.29.0)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
@@ -1646,6 +1652,14 @@ packages:
       react-native: '>=0.62.x'
       react-native-gesture-handler: '>=2.x.x'
       react-native-reanimated: '>=2.x.x'
+
+  '@luccasr73/with-rn-image-crop-picker@0.1.5':
+    resolution: {integrity: sha512-ShNi/mdrwPjCjh8tSA7sTZeWKyK4t/wQ2f9fdfOXEldrQI3UZ3dzvOdZVMZHoFaxcA3dvByvouXhqKh6cGgpBQ==}
+    peerDependencies:
+      expo: '>=51.0.0'
+    peerDependenciesMeta:
+      expo:
+        optional: true
 
   '@napi-rs/wasm-runtime@0.2.12':
     resolution: {integrity: sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==}
@@ -6002,6 +6016,12 @@ packages:
     peerDependencies:
       react-native: '>=0.81'
 
+  react-native-image-crop-picker@0.51.1:
+    resolution: {integrity: sha512-GIFRyXJgv1dPceKd/hraK9q9V38v45rSg2ONR6RiSePcOJemkHpc/PMU86pq6lWPilDYHSxbZmea2pNMk85ayw==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+
   react-native-is-edge-to-edge@1.2.1:
     resolution: {integrity: sha512-FLbPWl/MyYQWz+KwqOZsSyj2JmLKglHatd3xLZWskXOpRaio4LfEDEz8E/A6uD8QoTHW6Aobw1jbEwK7KMgR7Q==}
     peerDependencies:
@@ -9095,6 +9115,10 @@ snapshots:
       react-native: 0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4)
       react-native-gesture-handler: 2.30.0(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
       react-native-reanimated: 4.2.2(react-native-worklets@0.7.4(@babel/core@7.29.0)(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
+
+  '@luccasr73/with-rn-image-crop-picker@0.1.5(expo@55.0.6)':
+    optionalDependencies:
+      expo: 55.0.6(@babel/core@7.29.0)(@expo/dom-webview@55.0.3)(@expo/metro-runtime@6.1.2)(expo-router@55.0.5)(react-dom@19.2.4(react@19.2.4))(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
 
   '@napi-rs/wasm-runtime@0.2.12':
     dependencies:
@@ -14278,6 +14302,11 @@ snapshots:
   react-native-get-random-values@2.0.0(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4)):
     dependencies:
       fast-base64-decode: 1.0.0
+      react-native: 0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4)
+
+  react-native-image-crop-picker@0.51.1(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4):
+    dependencies:
+      react: 19.2.4
       react-native: 0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4)
 
   react-native-is-edge-to-edge@1.2.1(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4):
