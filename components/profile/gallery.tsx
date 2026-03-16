@@ -30,9 +30,10 @@ const GalleryCell = memo(({ status }: { status: CatalystStatus }) => {
   const aspectRatio =
     media.metadata?.width && media.metadata?.height ? media.metadata.width / media.metadata.height : 1;
   const cellHeight = COLUMN_WIDTH / aspectRatio;
+  const [realId] = status.id.split("/");
 
   return (
-    <Pressable onPress={() => router.push(`/status/${status.id}`)} style={{ marginBottom: GAP }}>
+    <Pressable onPress={() => router.push(`/status/${realId}`)} style={{ marginBottom: GAP }}>
       <View style={{ width: COLUMN_WIDTH, height: cellHeight, borderRadius: 4, overflow: "hidden" }}>
         <Image
           source={{
