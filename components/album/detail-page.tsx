@@ -180,7 +180,14 @@ export const AlbumDetailPage = ({ id, albumType }: Props) => {
           title: albumInfo?.title ?? "",
           headerRight: canEdit
             ? () => (
-                <TouchableOpacity style={{ padding: 8 }}>
+                <TouchableOpacity
+                  style={{ padding: 8 }}
+                  onPress={() => {
+                    if (albumType === "album") {
+                      router.push(`/album/${id}/edit`);
+                    }
+                  }}
+                >
                   <UniPencil size={20} className="text-light-tint dark:text-dark-tint" />
                 </TouchableOpacity>
               )
