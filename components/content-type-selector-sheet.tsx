@@ -104,7 +104,7 @@ export const ContentTypeSelectorSheet = forwardRef<ContentTypeSelectorSheetRef, 
               <Pressable
                 key={contentType.key}
                 onPress={() => handleSelect(contentType.key)}
-                className="flex-row items-start px-5 py-2"
+                className="flex-row items-start px-4 py-2"
               >
                 <View className="mr-4 h-11 w-11 items-center justify-center rounded-lg bg-light-accent/10 dark:bg-dark-accent/10">
                   <View className="text-light-accent dark:text-dark-accent">

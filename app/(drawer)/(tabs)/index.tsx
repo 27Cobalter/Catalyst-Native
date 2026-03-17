@@ -30,7 +30,7 @@ export default function HomeScreen() {
           router.push("/compose/post");
           break;
         case "album":
-          // TODO: Navigate to album composer
+          router.push("/compose/album");
           break;
         case "smartAlbum":
           // TODO: Navigate to smart album composer
