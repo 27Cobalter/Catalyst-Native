@@ -11,7 +11,7 @@ import dayjs from "dayjs";
 import { Image } from "expo-image";
 import { Stack, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
-import { Calendar, Pencil } from "lucide-react-native";
+import { Calendar, FileQuestion, Pencil } from "lucide-react-native";
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { withUniwind } from "uniwind";
@@ -19,6 +19,7 @@ import { withUniwind } from "uniwind";
 import "@/global.css";
 
 const UniCalendar = withUniwind(Calendar);
+const UniFileQuestion = withUniwind(FileQuestion);
 const UniImage = withUniwind(Image);
 const UniPencil = withUniwind(Pencil);
 
@@ -107,6 +108,8 @@ export const AlbumDetailPage = ({ id, albumType }: Props) => {
   const account = useAtomValue(accountAtom);
   const [albumInfo, setAlbumInfo] = useState<AlbumInfo | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isNotFound, setIsNotFound] = useState(false);
+  const router = useRouter();
 
   const canEdit =
     albumInfo?.user && account?.user ? albumInfo.user.id === account.user.id : false;
@@ -134,8 +137,8 @@ export const AlbumDetailPage = ({ id, albumType }: Props) => {
             until: album.until,
           });
         }
-      } catch (e) {
-        console.error("Failed to fetch album info:", e);
+      } catch {
+        setIsNotFound(true);
       } finally {
         setIsInitialLoading(false);
       }
@@ -168,6 +171,23 @@ export const AlbumDetailPage = ({ id, albumType }: Props) => {
         <Stack.Screen options={{ title: "" }} />
         <View className="flex-1 bg-light-background dark:bg-dark-background items-center justify-center">
           <ActivityIndicator size="large" />
+        </View>
+      </>
+    );
+  }
+
+  if (isNotFound) {
+    return (
+      <>
+        <Stack.Screen options={{ title: "" }} />
+        <View className="flex-1 bg-light-background dark:bg-dark-background items-center justify-center">
+          <UniFileQuestion size={64} className="text-light-gray dark:text-dark-gray" />
+          <Text className="font-semibold text-light-gray dark:text-dark-gray mt-2 text-center">
+            {albumType === "album" ? "アルバム" : "スマートアルバム"}が見つかりません
+          </Text>
+          <Text className="text-sm text-light-gray dark:text-dark-gray mt-2 text-center">
+            削除されたか、アクセスできないコンテンツです
+          </Text>
         </View>
       </>
     );

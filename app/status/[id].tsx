@@ -27,6 +27,7 @@ import {
   Check,
   Clipboard as ClipboardIcon,
   ExternalLink,
+  FileQuestion,
   MoreHorizontal,
   Pencil,
   Send,
@@ -57,6 +58,7 @@ const UniBookmark = withUniwind(Bookmark);
 const UniBookmarkMinus = withUniwind(BookmarkMinus);
 const UniClipboardIcon = withUniwind(ClipboardIcon);
 const UniExternalLink = withUniwind(ExternalLink);
+const UniFileQuestion = withUniwind(FileQuestion);
 const UniImage = withUniwind(Image);
 const UniMoreHorizontal = withUniwind(MoreHorizontal);
 const UniPencil = withUniwind(Pencil);
@@ -116,6 +118,7 @@ export default function StatusDetailsPage() {
   const [albumSelectionMode, setAlbumSelectionMode] = useState<"add" | "remove">("add");
   const [isEditingSaving, setIsEditingSaving] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [isNotFound, setIsNotFound] = useState(false);
   const emojiPickerRef = useRef<EmojiPickerSheetRef>(null);
   const menuSheetRef = useRef<BottomSheetModal>(null);
 
@@ -136,8 +139,8 @@ export default function StatusDetailsPage() {
         setStatus(statusRes.status);
         setIsFavorited(favRes as boolean);
         setReactions(reactionsRes.reactions ?? {});
-      } catch (e) {
-        console.error("Failed to fetch status:", e);
+      } catch {
+        setIsNotFound(true);
       }
     };
 
@@ -272,7 +275,17 @@ export default function StatusDetailsPage() {
         }}
       />
 
-      {!status ? (
+      {!status && isNotFound ? (
+        <View className="flex-1 bg-light-background dark:bg-dark-background items-center justify-center">
+          <UniFileQuestion size={64} className="text-light-gray dark:text-dark-gray" />
+          <Text className="font-semibold text-light-gray dark:text-dark-gray mt-2 text-center">
+            投稿が見つかりません
+          </Text>
+          <Text className="text-sm text-light-gray dark:text-dark-gray mt-2 text-center">
+            削除されたか、アクセスできないコンテンツです
+          </Text>
+        </View>
+      ) : !status ? (
         <View className="flex-1 bg-light-background dark:bg-dark-background items-center justify-center">
           <ActivityIndicator size="large" />
         </View>
