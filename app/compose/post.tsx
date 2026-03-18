@@ -1,4 +1,5 @@
 import { accountAtom } from "@/models/atoms/account";
+import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { Stack, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
@@ -97,13 +98,12 @@ export default function PostComposerScreen() {
 
       for (const image of images) {
         const uploadUrls = await client.media.upload();
-
-        const response = await fetch(image.uri);
-        const blob = await response.blob();
+        const file = new FileSystem.File(image.uri);
+        const ab = await file.arrayBuffer();
 
         await fetch(uploadUrls.signedUrl, {
           method: "PUT",
-          body: blob,
+          body: ab,
           headers: { "Content-Type": "image/jpeg" },
         });
 
@@ -170,7 +170,7 @@ export default function PostComposerScreen() {
               <View className="flex-row flex-wrap gap-2">
                 {images.map((image, index) => (
                   <View key={image.uri} className="relative">
-                    <Image source={{ uri: image.uri }} className="h-[100px] w-[100px] rounded-lg" resizeMode="cover" />
+                    <Image source={{ uri: image.uri }} className="h-25 w-25 rounded-lg" resizeMode="cover" />
                     <Pressable
                       onPress={() => handleRemoveImage(index)}
                       className="absolute -right-1.5 -top-1.5 h-6 w-6 items-center justify-center rounded-full bg-black/60"
@@ -210,7 +210,7 @@ export default function PostComposerScreen() {
               multiline
               placeholder="本文を入力..."
               placeholderTextColor={theme === "dark" ? "#666" : "#999"}
-              className="min-h-[80px] rounded-lg border border-light-border bg-light-surface p-3 text-base text-light-text dark:border-dark-border dark:bg-dark-surface dark:text-dark-text"
+              className="min-h-20 rounded-lg border border-light-border bg-light-surface p-3 text-base text-light-text dark:border-dark-border dark:bg-dark-surface dark:text-dark-text"
               textAlignVertical="top"
             />
             <Text
