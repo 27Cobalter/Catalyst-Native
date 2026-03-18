@@ -33,7 +33,7 @@ export default function HomeScreen() {
           router.push("/compose/album");
           break;
         case "smartAlbum":
-          // TODO: Navigate to smart album composer
+          router.push("/compose/smart-album");
           break;
       }
     },
@@ -53,8 +53,8 @@ export default function HomeScreen() {
       ) : (
         <FirehoseTimeline />
       )}
-      {credential && <FloatingActionButton onPress={handleFabPress} />}
-      {credential && <ContentTypeSelectorSheet ref={selectorSheetRef} onSelect={handleContentTypeSelect} />}
+      {!!credential.accessToken && <FloatingActionButton onPress={handleFabPress} />}
+      {!!credential.accessToken && <ContentTypeSelectorSheet ref={selectorSheetRef} onSelect={handleContentTypeSelect} />}
     </View>
   );
 }

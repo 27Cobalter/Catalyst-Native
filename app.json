@@ -18,7 +18,9 @@
         "aps-environment": "production"
       },
       "infoPlist": {
-        "UIBackgroundModes": ["remote-notification"],
+        "UIBackgroundModes": [
+          "remote-notification"
+        ],
         "LSApplicationQueriesSchemes": [
           "googlechrome",
           "googlechromes",
@@ -84,9 +86,7 @@
       "@react-native-firebase/messaging",
       [
         "@luccasr73/with-rn-image-crop-picker",
-        {
-
-        }
+        {}
       ],
       [
         "expo-build-properties",
@@ -106,7 +106,8 @@
       [
         "expo-file-system",
         {}
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,
