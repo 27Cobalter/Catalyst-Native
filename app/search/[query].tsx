@@ -5,9 +5,9 @@ import { useAtomValue } from "jotai";
 import { useCallback } from "react";
 
 export default function SearchPage() {
-  const params = useLocalSearchParams<{ tab?: string; q?: string }>();
+  const params = useLocalSearchParams<{ query: string }>();
   const client = useAtomValue(clientAtom);
-  const hashtag = params.q ?? "";
+  const hashtag = decodeURIComponent(params.query ?? "");
   const fetcher = useCallback(
     async (since: string | null, until: string | null) => {
       if (!client || !hashtag) {

@@ -91,6 +91,7 @@ export default Sentry.wrap(function RootLayout() {
             name="settings/legal/licenses"
             options={{ title: "オープンソースソフトウェア", headerBackTitle: "戻る" }}
           />
+          <Stack.Screen name="search/[query]" options={{ headerBackTitle: "戻る" }} />
           <Stack.Screen name="compose/post" options={{ title: "新しい投稿", headerBackTitle: "キャンセル" }} />
           <Stack.Screen
             name="profile/edit"

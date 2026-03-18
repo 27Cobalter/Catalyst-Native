@@ -28,7 +28,7 @@ export const StatusText = React.memo(
         )
         .replace(
           /(^|[\s　])#([\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\uFF65-\uFF9F]+)/g,
-          (_, prefix, tag) => `${prefix}<a href="/search?tab=hashtag&exact=true&q=%23${tag}">#${tag}</a>`,
+          (_, prefix, tag) => `${prefix}<a href="/search/%23${tag}">#${tag}</a>`,
         );
       const u = unified()
         .use(RemarkParse)
