@@ -63,6 +63,41 @@ const DISPLAY_MODE_OPTIONS: { value: CatalystAlbumDisplayMode; label: string }[]
   { value: "gallery", label: "ギャラリー" },
 ];
 
+export function hashtagsToConditions(hashtags: string[]): SmartAlbumCondition[] {
+  return hashtags
+    .map((raw, index) => {
+      const trimmed = raw.trim();
+      if (!trimmed) return null;
+
+      const isExclude = trimmed.startsWith("-");
+      const without = isExclude ? trimmed.slice(1) : trimmed;
+
+      let type: ConditionType = "hashtag";
+      let value = without;
+
+      if (without.startsWith("takenBy:")) {
+        type = "takenBy";
+        value = without.slice("takenBy:".length);
+      } else if (without.startsWith("contest:")) {
+        type = "contest";
+        value = without.slice("contest:".length);
+      } else if (without.startsWith("user:")) {
+        type = "user";
+        value = without.slice("user:".length);
+      }
+
+      if (!value) return null;
+
+      return {
+        id: `${isExclude ? "ex-" : ""}${type}-init-${index}`,
+        type,
+        value,
+        isExclude,
+      } satisfies SmartAlbumCondition;
+    })
+    .filter((c): c is SmartAlbumCondition => c !== null);
+}
+
 export function conditionToHashtag(condition: SmartAlbumCondition): string {
   const prefix = condition.isExclude ? "-" : "";
   if (condition.type === "takenBy") return `${prefix}takenBy:${condition.value}`;
@@ -90,6 +125,7 @@ type Props = {
   onChangeIsPublic: (v: boolean) => void;
   displayMode: CatalystAlbumDisplayMode;
   onChangeDisplayMode: (v: CatalystAlbumDisplayMode) => void;
+  footer?: React.ReactNode;
 };
 
 export const SmartAlbumForm = ({
@@ -111,6 +147,7 @@ export const SmartAlbumForm = ({
   onChangeIsPublic,
   displayMode,
   onChangeDisplayMode,
+  footer,
 }: Props) => {
   const theme = useColorScheme() ?? "light";
   const addConditionSheetRef = useRef<BottomSheetModal>(null);
@@ -387,6 +424,8 @@ export const SmartAlbumForm = ({
             {isPublic ? "すべてのユーザーがこのアルバムを閲覧できます" : "自分のみがこのアルバムを閲覧できます"}
           </Text>
         </View>
+
+        {footer}
       </ScrollView>
 
       {/* 条件追加シート */}

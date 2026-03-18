@@ -205,6 +205,8 @@ export const AlbumDetailPage = ({ id, albumType }: Props) => {
                   onPress={() => {
                     if (albumType === "album") {
                       router.push(`/album/${id}/edit`);
+                    } else {
+                      router.push(`/smart-album/${id}/edit`);
                     }
                   }}
                 >
