@@ -116,7 +116,7 @@ export default function PostComposerScreen() {
         });
       }
 
-      await client.catalyst.createStatus({
+      const result = await client.catalyst.createStatus({
         description: text.trim(),
         isNsfw,
         isSpoiler,
@@ -128,7 +128,8 @@ export default function PostComposerScreen() {
         media: mediaList,
       });
 
-      router.back();
+      router.dismiss();
+      router.push(`/status/${result.id}`);
     } catch (error) {
       console.error("Failed to create status:", error);
       Toast.show({ type: "error", text1: "エラー", text2: "投稿に失敗しました" });
