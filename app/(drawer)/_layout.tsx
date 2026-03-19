@@ -1,4 +1,5 @@
 import { Fonts } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import { getCdnUrl } from "@/lib/media";
 import { accountAtom } from "@/models/atoms/account";
 import type { DrawerContentComponentProps } from "@react-navigation/drawer";
@@ -44,6 +45,7 @@ const UniMenu = withUniwind(Menu);
 
 export default function DrawerLayout() {
   const account = useAtomValue(accountAtom);
+  const colorScheme = useColorScheme();
   const segments = useSegments();
   const headers: Route[] = useMemo(() => {
     return [
@@ -84,6 +86,9 @@ export default function DrawerLayout() {
         headerShadowVisible: false,
         headerShown: !isProfileTab,
         swipeEnabled: !isProfileTab,
+        headerStyle: {
+          backgroundColor: colorScheme === "dark" ? "#151718" : "#ffffff",
+        },
         headerLeft: () => {
           const openDrawer = () => {
             navigation.dispatch(DrawerActions.openDrawer());
