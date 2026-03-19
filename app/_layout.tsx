@@ -6,7 +6,7 @@ import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { accountAtom } from "@/models/atoms/account";
 import * as Credential from "@/models/credential";
-import { getApp } from "@react-native-firebase/app";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { getMessaging, setBackgroundMessageHandler } from "@react-native-firebase/messaging";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import * as Sentry from "@sentry/react-native";
@@ -15,18 +15,19 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
-import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-
 import "react-native-reanimated";
 import Toast from "react-native-toast-message";
 
-// バックグラウンドでの通知受信ハンドラ
-setBackgroundMessageHandler(getMessaging(getApp()), async (_remoteMessage) => {
-  // バックグラウンド通知の処理（現時点では特別な処理は不要）
-});
+import "@/global.css";
 
-// import "@/global.css";
+if (Platform.OS === "android") {
+  // バックグラウンドでの通知受信ハンドラ
+  setBackgroundMessageHandler(getMessaging(), async (_remoteMessage) => {
+    // バックグラウンド通知の処理（現時点では特別な処理は不要）
+  });
+}
 
 Sentry.init({
   dsn: "https://6d7c270e3a7bb56c0a746319d7e885d5@o4504564074348544.ingest.us.sentry.io/4510957726793728",
@@ -72,35 +73,35 @@ export default Sentry.wrap(function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(drawer)" options={{ headerShown: false, gestureEnabled: false }} />
-          <Stack.Screen name="status/[id]" options={{ title: "投稿", headerBackTitle: "戻る" }} />
-          <Stack.Screen name="user/[screenName]" options={{ headerShown: false }} />
-          <Stack.Screen name="authorize" options={{ headerShown: false }} />
-          <Stack.Screen name="settings" options={{ title: "設定とプライバシー", headerBackTitle: "戻る" }} />
-          <Stack.Screen name="settings/account" options={{ title: "アカウント", headerBackTitle: "戻る" }} />
-          <Stack.Screen name="settings/notifications" options={{ title: "通知", headerBackTitle: "戻る" }} />
-          <Stack.Screen name="settings/display" options={{ title: "表示", headerBackTitle: "戻る" }} />
-          <Stack.Screen
-            name="settings/accessibility"
-            options={{ title: "アクセシビリティ", headerBackTitle: "戻る" }}
-          />
-          <Stack.Screen name="settings/legal" options={{ title: "法的情報", headerBackTitle: "戻る" }} />
-          <Stack.Screen
-            name="settings/legal/licenses"
-            options={{ title: "オープンソースソフトウェア", headerBackTitle: "戻る" }}
-          />
-          <Stack.Screen name="search/[query]" options={{ headerBackTitle: "戻る" }} />
-          <Stack.Screen name="compose/post" options={{ title: "新しい投稿", headerBackTitle: "キャンセル" }} />
-          <Stack.Screen
-            name="profile/edit"
-            options={{ title: "プロフィールを編集", headerBackTitle: "キャンセル" }}
-          />
-        </Stack>
-        <StatusBar style="auto" />
-        <Toast />
-      </ThemeProvider>
+        <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+          <Stack>
+            <Stack.Screen name="(drawer)" options={{ headerShown: false, gestureEnabled: false }} />
+            <Stack.Screen name="status/[id]" options={{ title: "投稿", headerBackTitle: "戻る" }} />
+            <Stack.Screen name="user/[screenName]" options={{ headerShown: false }} />
+            <Stack.Screen name="authorize" options={{ headerShown: false }} />
+            <Stack.Screen name="settings" options={{ title: "設定とプライバシー", headerBackTitle: "戻る" }} />
+            <Stack.Screen name="settings/account" options={{ title: "アカウント", headerBackTitle: "戻る" }} />
+            <Stack.Screen name="settings/notifications" options={{ title: "通知", headerBackTitle: "戻る" }} />
+            <Stack.Screen name="settings/display" options={{ title: "表示", headerBackTitle: "戻る" }} />
+            <Stack.Screen
+              name="settings/accessibility"
+              options={{ title: "アクセシビリティ", headerBackTitle: "戻る" }}
+            />
+            <Stack.Screen name="settings/legal" options={{ title: "法的情報", headerBackTitle: "戻る" }} />
+            <Stack.Screen
+              name="settings/legal/licenses"
+              options={{ title: "オープンソースソフトウェア", headerBackTitle: "戻る" }}
+            />
+            <Stack.Screen name="search/[query]" options={{ headerBackTitle: "戻る" }} />
+            <Stack.Screen name="compose/post" options={{ title: "新しい投稿", headerBackTitle: "キャンセル" }} />
+            <Stack.Screen
+              name="profile/edit"
+              options={{ title: "プロフィールを編集", headerBackTitle: "キャンセル" }}
+            />
+          </Stack>
+          <StatusBar style="auto" />
+          <Toast />
+        </ThemeProvider>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );
