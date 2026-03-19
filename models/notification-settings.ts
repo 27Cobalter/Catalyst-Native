@@ -1,4 +1,4 @@
-import { getApp } from "@react-native-firebase/app";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   AuthorizationStatus,
   onTokenRefresh as firebaseOnTokenRefresh,
@@ -7,7 +7,6 @@ import {
   hasPermission,
   requestPermission,
 } from "@react-native-firebase/messaging";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert, Linking, PermissionsAndroid, Platform } from "react-native";
 
 // Push通知の種類
@@ -70,10 +69,8 @@ function mapAuthorizationStatus(status: number): AppAuthorizationStatus {
   }
 }
 
-const messagingInstance = getMessaging(getApp());
-
 export async function getAuthorizationStatus(): Promise<AppAuthorizationStatus> {
-  const status = await hasPermission(messagingInstance);
+  const status = await hasPermission(getMessaging());
   return mapAuthorizationStatus(status);
 }
 
@@ -83,7 +80,7 @@ export async function requestAuthorization(): Promise<boolean> {
     return result === PermissionsAndroid.RESULTS.GRANTED;
   }
 
-  const status = await requestPermission(messagingInstance, {
+  const status = await requestPermission(getMessaging(), {
     alert: true,
     sound: true,
     badge: true,
@@ -94,15 +91,15 @@ export async function requestAuthorization(): Promise<boolean> {
 
 export async function getFcmToken(): Promise<string | null> {
   try {
-    const token = await getToken(messagingInstance);
+    const token = await getToken(getMessaging());
     return token;
   } catch {
     return null;
   }
 }
 
-export function onTokenRefresh(callback: (token: string) => void) {
-  return firebaseOnTokenRefresh(messagingInstance, callback);
+export async function onTokenRefresh(callback: (token: string) => void) {
+  return firebaseOnTokenRefresh(getMessaging(), callback);
 }
 
 export async function loadPushEnabled(): Promise<boolean> {

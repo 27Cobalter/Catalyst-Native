@@ -1,7 +1,7 @@
+import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { cn } from "@/lib/utils";
 import { accountAtom } from "@/models/atoms/account";
 import {
-  type AppAuthorizationStatus,
   PUSH_NOTIFICATION_TYPES,
   getAuthorizationStatus,
   getFcmToken,
@@ -27,38 +27,47 @@ export default function NotificationSettingsPage() {
   const isLoggedIn = !!account;
 
   const [isPushEnabled, setIsPushEnabled] = useState(false);
-  const [authStatus, setAuthStatus] = useState<AppAuthorizationStatus>("notDetermined");
+  const [authStatus, setAuthStatus] = useState<string>("notDetermined");
   const [enabledTypes, setEnabledTypes] = useState<Set<string>>(new Set());
   const [fcmToken, setFcmToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // 初期化
-  useEffect(() => {
-    (async () => {
+  useAsyncOneTimeEffect(async () => {
+    try {
       const [pushEnabled, types, status, savedToken] = await Promise.all([
         loadPushEnabled(),
         loadEnabledTypes(),
         getAuthorizationStatus(),
         loadSavedFcmToken(),
       ]);
+
       setIsPushEnabled(pushEnabled);
       setEnabledTypes(types);
       setAuthStatus(status);
       setFcmToken(savedToken);
+    } finally {
       setIsLoading(false);
-    })();
-  }, []);
+    }
+  });
 
   // FCMトークンのリフレッシュを監視
   useEffect(() => {
-    const unsubscribe = onTokenRefresh(async (token) => {
+    let unsubscribe: (() => void) | undefined;
+
+    onTokenRefresh(async (token) => {
       setFcmToken(token);
       await saveFcmToken(token);
       if (isPushEnabled && account) {
         await registerTokenToBackend(token, account.credential.accessToken);
       }
+    }).then((unsub) => {
+      unsubscribe = unsub;
     });
-    return unsubscribe;
+
+    return () => {
+      unsubscribe?.();
+    };
   }, [isPushEnabled, account]);
 
   const isEffectivelyEnabled = isPushEnabled && (authStatus === "authorized" || authStatus === "provisional");
