@@ -53,12 +53,12 @@ export default function HomeScreen() {
   }, [state]);
 
   return (
-    <View className="flex-col flex-1">
+    <View className="flex-col flex-1 bg-light-background dark:bg-dark-background">
       <View className="px-4">
         <View className="flex flex-row items-center px-2 rounded-lg bg-neutral-200 dark:bg-neutral-800">
           <UniSearchIcon size={24} className="text-light-icon dark:text-dark-icon" />
           <TextInput
-            className="w-full shrink text-black dark:text-white placeholder-light-icon dark:placeholder-dark-icon"
+            className="w-full h-8 shrink-0 android:h-10 text-black dark:text-white placeholder-light-icon dark:placeholder-dark-icon"
             value={state}
             onChangeText={setState}
             onFocus={() => setFocused(true)}
