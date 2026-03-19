@@ -3,13 +3,13 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import { getCdnUrl } from "@/lib/media";
 import { accountAtom } from "@/models/atoms/account";
 import type { DrawerContentComponentProps } from "@react-navigation/drawer";
-import { DrawerActions } from "@react-navigation/native";
+import { DrawerActions, useIsFocused } from "@react-navigation/native";
 import { Image } from "expo-image";
 import { router, useSegments } from "expo-router";
 import { Drawer } from "expo-router/drawer";
 import { useAtomValue } from "jotai";
 import { Cog, Images, Menu, Trophy, User } from "lucide-react-native";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
@@ -77,7 +77,14 @@ export default function DrawerLayout() {
     ].filter(Boolean) as Route[];
   }, []);
 
-  const isProfileTab = segments.includes("profile" as never);
+  const isFocused = useIsFocused();
+  const [isProfileTab, setIsProfileTab] = useState(false);
+
+  useEffect(() => {
+    if (isFocused) {
+      setIsProfileTab(segments.includes("profile" as never));
+    }
+  }, [isFocused, segments]);
 
   return (
     <Drawer
