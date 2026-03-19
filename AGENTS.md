@@ -89,3 +89,7 @@ Catalyst iOS ネイティブ実装である Catalyst for iOS は、 `../Catalyst
 ### サーバー実装
 
 Catalyst のバックエンド実装である teyvat は `../teyvat` ディレクトリに配置されており、それぞれ `../teyvat/README.md` に書かれたコンポーネントに応じて参照することが出来ます。
+
+### twitter-text ネイティブ実装
+
+twitter-text のネイティブ実装である react-native-twitter-text は `../react-native-twitter-text` ディレクトリに配置されており、任意のタイミングで参照することが出来ます。
