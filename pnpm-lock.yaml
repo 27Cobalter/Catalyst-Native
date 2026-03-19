@@ -31,6 +31,9 @@ importers:
       '@natsuneko-laboratory/catalyst-sdk':
         specifier: ^0.1.2
         version: 0.1.2
+      '@natsuneko-laboratory/react-native-twitter-text':
+        specifier: ^0.1.0
+        version: 0.1.0(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
       '@react-native-async-storage/async-storage':
         specifier: 3.0.1
         version: 3.0.1(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
@@ -1672,6 +1675,12 @@ packages:
 
   '@natsuneko-laboratory/catalyst-sdk@0.1.2':
     resolution: {integrity: sha512-T6UUo0PG4ELKtpTRGlqWwknOehlvtrJaEef+HiZ64fHlFOLlU4IBKjEujahIopTW/EhNYxuB8IY91HwdhLdUfw==}
+
+  '@natsuneko-laboratory/react-native-twitter-text@0.1.0':
+    resolution: {integrity: sha512-umRAhpgBRqqBVWmyRCpaZta0fU1Jgy8xxc9oiaBb4ZnA2JuiNYY9HmVW9b2LdscmeVKneW4xW8fXiWmxo3NGLw==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -9149,6 +9158,11 @@ snapshots:
   '@natsuneko-laboratory/catalyst-sdk@0.1.2':
     dependencies:
       js-sha256: 0.11.1
+
+  '@natsuneko-laboratory/react-native-twitter-text@0.1.0(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      react: 19.2.4
+      react-native: 0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4)
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:

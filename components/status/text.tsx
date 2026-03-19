@@ -1,4 +1,5 @@
 import { openUrlWithBrowser } from "@/models/browser-settings";
+import { extractEntities } from "@natsuneko-laboratory/react-native-twitter-text";
 import { Link } from "expo-router";
 import React, { Fragment, useCallback, useMemo } from "react";
 import { Text } from "react-native";
@@ -21,15 +22,39 @@ export const StatusText = React.memo(
     }, []);
 
     const val = useMemo(() => {
-      const html = status
-        .replace(
-          /https?:\/\/[^\s　\])<>]+/g,
-          (url) => `<a href="${url}">${url}</a>`,
-        )
-        .replace(
-          /(^|[\s　])#([\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\uFF65-\uFF9F]+)/g,
-          (_, prefix, tag) => `${prefix}<a href="/search/%23${tag}">#${tag}</a>`,
-        );
+      const entities = extractEntities(status);
+      const sb: string[] = [];
+      let cursor = 0;
+
+      for (const entity of entities) {
+        if (entity.range.start > cursor) {
+          sb.push(status.slice(cursor, entity.range.start));
+        }
+
+        switch (entity.type) {
+          case "url": {
+            const url = status.slice(entity.range.start, entity.range.end);
+            sb.push(`<a href="${url}">${url}</a>`);
+            break;
+          }
+          case "hashtag": {
+            const tag = status.slice(entity.range.start + 1, entity.range.end);
+            sb.push(`<a href="/search/%23${tag}">#${tag}</a>`);
+            break;
+          }
+          default:
+            sb.push(status.slice(entity.range.start, entity.range.end));
+        }
+
+        cursor = entity.range.end;
+      }
+
+      if (cursor < status.length) {
+        sb.push(status.slice(cursor));
+      }
+
+      const html = sb.join("");
+
       const u = unified()
         .use(RemarkParse)
         .use(RemarkBreaks)

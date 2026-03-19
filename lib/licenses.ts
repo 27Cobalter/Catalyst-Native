@@ -201,6 +201,27 @@ SOFTWARE.
 ` },
   "@natsuneko-laboratory/catalyst-sdk@0.1.2": { id: "@natsuneko-laboratory/catalyst-sdk@0.1.2", name: "@natsuneko-laboratory/catalyst-sdk", content: `undefined` },
   "js-sha256@0.11.1": { id: "js-sha256@0.11.1", name: "js-sha256", content: `undefined` },
+  "@natsuneko-laboratory/react-native-twitter-text@0.1.0": { id: "@natsuneko-laboratory/react-native-twitter-text@0.1.0", name: "@natsuneko-laboratory/react-native-twitter-text", content: `MIT License
+
+Copyright (c) 2026 Kanon Mochizuki
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+` },
   "@react-native-async-storage/async-storage@3.0.1": { id: "@react-native-async-storage/async-storage@3.0.1", name: "@react-native-async-storage/async-storage", content: `undefined` },
   "idb@8.0.3": { id: "idb@8.0.3", name: "idb", content: `ISC License (ISC)
 Copyright (c) 2016, Jake Archibald <jaffathecake@gmail.com>
@@ -2731,7 +2752,7 @@ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ` },
-  "@sentry/cli-linux-x64@3.3.3": { id: "@sentry/cli-linux-x64@3.3.3", name: "@sentry/cli-linux-x64", content: `undefined` },
+  "@sentry/cli-darwin@3.3.3": { id: "@sentry/cli-darwin@3.3.3", name: "@sentry/cli-darwin", content: `undefined` },
   "@sentry/react@10.43.0": { id: "@sentry/react@10.43.0", name: "@sentry/react", content: `MIT License
 
 Copyright (c) 2019 Functional Software, Inc. dba Sentry
@@ -8106,7 +8127,7 @@ defined by the Mozilla Public License, v. 2.0.
    See the License for the specific language governing permissions and
    limitations under the License.
 ` },
-  "lightningcss-linux-x64-gnu@1.32.0": { id: "lightningcss-linux-x64-gnu@1.32.0", name: "lightningcss-linux-x64-gnu", content: ` Mozilla Public License Version 2.0
+  "lightningcss-darwin-arm64@1.32.0": { id: "lightningcss-darwin-arm64@1.32.0", name: "lightningcss-darwin-arm64", content: ` Mozilla Public License Version 2.0
 ==================================
 
 1. Definitions
@@ -14626,6 +14647,29 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
+  "fsevents@2.3.3": { id: "fsevents@2.3.3", name: "fsevents", content: `MIT License
+-----------
+
+Copyright (C) 2010-2020 by Philipp Dunkel, Ben Noordhuis, Elan Shankar, Paul Miller
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+` },
   "pirates@4.0.7": { id: "pirates@4.0.7", name: "pirates", content: `MIT License
 
 Copyright (c) 2016-2018 Ari Porad
@@ -19160,7 +19204,7 @@ Exhibit B - "Incompatible With Secondary Licenses" Notice
 This Source Code Form is "Incompatible With Secondary Licenses", as
 defined by the Mozilla Public License, v. 2.0.
 ` },
-  "lightningcss-linux-x64-gnu@1.30.2": { id: "lightningcss-linux-x64-gnu@1.30.2", name: "lightningcss-linux-x64-gnu", content: ` Mozilla Public License Version 2.0
+  "lightningcss-darwin-arm64@1.30.2": { id: "lightningcss-darwin-arm64@1.30.2", name: "lightningcss-darwin-arm64", content: ` Mozilla Public License Version 2.0
 ==================================
 
 1. Definitions
@@ -19586,7 +19630,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ` },
-  "@tailwindcss/oxide-linux-x64-gnu@4.1.17": { id: "@tailwindcss/oxide-linux-x64-gnu@4.1.17", name: "@tailwindcss/oxide-linux-x64-gnu", content: `MIT License
+  "@tailwindcss/oxide-darwin-arm64@4.1.17": { id: "@tailwindcss/oxide-darwin-arm64@4.1.17", name: "@tailwindcss/oxide-darwin-arm64", content: `MIT License
 
 Copyright (c) Tailwind Labs, Inc.
 
@@ -20004,7 +20048,7 @@ Exhibit B - "Incompatible With Secondary Licenses" Notice
 This Source Code Form is "Incompatible With Secondary Licenses", as
 defined by the Mozilla Public License, v. 2.0.
 ` },
-  "lightningcss-linux-x64-gnu@1.30.1": { id: "lightningcss-linux-x64-gnu@1.30.1", name: "lightningcss-linux-x64-gnu", content: ` Mozilla Public License Version 2.0
+  "lightningcss-darwin-arm64@1.30.1": { id: "lightningcss-darwin-arm64@1.30.1", name: "lightningcss-darwin-arm64", content: ` Mozilla Public License Version 2.0
 ==================================
 
 1. Definitions
