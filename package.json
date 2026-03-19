@@ -16,6 +16,10 @@
     "build:ios:development": "pnpm run prebuilt && eas build --platform ios --profile development --local",
     "build:ios:preview": "pnpm run prebuilt && eas build --platform ios --profile preview --local",
     "build:ios:production": "pnpm run prebuilt && eas build --platform ios --profile production --local",
+    "submit:android:preview": "eas submit --platform android --profile preview",
+    "submit:android:production": "eas submit --platform android --profile production",
+    "submit:ios:preview": "eas submit --platform ios --profile preview",
+    "submit:ios:production": "eas submit --platform ios --profile production",
     "lint": "expo lint",
     "expo": "expo"
   },
