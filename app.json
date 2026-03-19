@@ -12,42 +12,40 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.natsuneko.catalyst",
       "config": {
-        "usesNonExemptEncryption": false
+        "usesNonExemptEncryption": false,
       },
       "entitlements": {
-        "aps-environment": "production"
+        "aps-environment": "production",
       },
       "infoPlist": {
-        "UIBackgroundModes": [
-          "remote-notification"
-        ],
+        "UIBackgroundModes": ["remote-notification"],
         "LSApplicationQueriesSchemes": [
           "googlechrome",
           "googlechromes",
           "firefox",
           "microsoft-edge-https",
           "brave",
-          "ddgQuickLink"
-        ]
+          "ddgQuickLink",
+        ],
       },
-      "googleServicesFile": "./GoogleService-Info.plist"
+      "googleServicesFile": "./GoogleService-Info.plist",
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#F3B3CF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "monochromeImage": "./assets/images/android-icon-monochrome.png",
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.natsuneko.catalyst",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
     },
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
     },
     "plugins": [
       "expo-router",
@@ -59,9 +57,9 @@
           "resizeMode": "contain",
           "backgroundColor": "#F3B3CF",
           "dark": {
-            "backgroundColor": "#F3B3CF"
-          }
-        }
+            "backgroundColor": "#F3B3CF",
+          },
+        },
       ],
       "expo-secure-store",
       [
@@ -69,55 +67,49 @@
         {
           "url": "https://sentry.io/",
           "project": "catalyst-native",
-          "organization": "natsuneko-laboratory"
-        }
+          "organization": "natsuneko-laboratory",
+        },
       ],
       [
         "expo-asset",
         {
-          "assets": [
-            "assets/images/emoji",
-            "assets/images/emoji-test.txt"
-          ]
-        }
+          "assets": ["assets/images/emoji", "assets/images/emoji-test.txt"],
+        },
       ],
-      "@react-native-async-storage/expo-with-async-storage",
       "@react-native-firebase/app",
       "@react-native-firebase/messaging",
-      [
-        "@luccasr73/with-rn-image-crop-picker",
-        {}
-      ],
+      "@react-native-async-storage/expo-with-async-storage",
+      ["@luccasr73/with-rn-image-crop-picker", {}],
       [
         "expo-build-properties",
         {
           "ios": {
-            "useFrameworks": "static"
-          }
-        }
+            "forceStaticLinking": ["RNFBApp", "RNFBMessaging"],
+            "useFrameworks": "static",
+            "ccacheEnabled": true,
+            "buildReactNativeFromSource": true,
+          },
+        },
       ],
       [
         "expo-image-picker",
         {
           "miccophonePermission": false,
-          "cameraPermission": false
-        }
+          "cameraPermission": false,
+        },
       ],
-      [
-        "expo-file-system",
-        {}
-      ],
-      "@react-native-community/datetimepicker"
+      ["expo-file-system", {}],
+      "@react-native-community/datetimepicker",
     ],
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true
+      "reactCompiler": true,
     },
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "695c4d2f-513a-40fd-9e9a-20f0d77a50c1"
-      }
-    }
-  }
+        "projectId": "695c4d2f-513a-40fd-9e9a-20f0d77a50c1",
+      },
+    },
+  },
 }
