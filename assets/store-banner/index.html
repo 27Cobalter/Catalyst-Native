@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Catalyst Store Banner Mock</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              catalyst: {
+                bg: "#fffafb", // やわらかな背景
+                surface: "#ffffff",
+                text: "#2f2733", // 濃い本文色
+                muted: "#7d7181", // 補助テキスト
+                accent: "#f2bfd0", // Catalystらしい淡いピンク
+                accentStrong: "#e89db8",
+                tint: "#6f8fdc", // 少し青みのある差し色
+                tintSoft: "#dfe8ff",
+                border: "#f2e7ec",
+                shadow: "rgba(120, 88, 108, 0.14)",
+              },
+            },
+            boxShadow: {
+              catalyst: "0 20px 60px rgba(120, 88, 108, 0.14)",
+              phone: "0 18px 40px rgba(45, 39, 51, 0.18)",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="m-0 bg-[#f6f1f4]">
+    <div class="mx-auto flex min-h-screen items-center justify-center p-8">
+      <div
+        class="relative h-[500px] w-[1024px] overflow-hidden rounded-[32px] bg-catalyst-bg text-catalyst-text shadow-catalyst"
+      >
+        <!-- 背景 -->
+        <div
+          class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(242,191,208,0.45),_transparent_40%),radial-gradient(circle_at_bottom_right,_rgba(111,143,220,0.18),_transparent_35%),linear-gradient(135deg,#fffafb_0%,#fff6f8_45%,#f8f7ff_100%)]"
+        ></div>
+
+        <!-- ふわっとした飾り -->
+        <div class="absolute -left-16 -top-16 h-56 w-56 rounded-full bg-catalyst-accent/35 blur-3xl"></div>
+        <div class="absolute right-0 top-0 h-56 w-56 rounded-full bg-catalyst-tint/20 blur-3xl"></div>
+        <div class="absolute bottom-0 left-1/3 h-40 w-40 rounded-full bg-catalyst-accent/20 blur-3xl"></div>
+
+        <div class="relative z-10 grid h-full grid-cols-12">
+          <!-- 左: メインビジュアル -->
+          <div class="col-span-7 h-full p-6">
+            <div
+              class="relative h-full w-full overflow-hidden rounded-[28px] border border-catalyst-border bg-white/50 shadow-lg"
+            >
+              <!--
+                ここにメインビジュアルを入れます
+                例:
+                <img src="your-main-visual.jpg" class="h-full w-full object-cover" />
+
+                おすすめ:
+                - 少しピンク / 紫 / 青系の光が入る写真
+                - 夜景、ネオン、夕景、星空、幻想ワールド
+                - 暗すぎず明るすぎない写真
+              -->
+              <img src="media_185e147a-cbe4-4635-a37b-57c314bf7a6b.png" class="h-full w-full object-cover" />
+              <div
+                class="absolute inset-0 bg-[linear-gradient(135deg,rgba(242,191,208,0.22),rgba(111,143,220,0.12))]"
+              ></div>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <!-- <div class="px-10 text-center">
+                  <div
+                    class="mx-auto mb-4 h-16 w-16 rounded-2xl border border-dashed border-catalyst-muted/40 bg-white/40"
+                  ></div>
+                  <p class="text-xl font-semibold text-catalyst-text/85">メインビジュアル</p>
+                  <p class="mt-2 text-sm leading-relaxed text-catalyst-muted">
+                    Catalyst らしい雰囲気のVR写真を配置<br />
+                    やわらかい光や印象的な景観の1枚がおすすめ
+                  </p>
+                </div> -->
+              </div>
+
+              <!-- 写真の下部を落として文字を載せやすく -->
+              <div class="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white/75 to-transparent"></div>
+            </div>
+          </div>
+
+          <!-- 右: ロゴ / コピー / スマホ -->
+          <div class="col-span-5 flex h-full flex-col justify-between px-8 py-7">
+            <div>
+              <!-- ロゴ -->
+              <div class="flex items-center gap-4">
+                <!--
+                  Catalyst のロゴ / アプリアイコンをここに入れる
+                  背景透過PNG想定
+                -->
+                <div
+                  class="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/70 bg-white/75 shadow-sm"
+                >
+                  <img src="../images/icon.png" />
+                </div>
+
+                <div>
+                  <h1 class="text-[38px] font-bold tracking-tight text-catalyst-text">Catalyst</h1>
+                  <p class="mt-1 text-sm text-catalyst-tint">VRの思い出を、美しく共有</p>
+                </div>
+              </div>
+
+              <!-- メインコピー -->
+              <div class="mt-8">
+                <p class="text-[30px] font-semibold leading-tight text-catalyst-text">
+                  あなたの世界を、<br />
+                  もっと身近に。
+                </p>
+                <p class="mt-3 max-w-sm text-sm leading-6 text-catalyst-muted">
+                  VRChat や Resonite の写真を、 見つけて、残して、楽しめる写真共有サービス。
+                </p>
+              </div>
+
+              <!-- チップ -->
+              <!--  <div class="mt-6 flex flex-wrap gap-2">
+                <span class="rounded-full border border-[#f0dce4] bg-white/75 px-3 py-1.5 text-xs text-catalyst-muted">
+                  VRChat
+                </span>
+                <span class="rounded-full border border-[#f0dce4] bg-white/75 px-3 py-1.5 text-xs text-catalyst-muted">
+                  Resonite
+                </span>
+                <span
+                  class="rounded-full border border-[#dbe4ff] bg-catalyst-tintSoft/70 px-3 py-1.5 text-xs text-catalyst-tint"
+                >
+                  cluster
+                </span>
+                <span class="rounded-full border border-[#f0dce4] bg-[#fff2f7] px-3 py-1.5 text-xs text-[#c26e96]">
+                  Resonite
+                </span>
+              </div> -->
+            </div>
+
+            <!-- スマホモック -->
+            <div class="relative flex justify-end pb-1">
+              <div
+                class="absolute bottom-4 right-20 -z-10 h-[182px] w-[92px] rotate-[-8deg] rounded-[24px] border border-[#2f2733]/10 bg-[#1e1a22] p-1.5 shadow-phone/50 backdrop-blur"
+              >
+                <div class="absolute left-1/2 top-1.5 z-10 h-1 w-8 -translate-x-1/2 rounded-full bg-white/18"></div>
+                <div class="h-full w-full overflow-hidden rounded-[18px] bg-white">
+                  <img src="./Screenshot_20260320-010010.png" class="h-full w-full object-cover" />
+                </div>
+              </div>
+
+              <div
+                class="relative h-[252px] w-[126px] rounded-[30px] border border-[#2f2733]/10 bg-[#1e1a22] p-2 shadow-phone"
+              >
+                <div class="absolute left-1/2 top-2 h-1.5 w-12 -translate-x-1/2 rounded-full bg-white/18"></div>
+
+                <div class="h-full w-full overflow-hidden rounded-[23px] bg-white">
+                  <!--
+                    ここにアプリ画面スクリーンショットを入れます
+                    例:
+                    <img src="app-screen.png" class="h-full w-full object-cover" />
+
+                    おすすめ:
+                    - タイムライン画面
+                    - 写真詳細画面
+                    - ピンク寄り背景なら、白ベースUIが相性良し
+                  -->
+                  <img src="./Screenshot_20260320-005957.png" />
+                  <div
+                    class="flex h-full items-center justify-center bg-[linear-gradient(180deg,#fff8fb_0%,#f8f7ff_100%)]"
+                  >
+                    <div class="px-4 text-center">
+                      <div
+                        class="mx-auto mb-3 h-10 w-10 rounded-xl border border-dashed border-[#cbbac2] bg-white/70"
+                      ></div>
+                      <p class="text-xs font-medium text-catalyst-text/80">アプリ画面</p>
+                      <p class="mt-1 text-[10px] leading-4 text-catalyst-muted">
+                        タイムラインや投稿詳細の<br />
+                        スクリーンショットを配置
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 全体を少しなじませる薄いオーバーレイ -->
+        <div
+          class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.08),rgba(255,255,255,0.02))]"
+        ></div>
+      </div>
+    </div>
+  </body>
+</html>
