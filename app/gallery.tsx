@@ -3,10 +3,18 @@ import { getCdnUrl } from "@/lib/media";
 import { clientAtom } from "@/models/atoms/credential";
 import type { CatalystStatus } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
-import { Stack, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import React, { memo, useCallback, useRef, useState } from "react";
-import { ActivityIndicator, Dimensions, NativeScrollEvent, NativeSyntheticEvent, Pressable, ScrollView, View } from "react-native";
+import {
+  ActivityIndicator,
+  Dimensions,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Pressable,
+  ScrollView,
+  View,
+} from "react-native";
 
 const COLUMNS = 2;
 const GAP = 2;
@@ -128,7 +136,6 @@ export default function GalleryScreen() {
 
   return (
     <View className="flex-1 bg-light-background dark:bg-dark-background">
-      <Stack.Screen options={{ title: "ギャラリー" }} />
       <ScrollView onScroll={handleScroll} scrollEventThrottle={16}>
         <View className="flex-row" style={{ gap: GAP }}>
           <View style={{ width: COLUMN_WIDTH }}>

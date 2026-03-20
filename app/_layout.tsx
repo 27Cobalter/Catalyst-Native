@@ -79,6 +79,7 @@ export default Sentry.wrap(function RootLayout() {
             <Stack.Screen name="status/[id]" options={{ title: "投稿", headerBackTitle: "戻る" }} />
             <Stack.Screen name="user/[screenName]" options={{ headerShown: false }} />
             <Stack.Screen name="authorize" options={{ headerShown: false }} />
+            <Stack.Screen name="gallery" options={{ title: "ギャラリー", headerBackTitle: "戻る" }} />
             <Stack.Screen name="settings" options={{ title: "設定とプライバシー", headerBackTitle: "戻る" }} />
             <Stack.Screen name="settings/account" options={{ title: "アカウント", headerBackTitle: "戻る" }} />
             <Stack.Screen name="settings/notifications" options={{ title: "通知", headerBackTitle: "戻る" }} />
