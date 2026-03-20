@@ -66,7 +66,7 @@ export const ReactionNotification = memo(({ notification }: Props) => {
         )}
 
         <Text className="text-sm text-light-text dark:text-dark-text">
-          {entities.length > 1 ? `${entities.length}回アクションされました` : "アクションされました"}
+          {entities.length > 1 ? `${entities.length}回リアクションされました` : "リアクションされました"}
         </Text>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
