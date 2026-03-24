@@ -2,10 +2,11 @@ import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { cn } from "@/lib/utils";
 import { clientAtom } from "@/models/atoms/credential";
 import type { Notification } from "@natsuneko-laboratory/catalyst-sdk";
+import PushNotificationIOS from "@react-native-community/push-notification-ios";
 import { FlashList } from "@shopify/flash-list";
 import { useAtomValue } from "jotai";
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Platform, PushNotificationIOS, RefreshControl, Text, View, useColorScheme } from "react-native";
+import { ActivityIndicator, Platform, RefreshControl, Text, View, useColorScheme } from "react-native";
 import { FollowNotification } from "./follow";
 import { ReactionNotification } from "./reaction";
 
