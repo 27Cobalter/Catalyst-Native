@@ -57,7 +57,7 @@ export default Sentry.wrap(function RootLayout() {
 
   useAsyncOneTimeEffect(async () => {
     try {
-      const { credential, isLoggedIn } = await Credential.init();
+      const { credential, isLoggedIn } = await Credential.tryRestore();
 
       setAccount(isLoggedIn ? { user: Credential.currentUser()!, credential } : null);
     } finally {

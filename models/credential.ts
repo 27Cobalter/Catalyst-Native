@@ -7,7 +7,11 @@ import { v4 } from "uuid";
 
 let _currentUser: EgeriaUser | undefined = undefined;
 
-export const init = async (): Promise<{
+/**
+ * アプリ起動時に保存済みトークンからセッションを復元する。
+ * OAuth フローは開始しない。
+ */
+export const tryRestore = async (): Promise<{
   credential: CredentialStore.Credential;
   isLoggedIn: boolean;
 }> => {
@@ -22,29 +26,45 @@ export const init = async (): Promise<{
         return { credential, isLoggedIn: true };
       }
     } catch {
-      const newTokens = await credential.client.refresh();
-      const me = await credential.client.egeria.me();
+      try {
+        const newTokens = await credential.client.refresh();
+        const me = await credential.client.egeria.me();
 
-      if (me?.user) {
-        _currentUser = me.user;
-        await CredentialStore.saveCredential({
-          accessToken: newTokens.accessToken,
-          refreshToken: newTokens.refreshToken,
-        });
-
-        return {
-          credential: {
-            ...credential,
+        if (me?.user) {
+          _currentUser = me.user;
+          await CredentialStore.saveCredential({
             accessToken: newTokens.accessToken,
             refreshToken: newTokens.refreshToken,
-          },
-          isLoggedIn: true,
-        };
+          });
+
+          return {
+            credential: {
+              ...credential,
+              accessToken: newTokens.accessToken,
+              refreshToken: newTokens.refreshToken,
+            },
+            isLoggedIn: true,
+          };
+        }
+      } catch (refreshErr) {
+        console.error("Token refresh failed:", refreshErr);
       }
     }
   }
 
+  // トークンが無い or 復元失敗 → 未ログイン状態で返す
   await logout();
+  return { credential: CredentialStore.EMPTY_CREDENTIAL, isLoggedIn: false };
+};
+
+/**
+ * OAuth PKCE フローを開始してログインする。
+ */
+export const login = async (): Promise<{
+  credential: CredentialStore.Credential;
+  isLoggedIn: boolean;
+}> => {
+  const credential = await CredentialStore.getCredential();
 
   const pcke = await PKCE.create();
   const state = v4();
@@ -83,6 +103,9 @@ export const init = async (): Promise<{
 
   return { credential: CredentialStore.EMPTY_CREDENTIAL, isLoggedIn: false };
 };
+
+/** @deprecated Use tryRestore() for startup and login() for explicit auth */
+export const init = login;
 
 export const logout = async (): Promise<void> => {
   await CredentialStore.clear();

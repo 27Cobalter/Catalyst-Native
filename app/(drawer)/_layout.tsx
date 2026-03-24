@@ -2,13 +2,14 @@ import { Fonts } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { getCdnUrl } from "@/lib/media";
 import { accountAtom } from "@/models/atoms/account";
+import * as Credential from "@/models/credential";
 import type { DrawerContentComponentProps } from "@react-navigation/drawer";
 import { DrawerActions, useIsFocused } from "@react-navigation/native";
 import { Image } from "expo-image";
 import { router, useSegments } from "expo-router";
 import { Drawer } from "expo-router/drawer";
-import { useAtomValue } from "jotai";
-import { Cog, Images, Menu, Trophy, User } from "lucide-react-native";
+import { useAtom } from "jotai";
+import { Cog, Images, LogIn, Menu, Trophy, User } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -42,9 +43,10 @@ const UniTrophy = withUniwind(Trophy);
 const UniImages = withUniwind(Images);
 const UniCog = withUniwind(Cog);
 const UniMenu = withUniwind(Menu);
+const UniLogIn = withUniwind(LogIn);
 
 export default function DrawerLayout() {
-  const account = useAtomValue(accountAtom);
+  const [account, setAccount] = useAtom(accountAtom);
   const colorScheme = useColorScheme();
   const segments = useSegments();
   const headers: Route[] = useMemo(() => {
@@ -76,6 +78,13 @@ export default function DrawerLayout() {
       },
     ].filter(Boolean) as Route[];
   }, []);
+
+  const handleLogin = useCallback(async () => {
+    const { credential, isLoggedIn } = await Credential.login();
+    if (isLoggedIn) {
+      setAccount({ user: Credential.currentUser()!, credential });
+    }
+  }, [setAccount]);
 
   const isFocused = useIsFocused();
   const [isProfileTab, setIsProfileTab] = useState(false);
@@ -130,7 +139,7 @@ export default function DrawerLayout() {
       drawerContent={({ navigation }) => (
         <SafeAreaView>
           <View className="flex flex-col pt-4">
-            {account?.user.profile != null && (
+            {account?.user.profile != null ? (
               <Pressable
                 onPress={() => {
                   navigation.dispatch(DrawerActions.closeDrawer());
@@ -158,6 +167,20 @@ export default function DrawerLayout() {
                         @{account.user.screenName}
                       </Text>
                     </View>
+                  </View>
+                </View>
+              </Pressable>
+            ) : (
+              <Pressable
+                onPress={() => {
+                  navigation.dispatch(DrawerActions.closeDrawer());
+                  handleLogin();
+                }}
+              >
+                <View className="border-b dark:border-dark-border border-light-border pb-4">
+                  <View className="pl-8 flex-row items-center gap-3 py-2">
+                    <UniLogIn className="text-light-tint dark:text-dark-tint" size={24} />
+                    <Text className="text-base text-light-tint dark:text-dark-tint">ログイン</Text>
                   </View>
                 </View>
               </Pressable>
