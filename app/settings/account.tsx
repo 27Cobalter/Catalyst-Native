@@ -67,13 +67,20 @@ export default function AccountSettingsPage() {
     ? "すでに1度ユーザー名を変更しているため、変更できません。"
     : errorMessage;
 
+  const handleLogin = useCallback(async () => {
+    const { credential, isLoggedIn: loggedIn } = await Credential.login();
+    if (loggedIn) {
+      setAccount({ user: Credential.currentUser()!, credential });
+    }
+  }, [setAccount]);
+
   if (!isLoggedIn) {
     return (
       <View className="flex-1 bg-light-background dark:bg-dark-background">
         <View className="mt-4 mx-4 rounded-xl bg-white dark:bg-neutral-800 overflow-hidden">
-          <View className="px-4 py-3.5">
-            <Text className="text-base text-light-gray dark:text-dark-gray">ログインが必要です。</Text>
-          </View>
+          <Pressable className="px-4 py-3.5" onPress={handleLogin}>
+            <Text className="text-base text-light-tint dark:text-dark-tint">ログイン</Text>
+          </Pressable>
         </View>
       </View>
     );
