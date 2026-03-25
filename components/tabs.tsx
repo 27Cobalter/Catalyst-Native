@@ -13,9 +13,10 @@ type Props = {
   tabs: Tab[];
   renderScene: (tab: Tab) => React.ReactNode;
   defaultIndex?: number;
+  onTabChange?: (tab: Tab, index: number) => void;
 };
 
-export function Tabs({ tabs, renderScene, defaultIndex = 0 }: Props) {
+export function Tabs({ tabs, renderScene, defaultIndex = 0, onTabChange }: Props) {
   const [activeIndex, setActiveIndex] = useState(defaultIndex);
   const scrollX = useRef(new Animated.Value(defaultIndex * SCREEN_WIDTH)).current;
   const flatListRef = useRef<FlatList<Tab>>(null);
@@ -31,6 +32,7 @@ export function Tabs({ tabs, renderScene, defaultIndex = 0 }: Props) {
 
   const handleTabPress = (index: number) => {
     setActiveIndex(index);
+    onTabChange?.(tabs[index]!, index);
     flatListRef.current?.scrollToIndex({ index, animated: true });
     Animated.timing(scrollX, {
       toValue: index * SCREEN_WIDTH,
