@@ -1,8 +1,8 @@
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { cn } from "@/lib/utils";
 import { CatalystStatus } from "@natsuneko-laboratory/catalyst-sdk";
-import { FlashList, ListRenderItem } from "@shopify/flash-list";
-import React, { useCallback, useState } from "react";
+import { FlashList, FlashListRef, ListRenderItem } from "@shopify/flash-list";
+import React, { useCallback, useImperativeHandle, useRef, useState } from "react";
 import { ActivityIndicator, RefreshControl, StyleProp, useColorScheme, View, ViewStyle } from "react-native";
 import { TimelineStatus } from "./status";
 
@@ -23,12 +23,18 @@ type Props = {
   fetcher: (since: string | null, until: string | null) => Promise<CatalystStatus[]>;
   ListEmptyComponent?: React.ComponentType;
   ListEmptyComponentStyle?: StyleProp<ViewStyle>;
+  ref?: React.Ref<TimelineHandle>;
 };
 
-export const TimelineBase = ({ fetcher, ListEmptyComponent, ListEmptyComponentStyle }: Props) => {
+export type TimelineHandle = {
+  scrollToTop: () => void;
+};
+
+export const TimelineBase = ({ fetcher, ListEmptyComponent, ListEmptyComponentStyle, ref }: Props) => {
   const [items, setItems] = useState<CatalystStatus[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const listRef = useRef<FlashListRef<CatalystStatus>>(null);
 
   const onRender = useCallback<ListRenderItem<CatalystStatus>>(({ item }) => {
     return <TimelineStatus status={item} />;
@@ -80,8 +86,19 @@ export const TimelineBase = ({ fetcher, ListEmptyComponent, ListEmptyComponentSt
     }
   });
 
+  useImperativeHandle(
+    ref,
+    () => ({
+      scrollToTop: () => {
+        listRef.current?.scrollToOffset({ offset: 0, animated: true });
+      },
+    }),
+    [],
+  );
+
   return (
     <FlashList
+      ref={listRef}
       keyExtractor={(w) => w.id}
       data={items}
       renderItem={onRender}

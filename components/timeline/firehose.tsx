@@ -1,9 +1,13 @@
 import { clientAtom } from "@/models/atoms/credential";
 import { useAtomValue } from "jotai";
-import { useCallback } from "react";
-import { TimelineBase } from "./base";
+import { Ref, useCallback } from "react";
+import { TimelineBase, TimelineHandle } from "./base";
 
-export const FirehoseTimeline = () => {
+type Props = {
+  ref?: Ref<TimelineHandle>;
+}
+
+export const FirehoseTimeline = ({ ref }: Props) => {
   const client = useAtomValue(clientAtom);
 
   const fetcher = useCallback(
@@ -18,5 +22,5 @@ export const FirehoseTimeline = () => {
     [client],
   );
 
-  return <TimelineBase fetcher={fetcher} />;
+  return <TimelineBase ref={ref} fetcher={fetcher} />;
 };
