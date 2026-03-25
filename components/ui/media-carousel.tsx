@@ -223,18 +223,8 @@ export const MediaCarousel = memo(({ medias }: Props) => {
         {/* Sensitive content overlay */}
         {hasSensitiveContent && !isBlurRemoved && (
           <Pressable
+            className="absolute inset-0 bg-light-skeleton dark:bg-dark-skeleton items-center justify-center gap-2"
             onPress={() => setIsBlurRemoved(true)}
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: actualHeight,
-              backgroundColor: "rgba(0,0,0,0.4)",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-            }}
           >
             <EyeOff size={28} color="white" />
             <Text style={{ color: "white", fontWeight: "bold", fontSize: 17 }}>Tap to view</Text>
