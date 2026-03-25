@@ -35,7 +35,8 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
   const { width: screenWidth } = useWindowDimensions();
   const account = useAtomValue(accountAtom);
   const client = useAtomValue(clientAtom);
-  const [user, setUser] = useState<EgeriaUser | null>(null);
+  const accountUser = account?.user.screenName === screenName ? account.user : null;
+  const [user, setUser] = useState<EgeriaUser | null>(accountUser);
   const [activeTab, setActiveTab] = useState(0);
   const scrollY = useRef(new Animated.Value(0)).current;
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -63,6 +64,13 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
       return;
     }
 
+    if (accountUser) {
+      setUser(accountUser);
+      return;
+    }
+
+    setUser(null);
+
     try {
       const user = await client.egeria.userByUsername(screenName);
       if (user) {
@@ -71,7 +79,7 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
     } catch (e) {
       console.error(`failed to fetch user: @${screenName}, ${e}`);
     }
-  }, [account, screenName]);
+  }, [accountUser, client, screenName]);
 
   const handleScroll = useMemo(
     () =>
