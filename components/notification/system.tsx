@@ -3,9 +3,9 @@ import { cn } from "@/lib/utils";
 import { clientAtom } from "@/models/atoms/credential";
 import type { Notification } from "@natsuneko-laboratory/catalyst-sdk";
 import PushNotificationIOS from "@react-native-community/push-notification-ios";
-import { FlashList } from "@shopify/flash-list";
+import { FlashList, FlashListRef } from "@shopify/flash-list";
 import { useAtomValue } from "jotai";
-import React, { useCallback, useState } from "react";
+import React, { Ref, useCallback, useImperativeHandle, useRef, useState } from "react";
 import { ActivityIndicator, Platform, RefreshControl, Text, View, useColorScheme } from "react-native";
 import { FollowNotification } from "./follow";
 import { ReactionNotification } from "./reaction";
@@ -25,11 +25,20 @@ const EmptyState = () => (
   </View>
 );
 
-export const SystemNotificationList = () => {
+type TimelineHandle = {
+  scrollToTop: () => void;
+}
+
+type Props = {
+  ref?: Ref<TimelineHandle>;
+}
+
+export const SystemNotificationList = ({ ref } : Props) => {
   const client = useAtomValue(clientAtom);
   const [items, setItems] = useState<Notification[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const list = useRef<FlashListRef<Notification>>(null);
 
   const fetchNotifications = useCallback(
     async (since: string | null, until: string | null) => {
@@ -67,6 +76,12 @@ export const SystemNotificationList = () => {
       setIsLoading(false);
     }
   });
+
+  useImperativeHandle(ref, () => ({
+    scrollToTop: () => {
+      list.current?.scrollToOffset({ offset: 0, animated: true });
+    }
+  }), []);
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -112,6 +127,7 @@ export const SystemNotificationList = () => {
 
   return (
     <FlashList
+      ref={list}
       keyExtractor={(w) => w.id}
       data={items}
       renderItem={renderItem}

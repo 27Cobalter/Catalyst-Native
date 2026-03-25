@@ -58,7 +58,7 @@ export default function HomeScreen() {
     }
   }, [activeTab]);
 
-  scrollable.current = scrollActiveTimelineToTopHandler!;
+  scrollable.current = scrollActiveTimelineToTopHandler;
 
   useScrollToTop(scrollable)
 
