@@ -70,7 +70,7 @@ export default function HomeScreen() {
 
   return (
     <View className="flex-1 bg-light-background dark:bg-dark-background">
-      {credential ? (
+      {credential.accessToken ? (
         <Tabs
           tabs={TABS}
           onTabChange={(w) => setActiveTab(w.key)}
