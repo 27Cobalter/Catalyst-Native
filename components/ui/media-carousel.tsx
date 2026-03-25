@@ -4,7 +4,7 @@ import { Zoomable } from "@likashefqet/react-native-image-zoom";
 import type { Media } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
 import { EyeOff } from "lucide-react-native";
-import React, { memo, useRef, useState } from "react";
+import React, { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Dimensions, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, {
@@ -38,6 +38,7 @@ export const MediaCarousel = memo(({ medias }: Props) => {
   const [modalIndex, setModalIndex] = useState(0);
   const [activeTouches, setActiveTouches] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
+  const mediaIdentity = useMemo(() => medias.map((media) => media.id).join(":"), [medias]);
 
   const len = medias.length;
   const translateX = useSharedValue(0);
@@ -49,6 +50,21 @@ export const MediaCarousel = memo(({ medias }: Props) => {
   const zoomScale = useSharedValue(1);
 
   const dismissModal = () => setPresentedMediaIndex(null);
+
+  useEffect(() => {
+    // FlashList can recycle timeline cells, so reset carousel state when a different post's media set is mounted.
+    setPresentedMediaIndex(null);
+    setIsBlurRemoved(false);
+    setCurrentIndex(0);
+    setIsZoomed(false);
+    setModalIndex(0);
+    setActiveTouches(0);
+    translateX.value = 0;
+    currentIndexSV.value = 0;
+    modalTranslateY.value = 0;
+    zoomScale.value = 1;
+    scrollViewRef.current?.scrollTo({ x: 0, y: 0, animated: false });
+  }, [mediaIdentity, currentIndexSV, modalTranslateY, translateX, zoomScale]);
 
   const dismissPanGesture = Gesture.Pan()
     .activeOffsetY([-12, 12])
@@ -175,6 +191,7 @@ export const MediaCarousel = memo(({ medias }: Props) => {
                 }}
               >
                 <Image
+                  recyclingKey={`${mediaIdentity}:${media.id}:timeline`}
                   source={{
                     uri: getCdnUrl({
                       src: media.url,
@@ -311,6 +328,7 @@ export const MediaCarousel = memo(({ medias }: Props) => {
                             }}
                           >
                             <Image
+                              recyclingKey={`${mediaIdentity}:${media.id}:modal`}
                               source={{
                                 uri: getCdnUrl({
                                   src: media.url,
@@ -325,6 +343,7 @@ export const MediaCarousel = memo(({ medias }: Props) => {
                           </Zoomable>
                         ) : (
                           <Image
+                            recyclingKey={`${mediaIdentity}:${media.id}:modal`}
                             source={{
                               uri: getCdnUrl({
                                 src: media.url,

@@ -65,7 +65,7 @@ export const TimelineStatus = memo(({ status, renderingMode = "twtr" }: Props) =
       </Pressable>
 
       {/* Media carousel */}
-      {medias.length > 0 && <MediaCarousel medias={medias} />}
+      {medias.length > 0 && <MediaCarousel key={status.id} medias={medias} />}
 
       {/* Body */}
       {status.body.length > 0 && (
