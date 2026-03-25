@@ -71,8 +71,8 @@ export default function HomeScreen() {
         } else if (activeTab === "contests") {
           contestsRef.current?.scrollToTop();
         }
-      }
-    }
+      },
+    };
   }, [activeTab]);
 
   scroller.current = scrollActiveTimelineToTopHandler;
@@ -82,7 +82,7 @@ export default function HomeScreen() {
   return (
     <View className="flex-col flex-1 bg-light-background dark:bg-dark-background">
       <View className="px-4">
-        <View className="flex flex-row items-center px-2 rounded-lg bg-neutral-200 dark:bg-neutral-800">
+        <View className="flex flex-row items-center px-2 mt-1 gap-x-2 rounded-lg bg-neutral-200 dark:bg-neutral-800">
           <UniSearchIcon size={24} className="text-light-icon dark:text-dark-icon" />
           <TextInput
             className="w-full h-8 shrink-0 android:h-10 text-black dark:text-white placeholder-light-icon dark:placeholder-dark-icon"
@@ -107,7 +107,7 @@ export default function HomeScreen() {
       <View className="flex-1">
         <Tabs
           tabs={TABS}
-          onTabChange={w => setActiveTab(w.key)}
+          onTabChange={(w) => setActiveTab(w.key)}
           renderScene={(w) => {
             switch (w.key) {
               case "statuses": {
