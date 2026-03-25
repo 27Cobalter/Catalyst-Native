@@ -4,7 +4,7 @@ import { accountAtom } from "@/models/atoms/account";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
-import { Tabs, useRouter } from "expo-router";
+import { Tabs } from "expo-router";
 import { useAtomValue } from "jotai";
 import { Bell, House, Search } from "lucide-react-native";
 import React from "react";
@@ -24,11 +24,10 @@ type TabItem = {
   authRequired?: boolean;
 };
 
-function CustomTabBar({ state }: BottomTabBarProps) {
+function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const colorScheme = useColorScheme();
   const account = useAtomValue(accountAtom);
   const insets = useSafeAreaInsets();
-  const router = useRouter();
 
   const tabs: TabItem[] = [
     {
@@ -99,7 +98,25 @@ function CustomTabBar({ state }: BottomTabBarProps) {
               }
             }}
             onPress={() => {
-              router.navigate(tab.href as any);
+              const route = state.routes.find((route) => route.name === tab.key);
+              if (!route) {
+                return;
+              }
+
+              const isFocused = state.routes[state.index]?.key === route.key;
+              const event = navigation.emit({
+                type: "tabPress",
+                target: route.key,
+                canPreventDefault: true,
+              });
+
+              if (isFocused && !event.defaultPrevented && tab.key === "index") {
+                //
+              }
+
+              if (!isFocused && !event.defaultPrevented) {
+                navigation.navigate(route.name);
+              }
             }}
             style={{
               flex: 1,
