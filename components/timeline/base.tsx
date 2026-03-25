@@ -1,4 +1,5 @@
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
+import { merge } from "@/lib/merge";
 import { cn } from "@/lib/utils";
 import { CatalystStatus } from "@natsuneko-laboratory/catalyst-sdk";
 import { FlashList, FlashListRef, ListRenderItem } from "@shopify/flash-list";
@@ -35,6 +36,7 @@ export const TimelineBase = ({ fetcher, ListEmptyComponent, ListEmptyComponentSt
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const listRef = useRef<FlashListRef<CatalystStatus>>(null);
+  const sets = useRef<Set<string>>(new Set());
 
   const onRender = useCallback<ListRenderItem<CatalystStatus>>(({ item }) => {
     return <TimelineStatus status={item} />;
@@ -48,7 +50,7 @@ export const TimelineBase = ({ fetcher, ListEmptyComponent, ListEmptyComponentSt
       const newItems = await fetcher(since, null);
 
       if (newItems) {
-        setItems((prevItems) => [...newItems, ...prevItems]);
+        setItems((prevItems) => merge(newItems, prevItems, sets.current, (item) => item.id));
       }
     } finally {
       setIsRefreshing(false);
@@ -63,7 +65,7 @@ export const TimelineBase = ({ fetcher, ListEmptyComponent, ListEmptyComponentSt
       const newItems = await fetcher(null, until);
 
       if (newItems) {
-        setItems((prevItems) => [...prevItems, ...newItems]);
+        setItems((prevItems) => merge(prevItems, newItems, sets.current, (item) => item.id));
       }
     } finally {
       setIsLoading(false);

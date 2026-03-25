@@ -1,5 +1,6 @@
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { getCdnUrl } from "@/lib/media";
+import { merge } from "@/lib/merge";
 import { clientAtom } from "@/models/atoms/credential";
 import type { CatalystStatus } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
@@ -84,13 +85,14 @@ export default function GalleryScreen() {
   const [items, setItems] = useState<CatalystStatus[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const isLoadingRef = useRef(false);
+  const sets = useRef<Set<string>>(new Set());
 
   const fetchItems = useCallback(async () => {
     setIsLoading(true);
     isLoadingRef.current = true;
     try {
       const result = await client.catalyst.galleryTimeline({});
-      setItems(result.statuses);
+      setItems(merge(result.statuses, [], sets.current, (item) => item.id));
     } finally {
       setIsLoading(false);
       isLoadingRef.current = false;
@@ -110,8 +112,7 @@ export default function GalleryScreen() {
         until: lastItem.id,
       });
       if (result.statuses.length > 0) {
-        const filtered = result.statuses.filter((w) => !items.find((v) => v.id === w.id));
-        setItems((prev) => [...prev, ...filtered]);
+        setItems((prev) => merge(prev, result.statuses, sets.current, (item) => item.id));
       }
     } finally {
       setIsLoading(false);

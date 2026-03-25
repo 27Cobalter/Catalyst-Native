@@ -1,5 +1,6 @@
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { getCdnUrl } from "@/lib/media";
+import { merge } from "@/lib/merge";
 import { clientAtom } from "@/models/atoms/credential";
 import { CatalystStatus, EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
@@ -63,6 +64,7 @@ export const UserTimeline = memo(
     const { width: screenWidth } = useWindowDimensions();
     const cellSize = (screenWidth - GAP * (COLUMNS - 1)) / COLUMNS;
     const [items, setItems] = useState<CatalystStatus[]>([]);
+    const sets = useRef<Set<string>>(new Set());
     const [isLoading, setIsLoading] = useState(false);
     const isLoadingRef = useRef(false);
 
@@ -75,7 +77,7 @@ export const UserTimeline = memo(
       isLoadingRef.current = true;
       try {
         const result = await client.catalyst.userTimeline(user.screenName, {});
-        setItems(result.statuses);
+        setItems(merge(result.statuses, [], sets.current, (item) => item.id));
       } finally {
         setIsLoading(false);
         isLoadingRef.current = false;
@@ -96,10 +98,8 @@ export const UserTimeline = memo(
         const result = await client.catalyst.userTimeline(user.screenName, {
           until: lastItem.id,
         });
-        if (result.statuses.length > 0) {
-          const filtered = result.statuses.filter((w) => !items.find((v) => v.id === w.id));
-          setItems((prev) => [...prev, ...filtered]);
-        }
+
+        setItems((prev) => merge(prev, result.statuses, sets.current, (item) => item.id));
       } finally {
         setIsLoading(false);
         isLoadingRef.current = false;

@@ -1,4 +1,9 @@
-import { conditionToHashtag, hashtagsToConditions, SmartAlbumForm, type SmartAlbumCondition } from "@/components/smart-album/form";
+import {
+  conditionToHashtag,
+  hashtagsToConditions,
+  SmartAlbumForm,
+  type SmartAlbumCondition,
+} from "@/components/smart-album/form";
 import { accountAtom } from "@/models/atoms/account";
 import type { CatalystAlbumDisplayMode } from "@natsuneko-laboratory/catalyst-sdk";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -82,7 +87,21 @@ export default function SmartAlbumEditScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [canSave, account, id, title, description, conditions, since, until, isAllowNsfw, isAllowOthers, isPublic, displayMode, router]);
+  }, [
+    canSave,
+    account,
+    id,
+    title,
+    description,
+    conditions,
+    since,
+    until,
+    isAllowNsfw,
+    isAllowOthers,
+    isPublic,
+    displayMode,
+    router,
+  ]);
 
   const handleDelete = useCallback(() => {
     Alert.alert("スマートアルバムを削除", "このスマートアルバムを削除しますか？この操作は取り消せません。", [
