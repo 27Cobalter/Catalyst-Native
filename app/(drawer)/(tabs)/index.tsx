@@ -1,12 +1,14 @@
 import { ContentTypeSelectorSheet, type ContentTypeSelectorSheetRef } from "@/components/content-type-selector-sheet";
 import { Tab, Tabs } from "@/components/tabs";
+import { TimelineHandle } from "@/components/timeline/base";
 import { FirehoseTimeline } from "@/components/timeline/firehose";
 import { FollowingTimeline } from "@/components/timeline/following";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";
 import { credentialAtom } from "@/models/atoms/credential";
+import { useScrollToTop } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import { View } from "react-native";
 
 const TABS: Tab[] = [
@@ -17,7 +19,11 @@ const TABS: Tab[] = [
 export default function HomeScreen() {
   const credential = useAtomValue(credentialAtom);
   const router = useRouter();
+  const [activeTab, setActiveTab] = React.useState<string | undefined>();
   const selectorSheetRef = useRef<ContentTypeSelectorSheetRef>(null);
+  const followingTabRef = useRef<TimelineHandle>(null);
+  const firehoseTabRef = useRef<TimelineHandle>(null);
+  const scrollable = useRef<{ scrollToTop: () => void }>(null);
 
   const handleFabPress = useCallback(() => {
     selectorSheetRef.current?.open();
@@ -40,18 +46,41 @@ export default function HomeScreen() {
     [router],
   );
 
+  const scrollActiveTimelineToTopHandler = useMemo(() => {
+    return {
+      scrollToTop: () => {
+        if (activeTab === "following") {
+          followingTabRef.current?.scrollToTop();
+        } else if (activeTab === "firehose") {
+          firehoseTabRef.current?.scrollToTop();
+        }
+      }
+    }
+  }, [activeTab]);
+
+  scrollable.current = scrollActiveTimelineToTopHandler!;
+
+  useScrollToTop(scrollable)
+
+  if (activeTab === undefined) {
+    const defaultTab = credential.accessToken ? "following" : "firehose";
+    setActiveTab(defaultTab);
+    return null; // skip render
+  }
+
   return (
     <View className="flex-1 bg-light-background dark:bg-dark-background">
       {credential ? (
         <Tabs
           tabs={TABS}
+          onTabChange={(w) => setActiveTab(w.key)}
           renderScene={(tab) => {
-            if (tab.key === "firehose") return <FirehoseTimeline />;
-            return <FollowingTimeline />;
+            if (tab.key === "firehose") return <FirehoseTimeline ref={firehoseTabRef} />;
+            return <FollowingTimeline ref={followingTabRef} />;
           }}
         />
       ) : (
-        <FirehoseTimeline />
+        <FirehoseTimeline ref={firehoseTabRef} />
       )}
       {!!credential.accessToken && <FloatingActionButton onPress={handleFabPress} />}
       <ContentTypeSelectorSheet ref={selectorSheetRef} onSelect={handleContentTypeSelect} />
