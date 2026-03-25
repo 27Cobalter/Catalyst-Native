@@ -2,18 +2,24 @@ import { AlbumCard } from "@/components/album/card";
 import { useAsyncEffect } from "@/hooks/use-async-effect";
 import { clientAtom } from "@/models/atoms/credential";
 import { CatalystSmartAlbum } from "@natsuneko-laboratory/catalyst-sdk";
-import { FlashList, ListRenderItem } from "@shopify/flash-list";
+import { FlashList, FlashListRef, ListRenderItem } from "@shopify/flash-list";
 import { useAtomValue } from "jotai";
-import { useCallback, useState } from "react";
+import { useCallback, useImperativeHandle, useRef, useState } from "react";
 import { AlbumsEmptyResult } from "./empty-result";
+
+type TimelineHandle = {
+  scrollToTop: () => void;
+}
 
 type Props = {
   query: string;
+  ref?: React.Ref<TimelineHandle>;
 };
 
-export const AlbumList = ({ query }: Props) => {
+export const AlbumList = ({ query, ref }: Props) => {
   const client = useAtomValue(clientAtom);
   const [albums, setAlbums] = useState<CatalystSmartAlbum[]>([]);
+  const list = useRef<FlashListRef<CatalystSmartAlbum>>(null);
 
   const onRender = useCallback<ListRenderItem<CatalystSmartAlbum>>(({ item }) => {
     return <AlbumCard album={item} />;
@@ -26,8 +32,15 @@ export const AlbumList = ({ query }: Props) => {
     }
   }, [query]);
 
+  useImperativeHandle(ref, () => ({
+    scrollToTop: () => {
+      list.current?.scrollToOffset({ offset: 0, animated: true });
+    }
+  }), []);
+
   return (
     <FlashList
+      ref={list}
       data={albums}
       keyExtractor={(w) => w.id}
       renderItem={onRender}

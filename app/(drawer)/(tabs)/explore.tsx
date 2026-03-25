@@ -6,11 +6,12 @@ import { StatusesPlaceholder } from "@/components/explorer/statuses/placeholder"
 import { UserList } from "@/components/explorer/users/list";
 import { UsersPlaceholder } from "@/components/explorer/users/placeholder";
 import { Tab, Tabs } from "@/components/tabs";
-import { TimelineBase } from "@/components/timeline/base";
+import { TimelineBase, TimelineHandle } from "@/components/timeline/base";
 import { clientAtom } from "@/models/atoms/credential";
+import { useScrollToTop } from "@react-navigation/native";
 import { useAtomValue } from "jotai";
 import { Search, X } from "lucide-react-native";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { TextInput, View } from "react-native";
 import { withUniwind } from "uniwind";
 import { v4 } from "uuid";
@@ -28,9 +29,14 @@ const TABS: Tab[] = [
 export default function HomeScreen() {
   const [state, setState] = useState<string>("");
   const [query, setQuery] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<string>(TABS[0].key);
   const [focused, setFocused] = useState(false);
   const client = useAtomValue(clientAtom);
   const [stateKey, setStateKey] = useState(v4());
+  const timelineRef = useRef<TimelineHandle>(null);
+  const albumsRef = useRef<TimelineHandle>(null);
+  const usersRef = useRef<TimelineHandle>(null);
+  const contestsRef = useRef<TimelineHandle>(null);
 
   const timeline = useCallback(
     async (since: string | null, until: string | null) => {
@@ -51,6 +57,27 @@ export default function HomeScreen() {
     setQuery(state);
     setStateKey(v4());
   }, [state]);
+
+  const scroller = useRef<{ scrollToTop: () => void }>(null);
+  const scrollActiveTimelineToTopHandler = useMemo(() => {
+    return {
+      scrollToTop: () => {
+        if (activeTab === "statuses") {
+          timelineRef.current?.scrollToTop();
+        } else if (activeTab === "albums") {
+          albumsRef.current?.scrollToTop();
+        } else if (activeTab === "users") {
+          usersRef.current?.scrollToTop();
+        } else if (activeTab === "contests") {
+          contestsRef.current?.scrollToTop();
+        }
+      }
+    }
+  }, [activeTab]);
+
+  scroller.current = scrollActiveTimelineToTopHandler;
+
+  useScrollToTop(scroller);
 
   return (
     <View className="flex-col flex-1 bg-light-background dark:bg-dark-background">
@@ -80,12 +107,14 @@ export default function HomeScreen() {
       <View className="flex-1">
         <Tabs
           tabs={TABS}
+          onTabChange={w => setActiveTab(w.key)}
           renderScene={(w) => {
             switch (w.key) {
               case "statuses": {
                 if (query) {
                   return (
                     <TimelineBase
+                      ref={timelineRef}
                       key={stateKey}
                       fetcher={timeline}
                       ListEmptyComponent={StatusesEmptyResult}
@@ -99,7 +128,7 @@ export default function HomeScreen() {
 
               case "albums": {
                 if (query) {
-                  return <AlbumList query={query} />;
+                  return <AlbumList ref={albumsRef} query={query} />;
                 }
 
                 return <AlbumsPlaceholder />;
@@ -107,7 +136,7 @@ export default function HomeScreen() {
 
               case "users": {
                 if (query) {
-                  return <UserList query={query} />;
+                  return <UserList ref={usersRef} query={query} />;
                 }
 
                 return <UsersPlaceholder />;
