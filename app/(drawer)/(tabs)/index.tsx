@@ -54,7 +54,7 @@ export default function HomeScreen() {
         <FirehoseTimeline />
       )}
       {!!credential.accessToken && <FloatingActionButton onPress={handleFabPress} />}
-      {!!credential.accessToken && <ContentTypeSelectorSheet ref={selectorSheetRef} onSelect={handleContentTypeSelect} />}
+      <ContentTypeSelectorSheet ref={selectorSheetRef} onSelect={handleContentTypeSelect} />
     </View>
   );
 }
