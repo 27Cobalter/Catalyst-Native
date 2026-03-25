@@ -9,13 +9,10 @@ import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { LinkIcon } from "lucide-react-native";
 import { useCallback, useState } from "react";
-import { Dimensions, LayoutChangeEvent, Text, TouchableOpacity, View } from "react-native";
+import { LayoutChangeEvent, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 import { withUniwind } from "uniwind";
 import { StatusText } from "../status/text";
 import { SecondaryText } from "../ui/secondary-text";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const BANNER_HEIGHT = SCREEN_WIDTH / 3;
 const UniImage = withUniwind(Image);
 const UniLinkIcon = withUniwind(LinkIcon);
 
@@ -25,6 +22,8 @@ type Props = {
 };
 
 export const ProfileHeader = ({ user, onLayout }: Props) => {
+  const { width: screenWidth } = useWindowDimensions();
+  const bannerHeight = screenWidth / 3;
   const account = useAtomValue(accountAtom);
   const router = useRouter();
   const isLoggedIn = !!account?.user;
@@ -67,14 +66,14 @@ export const ProfileHeader = ({ user, onLayout }: Props) => {
               uri: getCdnUrl({
                 src: user.profile!.bannerUrl,
                 variant: "header",
-                width: SCREEN_WIDTH,
+                width: screenWidth,
               }),
             }}
             contentFit="cover"
-            style={{ width: SCREEN_WIDTH, height: BANNER_HEIGHT }}
+            style={{ width: screenWidth, height: bannerHeight }}
           />
         ) : (
-          <View className="bg-neutral-400 dark:bg-neutral-700" style={{ width: SCREEN_WIDTH, height: BANNER_HEIGHT }} />
+          <View className="bg-neutral-400 dark:bg-neutral-700" style={{ width: screenWidth, height: bannerHeight }} />
         )}
       </View>
 

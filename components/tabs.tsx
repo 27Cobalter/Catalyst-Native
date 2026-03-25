@@ -1,8 +1,6 @@
 import { cn } from "@/lib/utils";
 import React, { useRef, useState } from "react";
-import { Animated, Dimensions, FlatList, ListRenderItem, Pressable, Text, View } from "react-native";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+import { Animated, FlatList, ListRenderItem, Pressable, Text, View, useWindowDimensions } from "react-native";
 
 export type Tab = {
   key: string;
@@ -18,14 +16,15 @@ type Props = {
 
 export function Tabs({ tabs, renderScene, defaultIndex = 0, onTabChange }: Props) {
   const [activeIndex, setActiveIndex] = useState(defaultIndex);
-  const scrollX = useRef(new Animated.Value(defaultIndex * SCREEN_WIDTH)).current;
+  const { width: screenWidth } = useWindowDimensions();
+  const scrollX = useRef(new Animated.Value(defaultIndex * screenWidth)).current;
   const flatListRef = useRef<FlatList<Tab>>(null);
 
-  const TAB_WIDTH = SCREEN_WIDTH / tabs.length;
+  const TAB_WIDTH = screenWidth / tabs.length;
   const INDICATOR_WIDTH = TAB_WIDTH;
 
   const indicatorTranslateX = scrollX.interpolate({
-    inputRange: tabs.map((_, i) => i * SCREEN_WIDTH),
+    inputRange: tabs.map((_, i) => i * screenWidth),
     outputRange: tabs.map((_, i) => i * TAB_WIDTH + (TAB_WIDTH - INDICATOR_WIDTH) / 2),
     extrapolate: "clamp",
   });
@@ -35,14 +34,14 @@ export function Tabs({ tabs, renderScene, defaultIndex = 0, onTabChange }: Props
     onTabChange?.(tabs[index]!, index);
     flatListRef.current?.scrollToIndex({ index, animated: true });
     Animated.timing(scrollX, {
-      toValue: index * SCREEN_WIDTH,
+      toValue: index * screenWidth,
       duration: 250,
       useNativeDriver: false,
     }).start();
   };
 
   const renderItem: ListRenderItem<Tab> = ({ item }) => (
-    <View style={{ width: SCREEN_WIDTH, flex: 1 }}>{renderScene(item)}</View>
+    <View style={{ width: screenWidth, flex: 1 }}>{renderScene(item)}</View>
   );
 
   return (
@@ -86,7 +85,7 @@ export function Tabs({ tabs, renderScene, defaultIndex = 0, onTabChange }: Props
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item.key}
         renderItem={renderItem}
-        getItemLayout={(_, index) => ({ length: SCREEN_WIDTH, offset: SCREEN_WIDTH * index, index })}
+        getItemLayout={(_, index) => ({ length: screenWidth, offset: screenWidth * index, index })}
         initialScrollIndex={defaultIndex}
         scrollEventThrottle={16}
         className="flex-1"

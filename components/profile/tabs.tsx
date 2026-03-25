@@ -1,8 +1,6 @@
 import { cn } from "@/lib/utils";
 import { useCallback, useEffect, useRef } from "react";
-import { Animated, Dimensions, Pressable, Text, View } from "react-native";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+import { Animated, Pressable, Text, View, useWindowDimensions } from "react-native";
 
 type Props = {
   activeIndex: number;
@@ -11,8 +9,9 @@ type Props = {
 };
 
 export const ProfileTabs = ({ activeIndex, tabs, onClickTab }: Props) => {
+  const { width: screenWidth } = useWindowDimensions();
   const indicator = useRef(new Animated.Value(0));
-  const tabWidth = SCREEN_WIDTH / tabs.length;
+  const tabWidth = screenWidth / tabs.length;
 
   const handleTabClick = useCallback(
     (i: number) => {

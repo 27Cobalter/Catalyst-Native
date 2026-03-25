@@ -11,7 +11,6 @@ import { Camera, Plus, Trash2 } from "lucide-react-native";
 import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -20,6 +19,7 @@ import {
   TextInput,
   View,
   useColorScheme,
+  useWindowDimensions,
 } from "react-native";
 import ImageCropPicker, { Image } from "react-native-image-crop-picker";
 import Toast from "react-native-toast-message";
@@ -29,9 +29,6 @@ const UniImage = withUniwind(ExpoImage);
 const UniCamera = withUniwind(Camera);
 const UniPlus = withUniwind(Plus);
 const UniTrash2 = withUniwind(Trash2);
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const BANNER_HEIGHT = SCREEN_WIDTH / 3;
 
 const BANNER_WIDTH = 1500;
 const BANNER_CROP_HEIGHT = 500;
@@ -49,6 +46,8 @@ function isValidUrl(text: string): boolean {
 }
 
 export default function ProfileEditScreen() {
+  const { width: screenWidth } = useWindowDimensions();
+  const bannerHeight = screenWidth / 3;
   const theme = useColorScheme() ?? "light";
   const router = useRouter();
   const [account, setAccount] = useAtom(accountAtom);
@@ -221,7 +220,7 @@ export default function ProfileEditScreen() {
   }, [canSave, account, user, displayName, bio, website, additionalWebsites, client, setAccount, router]);
 
   const currentBannerUri = user?.profile?.bannerUrl
-    ? getCdnUrl({ src: user.profile.bannerUrl, variant: "header", width: SCREEN_WIDTH })
+    ? getCdnUrl({ src: user.profile.bannerUrl, variant: "header", width: screenWidth })
     : null;
 
   const currentIconUri = user?.profile?.iconUrl
@@ -280,17 +279,17 @@ export default function ProfileEditScreen() {
           <ScrollView className="flex-1" contentContainerClassName="pb-12">
             {/* ヘッダー画像 */}
             <Pressable onPress={handlePickBanner} disabled={isUploadingImage}>
-              <View style={{ width: SCREEN_WIDTH, height: BANNER_HEIGHT }}>
+              <View style={{ width: screenWidth, height: bannerHeight }}>
                 {currentBannerUri ? (
                   <UniImage
                     source={{ uri: currentBannerUri }}
                     contentFit="cover"
-                    style={{ width: SCREEN_WIDTH, height: BANNER_HEIGHT }}
+                    style={{ width: screenWidth, height: bannerHeight }}
                   />
                 ) : (
                   <View
                     className="bg-neutral-400 dark:bg-neutral-700"
-                    style={{ width: SCREEN_WIDTH, height: BANNER_HEIGHT }}
+                    style={{ width: screenWidth, height: bannerHeight }}
                   />
                 )}
                 <View className="absolute inset-0 items-center justify-center bg-black/30">

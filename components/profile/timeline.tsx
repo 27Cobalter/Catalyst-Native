@@ -7,12 +7,10 @@ import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { MessageSquare } from "lucide-react-native";
 import React, { memo, useCallback, useImperativeHandle, useRef, useState } from "react";
-import { ActivityIndicator, Dimensions, Pressable, View } from "react-native";
+import { ActivityIndicator, Pressable, View, useWindowDimensions } from "react-native";
 
 const COLUMNS = 3;
 const GAP = 1;
-const SCREEN_WIDTH = Dimensions.get("window").width;
-const CELL_SIZE = (SCREEN_WIDTH - GAP * (COLUMNS - 1)) / COLUMNS;
 
 type Props = {
   user?: EgeriaUser | null;
@@ -22,24 +20,24 @@ export type UserTimelineHandle = {
   loadMore: () => void;
 };
 
-const ThumbnailCell = memo(({ status }: { status: CatalystStatus }) => {
+const ThumbnailCell = memo(({ status, cellSize }: { status: CatalystStatus; cellSize: number }) => {
   const router = useRouter();
   const media = status.medias[0];
   const [isImageLoading, setIsImageLoading] = useState(true);
 
   return (
-    <Pressable onPress={() => router.push(`/status/${status.id}`)} style={{ width: CELL_SIZE, height: CELL_SIZE }}>
+    <Pressable onPress={() => router.push(`/status/${status.id}`)} style={{ width: cellSize, height: cellSize }}>
       {media ? (
-        <View style={{ width: CELL_SIZE, height: CELL_SIZE }}>
+        <View style={{ width: cellSize, height: cellSize }}>
           <Image
             source={{
               uri: getCdnUrl({
                 src: media.url,
                 variant: "tiny",
-                width: CELL_SIZE,
+                width: cellSize,
               }),
             }}
-            style={{ width: CELL_SIZE, height: CELL_SIZE }}
+            style={{ width: cellSize, height: cellSize }}
             contentFit="cover"
             onLoadEnd={() => setIsImageLoading(false)}
           />
@@ -62,6 +60,8 @@ ThumbnailCell.displayName = "ThumbnailCell";
 export const UserTimeline = memo(
   React.forwardRef<UserTimelineHandle, Props>(({ user }, ref) => {
     const client = useAtomValue(clientAtom);
+    const { width: screenWidth } = useWindowDimensions();
+    const cellSize = (screenWidth - GAP * (COLUMNS - 1)) / COLUMNS;
     const [items, setItems] = useState<CatalystStatus[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const isLoadingRef = useRef(false);
@@ -121,7 +121,7 @@ export const UserTimeline = memo(
           <View key={rowIndex} className="flex-row" style={{ marginTop: rowIndex > 0 ? GAP : 0 }}>
             {row.map((item, colIndex) => (
               <View key={item.id} style={{ marginLeft: colIndex > 0 ? GAP : 0 }}>
-                <ThumbnailCell status={item} />
+                <ThumbnailCell status={item} cellSize={cellSize} />
               </View>
             ))}
           </View>

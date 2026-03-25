@@ -5,7 +5,7 @@ import type { Media } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
 import { EyeOff } from "lucide-react-native";
 import React, { memo, useEffect, useMemo, useRef, useState } from "react";
-import { Dimensions, Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { Modal, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, {
   interpolate,
@@ -15,9 +15,6 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-const MAX_HEIGHT = SCREEN_HEIGHT / 2;
 
 const SPRING_CONFIG = {
   mass: 0.5,
@@ -31,6 +28,8 @@ type Props = {
 };
 
 export const MediaCarousel = memo(({ medias }: Props) => {
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
+  const MAX_HEIGHT = SCREEN_HEIGHT / 2;
   const [presentedMediaIndex, setPresentedMediaIndex] = useState<number | null>(null);
   const [isBlurRemoved, setIsBlurRemoved] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);

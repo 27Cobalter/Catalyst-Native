@@ -8,21 +8,19 @@ import { useAtomValue } from "jotai";
 import React, { memo, useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Dimensions,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Pressable,
   ScrollView,
   View,
+  useWindowDimensions,
 } from "react-native";
 
 const COLUMNS = 2;
 const GAP = 2;
-const SCREEN_WIDTH = Dimensions.get("window").width;
-const COLUMN_WIDTH = (SCREEN_WIDTH - GAP * (COLUMNS - 1)) / COLUMNS;
 const LOAD_MORE_THRESHOLD = 200;
 
-const GalleryCell = memo(({ status }: { status: CatalystStatus }) => {
+const GalleryCell = memo(({ status, columnWidth }: { status: CatalystStatus; columnWidth: number }) => {
   const router = useRouter();
   const media = status.medias[0];
   const [isImageLoading, setIsImageLoading] = useState(true);
@@ -30,21 +28,21 @@ const GalleryCell = memo(({ status }: { status: CatalystStatus }) => {
 
   const aspectRatio =
     media.metadata?.width && media.metadata?.height ? media.metadata.width / media.metadata.height : 1;
-  const cellHeight = COLUMN_WIDTH / aspectRatio;
+  const cellHeight = columnWidth / aspectRatio;
   const [realId] = status.id.split("/");
 
   return (
     <Pressable onPress={() => router.push(`/status/${realId}`)} style={{ marginBottom: GAP }}>
-      <View style={{ width: COLUMN_WIDTH, height: cellHeight, borderRadius: 4, overflow: "hidden" }}>
+      <View style={{ width: columnWidth, height: cellHeight, borderRadius: 4, overflow: "hidden" }}>
         <Image
           source={{
             uri: getCdnUrl({
               src: media.url,
               variant: "xsmall",
-              width: COLUMN_WIDTH,
+              width: columnWidth,
             }),
           }}
-          style={{ width: COLUMN_WIDTH, height: cellHeight }}
+          style={{ width: columnWidth, height: cellHeight }}
           contentFit="cover"
           onLoadEnd={() => setIsImageLoading(false)}
         />
@@ -59,7 +57,7 @@ const GalleryCell = memo(({ status }: { status: CatalystStatus }) => {
 });
 GalleryCell.displayName = "GalleryCell";
 
-function distributeToColumns(items: CatalystStatus[]): [CatalystStatus[], CatalystStatus[]] {
+function distributeToColumns(items: CatalystStatus[], columnWidth: number): [CatalystStatus[], CatalystStatus[]] {
   const columns: [CatalystStatus[], CatalystStatus[]] = [[], []];
   const heights = [0, 0];
 
@@ -69,7 +67,7 @@ function distributeToColumns(items: CatalystStatus[]): [CatalystStatus[], Cataly
 
     const aspectRatio =
       media.metadata?.width && media.metadata?.height ? media.metadata.width / media.metadata.height : 1;
-    const cellHeight = COLUMN_WIDTH / aspectRatio;
+    const cellHeight = columnWidth / aspectRatio;
 
     const shorter = heights[0] <= heights[1] ? 0 : 1;
     columns[shorter].push(item);
@@ -81,6 +79,8 @@ function distributeToColumns(items: CatalystStatus[]): [CatalystStatus[], Cataly
 
 export default function GalleryScreen() {
   const client = useAtomValue(clientAtom);
+  const { width: screenWidth } = useWindowDimensions();
+  const columnWidth = (screenWidth - GAP * (COLUMNS - 1)) / COLUMNS;
   const [items, setItems] = useState<CatalystStatus[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const isLoadingRef = useRef(false);
@@ -132,20 +132,20 @@ export default function GalleryScreen() {
     [loadMore],
   );
 
-  const [leftColumn, rightColumn] = distributeToColumns(items);
+  const [leftColumn, rightColumn] = distributeToColumns(items, columnWidth);
 
   return (
     <View className="flex-1 bg-light-background dark:bg-dark-background">
       <ScrollView onScroll={handleScroll} scrollEventThrottle={16}>
         <View className="flex-row" style={{ gap: GAP }}>
-          <View style={{ width: COLUMN_WIDTH }}>
+          <View style={{ width: columnWidth }}>
             {leftColumn.map((item) => (
-              <GalleryCell key={item.id} status={item} />
+              <GalleryCell key={item.id} status={item} columnWidth={columnWidth} />
             ))}
           </View>
-          <View style={{ width: COLUMN_WIDTH }}>
+          <View style={{ width: columnWidth }}>
             {rightColumn.map((item) => (
-              <GalleryCell key={item.id} status={item} />
+              <GalleryCell key={item.id} status={item} columnWidth={columnWidth} />
             ))}
           </View>
         </View>

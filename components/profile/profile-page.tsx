@@ -9,7 +9,7 @@ import { clientAtom } from "@/models/atoms/credential";
 import type { EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
 import { useAtomValue } from "jotai";
 import React, { useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Animated, Dimensions, NativeScrollEvent, NativeSyntheticEvent, View } from "react-native";
+import { ActivityIndicator, Animated, NativeScrollEvent, NativeSyntheticEvent, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Tab = {
@@ -23,8 +23,6 @@ const DEFAULT_TABS: Tab[] = [
   { route: "album", label: "アルバム" },
 ];
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
 const LOAD_MORE_THRESHOLD = 200;
 
 type Props = {
@@ -34,6 +32,7 @@ type Props = {
 
 export function ProfilePage({ screenName, showBackButton = true }: Props) {
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
   const account = useAtomValue(accountAtom);
   const client = useAtomValue(clientAtom);
   const [user, setUser] = useState<EgeriaUser | null>(null);
@@ -104,7 +103,7 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
 
         <View
           className="flex-row border-b border-neutral-500 bg-light-background dark:bg-dark-background"
-          style={{ width: SCREEN_WIDTH }}
+          style={{ width: screenWidth }}
         >
           <ProfileTabs activeIndex={activeTab} tabs={tabs} onClickTab={setActiveTab} />
         </View>
@@ -123,7 +122,7 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
           position: "absolute",
           top: NAV_BAR_HEIGHT,
           left: 0,
-          width: SCREEN_WIDTH,
+          width: screenWidth,
           opacity: stickyTabBarOpacity,
         }}
         pointerEvents={headerHeight > 0 ? "auto" : "none"}
