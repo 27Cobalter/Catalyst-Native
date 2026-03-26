@@ -8,6 +8,7 @@ import type {
   CatalystAlbumDisplayMode,
   CatalystSmartAlbum,
   CatalystStatus,
+  Media,
   EgeriaUser,
 } from "@natsuneko-laboratory/catalyst-sdk";
 import dayjs from "dayjs";
@@ -58,6 +59,12 @@ type AlbumInfo = {
 type Props = {
   id: string;
   albumType: AlbumType;
+};
+
+type GalleryItem = {
+  key: string;
+  statusId: string;
+  media: Media;
 };
 
 const formatPeriod = (since?: string, until?: string): string => {
@@ -172,16 +179,16 @@ const GridCell = memo(({ status, cellSize }: { status: CatalystStatus; cellSize:
 });
 GridCell.displayName = "GridCell";
 
-const GalleryCell = memo(({ status, columnWidth }: { status: CatalystStatus; columnWidth: number }) => {
+const GalleryCell = memo(({ item, columnWidth }: { item: GalleryItem; columnWidth: number }) => {
   const router = useRouter();
-  const media = status.medias[0];
   const [isImageLoading, setIsImageLoading] = useState(true);
-  if (!media) return null;
 
   const aspectRatio =
-    media.metadata?.width && media.metadata?.height ? media.metadata.width / media.metadata.height : 1;
+    item.media.metadata?.width && item.media.metadata?.height
+      ? item.media.metadata.width / item.media.metadata.height
+      : 1;
   const cellHeight = columnWidth / aspectRatio;
-  const [realId] = status.id.split("/");
+  const [realId] = item.statusId.split("/");
 
   return (
     <Pressable onPress={() => router.push(`/status/${realId}`)} style={{ marginBottom: GALLERY_GAP }}>
@@ -189,7 +196,7 @@ const GalleryCell = memo(({ status, columnWidth }: { status: CatalystStatus; col
         <UniImage
           source={{
             uri: getCdnUrl({
-              src: media.url,
+              src: item.media.url,
               variant: "xsmall",
               width: columnWidth,
             }),
@@ -210,18 +217,17 @@ const GalleryCell = memo(({ status, columnWidth }: { status: CatalystStatus; col
 GalleryCell.displayName = "GalleryCell";
 
 const distributeToColumns = (
-  items: CatalystStatus[],
+  items: GalleryItem[],
   columnWidth: number,
-): [CatalystStatus[], CatalystStatus[]] => {
-  const columns: [CatalystStatus[], CatalystStatus[]] = [[], []];
+): [GalleryItem[], GalleryItem[]] => {
+  const columns: [GalleryItem[], GalleryItem[]] = [[], []];
   const heights = [0, 0];
 
   for (const item of items) {
-    const media = item.medias[0];
-    if (!media) continue;
-
     const aspectRatio =
-      media.metadata?.width && media.metadata?.height ? media.metadata.width / media.metadata.height : 1;
+      item.media.metadata?.width && item.media.metadata?.height
+        ? item.media.metadata.width / item.media.metadata.height
+        : 1;
     const cellHeight = columnWidth / aspectRatio;
     const shorter = heights[0] <= heights[1] ? 0 : 1;
 
@@ -230,6 +236,16 @@ const distributeToColumns = (
   }
 
   return columns;
+};
+
+const expandGalleryItems = (statuses: CatalystStatus[]): GalleryItem[] => {
+  return statuses.flatMap((status) =>
+    status.medias.map((media) => ({
+      key: `${status.id}:${media.id}`,
+      statusId: status.id,
+      media,
+    })),
+  );
 };
 
 const AlbumVisualContent = ({
@@ -337,7 +353,8 @@ const AlbumVisualContent = ({
   }
 
   const columnWidth = (screenWidth - GALLERY_GAP * (GALLERY_COLUMNS - 1)) / GALLERY_COLUMNS;
-  const [leftColumn, rightColumn] = distributeToColumns(items, columnWidth);
+  const galleryItems = expandGalleryItems(items);
+  const [leftColumn, rightColumn] = distributeToColumns(galleryItems, columnWidth);
 
   return (
     <ScrollView
@@ -349,12 +366,12 @@ const AlbumVisualContent = ({
       <View className="flex-row" style={{ gap: GALLERY_GAP }}>
         <View style={{ width: columnWidth }}>
           {leftColumn.map((item) => (
-            <GalleryCell key={item.id} status={item} columnWidth={columnWidth} />
+            <GalleryCell key={item.key} item={item} columnWidth={columnWidth} />
           ))}
         </View>
         <View style={{ width: columnWidth }}>
           {rightColumn.map((item) => (
-            <GalleryCell key={item.id} status={item} columnWidth={columnWidth} />
+            <GalleryCell key={item.key} item={item} columnWidth={columnWidth} />
           ))}
         </View>
       </View>
