@@ -1,8 +1,11 @@
+import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
+import { merge } from "@/lib/merge";
 import { TimelineBase } from "@/components/timeline/base";
 import { getCdnUrl } from "@/lib/media";
 import { accountAtom } from "@/models/atoms/account";
 import type {
   CatalystAlbum,
+  CatalystAlbumDisplayMode,
   CatalystSmartAlbum,
   CatalystStatus,
   EgeriaUser,
@@ -11,9 +14,20 @@ import dayjs from "dayjs";
 import { Image } from "expo-image";
 import { Stack, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
-import { Calendar, FileQuestion, Pencil } from "lucide-react-native";
-import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { Calendar, FileQuestion, MessageSquare, Pencil } from "lucide-react-native";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import { withUniwind } from "uniwind";
 
 import "@/global.css";
@@ -21,7 +35,14 @@ import "@/global.css";
 const UniCalendar = withUniwind(Calendar);
 const UniFileQuestion = withUniwind(FileQuestion);
 const UniImage = withUniwind(Image);
+const UniMessageSquare = withUniwind(MessageSquare);
 const UniPencil = withUniwind(Pencil);
+
+const GRID_COLUMNS = 3;
+const GRID_GAP = 1;
+const GALLERY_COLUMNS = 2;
+const GALLERY_GAP = 2;
+const LOAD_MORE_THRESHOLD = 200;
 
 type AlbumType = "album" | "smartAlbum";
 
@@ -31,6 +52,7 @@ type AlbumInfo = {
   user?: EgeriaUser;
   since?: string;
   until?: string;
+  mode: CatalystAlbumDisplayMode;
 };
 
 type Props = {
@@ -104,6 +126,247 @@ const AlbumHeader = ({ info }: { info: AlbumInfo }) => {
   );
 };
 
+const EmptyState = () => (
+  <View className="items-center justify-center px-6 py-16">
+    <Text className="text-sm text-light-text-muted dark:text-dark-text-muted">
+      まだ投稿がありません
+    </Text>
+  </View>
+);
+
+const GridCell = memo(({ status, cellSize }: { status: CatalystStatus; cellSize: number }) => {
+  const router = useRouter();
+  const media = status.medias[0];
+  const [isImageLoading, setIsImageLoading] = useState(Boolean(media));
+  const [realId] = status.id.split("/");
+
+  return (
+    <Pressable onPress={() => router.push(`/status/${realId}`)} style={{ width: cellSize, height: cellSize }}>
+      {media ? (
+        <View style={{ width: cellSize, height: cellSize }}>
+          <UniImage
+            source={{
+              uri: getCdnUrl({
+                src: media.url,
+                variant: "tiny",
+                width: cellSize,
+              }),
+            }}
+            style={{ width: cellSize, height: cellSize }}
+            contentFit="cover"
+            onLoadEnd={() => setIsImageLoading(false)}
+          />
+          {isImageLoading && (
+            <View className="absolute inset-0 items-center justify-center bg-light-skeleton dark:bg-dark-skeleton">
+              <ActivityIndicator />
+            </View>
+          )}
+        </View>
+      ) : (
+        <View className="flex-1 items-center justify-center bg-light-surface dark:bg-dark-surface">
+          <UniMessageSquare size={24} className="text-light-text-muted dark:text-dark-text-muted" />
+        </View>
+      )}
+    </Pressable>
+  );
+});
+GridCell.displayName = "GridCell";
+
+const GalleryCell = memo(({ status, columnWidth }: { status: CatalystStatus; columnWidth: number }) => {
+  const router = useRouter();
+  const media = status.medias[0];
+  const [isImageLoading, setIsImageLoading] = useState(true);
+  if (!media) return null;
+
+  const aspectRatio =
+    media.metadata?.width && media.metadata?.height ? media.metadata.width / media.metadata.height : 1;
+  const cellHeight = columnWidth / aspectRatio;
+  const [realId] = status.id.split("/");
+
+  return (
+    <Pressable onPress={() => router.push(`/status/${realId}`)} style={{ marginBottom: GALLERY_GAP }}>
+      <View style={{ width: columnWidth, height: cellHeight, borderRadius: 4, overflow: "hidden" }}>
+        <UniImage
+          source={{
+            uri: getCdnUrl({
+              src: media.url,
+              variant: "xsmall",
+              width: columnWidth,
+            }),
+          }}
+          style={{ width: columnWidth, height: cellHeight }}
+          contentFit="cover"
+          onLoadEnd={() => setIsImageLoading(false)}
+        />
+        {isImageLoading && (
+          <View className="absolute inset-0 items-center justify-center bg-light-skeleton dark:bg-dark-skeleton">
+            <ActivityIndicator />
+          </View>
+        )}
+      </View>
+    </Pressable>
+  );
+});
+GalleryCell.displayName = "GalleryCell";
+
+const distributeToColumns = (
+  items: CatalystStatus[],
+  columnWidth: number,
+): [CatalystStatus[], CatalystStatus[]] => {
+  const columns: [CatalystStatus[], CatalystStatus[]] = [[], []];
+  const heights = [0, 0];
+
+  for (const item of items) {
+    const media = item.medias[0];
+    if (!media) continue;
+
+    const aspectRatio =
+      media.metadata?.width && media.metadata?.height ? media.metadata.width / media.metadata.height : 1;
+    const cellHeight = columnWidth / aspectRatio;
+    const shorter = heights[0] <= heights[1] ? 0 : 1;
+
+    columns[shorter].push(item);
+    heights[shorter] += cellHeight + GALLERY_GAP;
+  }
+
+  return columns;
+};
+
+const AlbumVisualContent = ({
+  mode,
+  fetcher,
+}: {
+  mode: Extract<CatalystAlbumDisplayMode, "grid" | "gallery">;
+  fetcher: (since: string | null, until: string | null) => Promise<CatalystStatus[]>;
+}) => {
+  const { width: screenWidth } = useWindowDimensions();
+  const [items, setItems] = useState<CatalystStatus[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const isLoadingRef = useRef(false);
+  const sets = useRef<Set<string>>(new Set());
+
+  const loadInitial = useCallback(async () => {
+    setIsLoading(true);
+    isLoadingRef.current = true;
+    try {
+      const result = await fetcher(null, null);
+      sets.current = new Set();
+      setItems(merge([], result, sets.current, (item) => item.id));
+    } finally {
+      setIsLoading(false);
+      isLoadingRef.current = false;
+    }
+  }, [fetcher]);
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      const since = items[0]?.id ?? null;
+      const newItems = await fetcher(since, null);
+      setItems((prev) => merge(newItems, prev, sets.current, (item) => item.id));
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [fetcher, items]);
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingRef.current) return;
+
+    const until = items[items.length - 1]?.id ?? null;
+    if (!until) return;
+
+    setIsLoading(true);
+    isLoadingRef.current = true;
+    try {
+      const newItems = await fetcher(null, until);
+      if (newItems.length > 0) {
+        setItems((prev) => merge(prev, newItems, sets.current, (item) => item.id));
+      }
+    } finally {
+      setIsLoading(false);
+      isLoadingRef.current = false;
+    }
+  }, [fetcher, items]);
+
+  useAsyncOneTimeEffect(loadInitial);
+
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (isLoadingRef.current) return;
+
+      const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+      const distanceFromBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
+      if (distanceFromBottom < LOAD_MORE_THRESHOLD) {
+        loadMore();
+      }
+    },
+    [loadMore],
+  );
+
+  if (mode === "grid") {
+    const cellSize = (screenWidth - GRID_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS;
+    const rows: CatalystStatus[][] = [];
+    for (let i = 0; i < items.length; i += GRID_COLUMNS) {
+      rows.push(items.slice(i, i + GRID_COLUMNS));
+    }
+
+    return (
+      <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
+      >
+        {rows.length === 0 && !isLoading ? <EmptyState /> : null}
+        {rows.map((row, rowIndex) => (
+          <View key={`row-${rowIndex}`} className="flex-row" style={{ marginTop: rowIndex > 0 ? GRID_GAP : 0 }}>
+            {row.map((item, colIndex) => (
+              <View key={item.id} style={{ marginLeft: colIndex > 0 ? GRID_GAP : 0 }}>
+                <GridCell status={item} cellSize={cellSize} />
+              </View>
+            ))}
+          </View>
+        ))}
+        {isLoading && (
+          <View className="py-4">
+            <ActivityIndicator />
+          </View>
+        )}
+      </ScrollView>
+    );
+  }
+
+  const columnWidth = (screenWidth - GALLERY_GAP * (GALLERY_COLUMNS - 1)) / GALLERY_COLUMNS;
+  const [leftColumn, rightColumn] = distributeToColumns(items, columnWidth);
+
+  return (
+    <ScrollView
+      onScroll={handleScroll}
+      scrollEventThrottle={16}
+      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
+    >
+      {leftColumn.length === 0 && rightColumn.length === 0 && !isLoading ? <EmptyState /> : null}
+      <View className="flex-row" style={{ gap: GALLERY_GAP }}>
+        <View style={{ width: columnWidth }}>
+          {leftColumn.map((item) => (
+            <GalleryCell key={item.id} status={item} columnWidth={columnWidth} />
+          ))}
+        </View>
+        <View style={{ width: columnWidth }}>
+          {rightColumn.map((item) => (
+            <GalleryCell key={item.id} status={item} columnWidth={columnWidth} />
+          ))}
+        </View>
+      </View>
+      {isLoading && (
+        <View className="py-4">
+          <ActivityIndicator />
+        </View>
+      )}
+    </ScrollView>
+  );
+};
+
 export const AlbumDetailPage = ({ id, albumType }: Props) => {
   const account = useAtomValue(accountAtom);
   const [albumInfo, setAlbumInfo] = useState<AlbumInfo | null>(null);
@@ -125,6 +388,7 @@ export const AlbumDetailPage = ({ id, albumType }: Props) => {
             title: album.name,
             description: album.description,
             user: album.user,
+            mode: album.mode,
           });
         } else {
           const album: CatalystSmartAlbum =
@@ -135,6 +399,7 @@ export const AlbumDetailPage = ({ id, albumType }: Props) => {
             user: album.user,
             since: album.since,
             until: album.until,
+            mode: album.mode,
           });
         }
       } catch {
@@ -219,10 +484,12 @@ export const AlbumDetailPage = ({ id, albumType }: Props) => {
 
       <View className="flex-1 bg-light-background dark:bg-dark-background">
         {albumInfo && <AlbumHeader info={albumInfo} />}
-        {albumInfo && (
-          <View className="h-px bg-light-divider dark:bg-dark-divider" />
+        {albumInfo && <View className="h-px bg-light-divider dark:bg-dark-divider" />}
+        {albumInfo?.mode === "timeline" ? (
+          <TimelineBase fetcher={fetcher} ListEmptyComponent={EmptyState} />
+        ) : (
+          <AlbumVisualContent mode={albumInfo.mode} fetcher={fetcher} />
         )}
-        <TimelineBase fetcher={fetcher} />
       </View>
     </>
   );
