@@ -31,7 +31,7 @@ const DrawerMenu = ({ route, navigation }: { route: Route; navigation: DrawerCon
     <Pressable className="pl-8 px-4 py-1.5 my-1" onPress={onPress}>
       <View className="flex-row items-center">
         <View className="pr-2">{route.icon()}</View>
-        <Text className="text-light-text dark:text-dark-text">{route.name}</Text>
+        <Text className="text-light-text dark:text-dark-text text-lg">{route.name}</Text>
       </View>
     </Pressable>
   );
