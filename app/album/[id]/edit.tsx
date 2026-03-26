@@ -108,8 +108,6 @@ export default function AlbumEditScreen() {
     <>
       <Stack.Screen
         options={{
-          title: "アルバム編集",
-          headerBackTitle: "キャンセル",
           headerRight: () => (
             <Pressable onPress={handleSave} disabled={!canSave}>
               <Text
@@ -144,9 +142,7 @@ export default function AlbumEditScreen() {
                   onPress={handleDelete}
                   className="items-center rounded-lg border border-light-error bg-light-error-background p-3 dark:border-dark-error dark:bg-dark-error-background"
                 >
-                  <Text className="text-sm font-semibold text-light-error dark:text-dark-error">
-                    アルバムを削除
-                  </Text>
+                  <Text className="text-sm font-semibold text-light-error dark:text-dark-error">アルバムを削除</Text>
                 </Pressable>
               </View>
             </>

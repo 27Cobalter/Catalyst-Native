@@ -144,8 +144,6 @@ export default function SmartAlbumEditScreen() {
     <>
       <Stack.Screen
         options={{
-          title: "スマートアルバム編集",
-          headerBackTitle: "キャンセル",
           headerRight: () => (
             <Pressable onPress={handleSave} disabled={!canSave}>
               <Text

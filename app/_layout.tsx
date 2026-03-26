@@ -76,6 +76,13 @@ export default Sentry.wrap(function RootLayout() {
         <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
           <Stack>
             <Stack.Screen name="(drawer)" options={{ headerShown: false, gestureEnabled: false }} />
+            <Stack.Screen name="album/[id]" options={{ title: "", headerBackTitle: "戻る" }} />
+            <Stack.Screen name="album/[id]/edit" options={{ title: "アルバム編集", headerBackTitle: "戻る" }} />
+            <Stack.Screen name="smart-album/[id]" options={{ title: "", headerBackTitle: "戻る" }} />
+            <Stack.Screen
+              name="smart-album/[id]/edit"
+              options={{ title: "スマートアルバム編集", headerBackTitle: "戻る" }}
+            />
             <Stack.Screen name="status/[id]" options={{ title: "投稿", headerBackTitle: "戻る" }} />
             <Stack.Screen name="user/[screenName]" options={{ headerShown: false }} />
             <Stack.Screen name="authorize" options={{ headerShown: false }} />

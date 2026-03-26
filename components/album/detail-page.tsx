@@ -450,7 +450,7 @@ export const AlbumDetailPage = ({ id, albumType }: Props) => {
   if (isInitialLoading) {
     return (
       <>
-        <Stack.Screen options={{ title: "" }} />
+        <Stack.Screen options={{ title: "", headerBackTitle: "戻る" }} />
         <View className="flex-1 bg-light-background dark:bg-dark-background items-center justify-center">
           <ActivityIndicator size="large" />
         </View>
@@ -461,7 +461,7 @@ export const AlbumDetailPage = ({ id, albumType }: Props) => {
   if (isNotFound) {
     return (
       <>
-        <Stack.Screen options={{ title: "" }} />
+        <Stack.Screen options={{ title: "", headerBackTitle: "戻る" }} />
         <View className="flex-1 bg-light-background dark:bg-dark-background items-center justify-center">
           <UniFileQuestion size={64} className="text-light-gray dark:text-dark-gray" />
           <Text className="font-semibold text-light-gray dark:text-dark-gray mt-2 text-center">
@@ -480,6 +480,7 @@ export const AlbumDetailPage = ({ id, albumType }: Props) => {
       <Stack.Screen
         options={{
           title: albumInfo?.title ?? "",
+          headerBackTitle: "戻る",
           headerRight: canEdit
             ? () => (
                 <TouchableOpacity
