@@ -7,9 +7,10 @@ import { useAsyncEffect } from "@/hooks/use-async-effect";
 import { accountAtom } from "@/models/atoms/account";
 import { clientAtom } from "@/models/atoms/credential";
 import type { EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
+import { useScrollToTop } from "@react-navigation/native";
 import { useAtomValue } from "jotai";
 import React, { useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Animated, NativeScrollEvent, NativeSyntheticEvent, View, useWindowDimensions } from "react-native";
+import { ActivityIndicator, Animated, NativeScrollEvent, NativeSyntheticEvent, ScrollView, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Tab = {
@@ -50,6 +51,19 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
         .map((w) => w as unknown as Tab),
     [isMyself],
   );
+  const view = useRef<ScrollView>(null);
+  const scroller = useRef<{ scrollToTop: () => void }>(null);
+  const scrollActiveTimelineToTopHandler = useMemo(() => {
+    return {
+      scrollToTop: () => {
+        view.current?.scrollTo({ x: 0, y: 0, animated: true });
+      },
+    };
+   }, []);
+  scroller.current = scrollActiveTimelineToTopHandler;
+
+  useScrollToTop(scroller);
+
   const stickyTabBarOpacity =
     headerHeight > 0
       ? scrollY.interpolate({
@@ -106,7 +120,7 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
 
   return (
     <View className="flex-1 bg-light-background dark:bg-dark-background">
-      <Animated.ScrollView onScroll={handleScroll} scrollEventThrottle={16}>
+      <Animated.ScrollView ref={view} onScroll={handleScroll} scrollEventThrottle={16}>
         <ProfileHeader user={user} onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)} />
 
         <View
