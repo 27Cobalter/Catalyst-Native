@@ -64,6 +64,7 @@ SDK は `CatalystTS`（API クライアント）、`PKCE`、および `CatalystS
 ### スタイリング
 
 基本的には [Uniwind](https://docs.uniwind.dev/)（React Native 向け Tailwind CSS）を使用し、`tailwind-merge` と `clsx` で条件付きクラスを管理しています。
+**特に理由がない限り、スタイルはユーティリティクラスを使用して定義し、インラインスタイルおよび StyleSheet は使用しないでください。**
 [llms-full.txt](https://docs.uniwind.dev/llms-full.txt) が提供されているので、必要に応じて活用してください。
 グローバル CSS は `global.css` に配置されています。
 プラットフォーム固有のコンポーネントバリアントは `.ios.tsx` サフィックスの慣習を使用しています（例: `components/ui/icon-symbol.ios.tsx`）。
