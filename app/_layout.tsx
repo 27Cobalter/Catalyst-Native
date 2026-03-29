@@ -10,6 +10,7 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { getMessaging, setBackgroundMessageHandler } from "@react-native-firebase/messaging";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import * as Sentry from "@sentry/react-native";
+import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -54,6 +55,11 @@ export default Sentry.wrap(function RootLayout() {
   const colorScheme = useColorScheme();
   const [isLoaded, setIsLoaded] = useState(false);
   const setAccount = useSetAtom(accountAtom);
+  const [loaded, error] = useFonts({
+    "Noto Sans JP Regular": require("@/assets/fonts/NotoSansJP-Regular.ttf"),
+    "Noto Sans JP Bold": require("@/assets/fonts/NotoSansJP-Bold.ttf"),
+    "HunyaJi-Re": require("@/assets/fonts/HonyaJi-Re.ttf"),
+  });
 
   useAsyncOneTimeEffect(async () => {
     try {
@@ -67,6 +73,10 @@ export default Sentry.wrap(function RootLayout() {
   });
 
   if (!isLoaded) {
+    return null;
+  }
+
+  if (error || !loaded) {
     return null;
   }
 

@@ -99,6 +99,7 @@
         },
       ],
       ["expo-file-system", {}],
+      ["expo-font", {}],
       "@react-native-community/datetimepicker",
       "@natsuneko-laboratory/react-native-twitter-text",
     ],

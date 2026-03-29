@@ -5,13 +5,7 @@ import { CatalystFleet } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
 import { useAtomValue } from "jotai";
 import { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Modal, Pressable, Text, View } from "react-native";
 import Animated, {
   cancelAnimation,
   runOnJS,
@@ -24,7 +18,7 @@ import { withUniwind } from "uniwind";
 
 const UniImage = withUniwind(Image);
 
-const FLEET_DURATION = 6000;
+const FLEET_DURATION = 1000 * 6; // 6 seconds
 
 type Props = {
   username: string | null;
@@ -178,13 +172,7 @@ export const FleetViewer = ({ username, visible, onClose, onMarkRead }: Props) =
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-      statusBarTranslucent
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
       <View className="flex-1 bg-black">
         {/* Fleet content — full screen */}
         {isLoading ? (
@@ -193,10 +181,7 @@ export const FleetViewer = ({ username, visible, onClose, onMarkRead }: Props) =
           </View>
         ) : contentData ? (
           <View className="flex-1">
-            <FleetContent
-              fleet={contentData}
-              onMediaLoad={currentFleet?.media ? handleMediaLoad : undefined}
-            />
+            <FleetContent fleet={contentData} onMediaLoad={currentFleet?.media ? handleMediaLoad : undefined} />
             {/* Media loading overlay */}
             {currentFleet?.media && !isMediaLoaded && (
               <View className="absolute inset-0 justify-center items-center bg-black/30">
@@ -208,11 +193,7 @@ export const FleetViewer = ({ username, visible, onClose, onMarkRead }: Props) =
 
         {/* Header overlay: progress bars + user info */}
         {!isLoading && fleets.length > 0 && (
-          <View
-            className="absolute left-0 right-0 z-10"
-            style={{ top: insets.top + 8 }}
-            pointerEvents="none"
-          >
+          <View className="absolute left-0 right-0 z-10" style={{ top: insets.top + 8 }} pointerEvents="none">
             <View className="flex-row gap-1 px-3 pb-2">
               {fleets.map((_, i) => (
                 <ProgressBar
@@ -225,11 +206,7 @@ export const FleetViewer = ({ username, visible, onClose, onMarkRead }: Props) =
             </View>
             {currentFleet && (
               <View className="flex-row items-center px-3 pb-2">
-                <UniImage
-                  source={{ uri: iconUrl }}
-                  className="w-8 h-8 rounded-full"
-                  contentFit="cover"
-                />
+                <UniImage source={{ uri: iconUrl }} className="w-8 h-8 rounded-full" contentFit="cover" />
                 <Text className="text-white ml-2 font-semibold text-sm flex-1" numberOfLines={1}>
                   {currentFleet.user.displayName || currentFleet.user.screenName}
                 </Text>
