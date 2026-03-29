@@ -186,38 +186,7 @@ export const FleetViewer = ({ username, visible, onClose, onMarkRead }: Props) =
       statusBarTranslucent
     >
       <View className="flex-1 bg-black">
-        {/* Progress bars */}
-        {!isLoading && fleets.length > 0 && (
-          <View
-            className="flex-row gap-1 px-3 pb-2 z-10"
-            style={{ paddingTop: insets.top + 8 }}
-          >
-            {fleets.map((_, i) => (
-              <ProgressBar
-                key={i}
-                state={getProgressBarState(i)}
-                paused={i === currentIndex ? isPaused : false}
-                onComplete={goNext}
-              />
-            ))}
-          </View>
-        )}
-
-        {/* User header */}
-        {!isLoading && currentFleet && (
-          <View className="flex-row items-center px-3 pb-2 z-10">
-            <UniImage
-              source={{ uri: iconUrl }}
-              className="w-8 h-8 rounded-full"
-              contentFit="cover"
-            />
-            <Text className="text-white ml-2 font-semibold text-sm flex-1" numberOfLines={1}>
-              {currentFleet.user.displayName || currentFleet.user.screenName}
-            </Text>
-          </View>
-        )}
-
-        {/* Fleet content */}
+        {/* Fleet content — full screen */}
         {isLoading ? (
           <View className="flex-1 justify-center items-center">
             <ActivityIndicator colorClassName="accent-white" size="large" />
@@ -236,6 +205,38 @@ export const FleetViewer = ({ username, visible, onClose, onMarkRead }: Props) =
             )}
           </View>
         ) : null}
+
+        {/* Header overlay: progress bars + user info */}
+        {!isLoading && fleets.length > 0 && (
+          <View
+            className="absolute left-0 right-0 z-10"
+            style={{ top: insets.top + 8 }}
+            pointerEvents="none"
+          >
+            <View className="flex-row gap-1 px-3 pb-2">
+              {fleets.map((_, i) => (
+                <ProgressBar
+                  key={i}
+                  state={getProgressBarState(i)}
+                  paused={i === currentIndex ? isPaused : false}
+                  onComplete={goNext}
+                />
+              ))}
+            </View>
+            {currentFleet && (
+              <View className="flex-row items-center px-3 pb-2">
+                <UniImage
+                  source={{ uri: iconUrl }}
+                  className="w-8 h-8 rounded-full"
+                  contentFit="cover"
+                />
+                <Text className="text-white ml-2 font-semibold text-sm flex-1" numberOfLines={1}>
+                  {currentFleet.user.displayName || currentFleet.user.screenName}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
 
         {/* Tap areas: left = prev, right = next */}
         <View className="absolute inset-0 flex-row" pointerEvents="box-none">
