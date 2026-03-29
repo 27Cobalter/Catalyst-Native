@@ -118,7 +118,8 @@
     ],
     "patchedDependencies": {
       "@expo/cli": "patches/@expo__cli.patch",
-      "@likashefqet/react-native-image-zoom": "patches/@likashefqet__react-native-image-zoom.patch"
+      "@likashefqet/react-native-image-zoom": "patches/@likashefqet__react-native-image-zoom.patch",
+      "react-native": "patches/react-native.patch"
     }
   }
 }
