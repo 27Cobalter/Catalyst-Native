@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import Animated, {
   cancelAnimation,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -69,23 +70,31 @@ type ProgressBarState = "past" | "current" | "future";
 
 type ProgressBarProps = {
   state: ProgressBarState;
+  paused: boolean;
   onComplete: () => void;
 };
 
-const ProgressBar = ({ state, onComplete }: ProgressBarProps) => {
+const ProgressBar = ({ state, paused, onComplete }: ProgressBarProps) => {
   const progress = useSharedValue(state === "past" ? 1 : 0);
 
   useEffect(() => {
-    if (state === "current") {
-      progress.value = 0;
-      progress.value = withTiming(1, { duration: FLEET_DURATION }, (finished) => {
-        if (finished) onComplete();
-      });
-    } else {
+    if (state !== "current") {
       cancelAnimation(progress);
       progress.value = state === "past" ? 1 : 0;
+      return;
     }
-  }, [state]);
+
+    if (paused) {
+      cancelAnimation(progress);
+      return;
+    }
+
+    // 現在の進捗から残り時間を計算して再開
+    const remaining = FLEET_DURATION * (1 - progress.value);
+    progress.value = withTiming(1, { duration: remaining }, (finished) => {
+      if (finished) runOnJS(onComplete)();
+    });
+  }, [state, paused, onComplete, progress]);
 
   const filledStyle = useAnimatedStyle(() => ({ flex: progress.value }));
   const emptyStyle = useAnimatedStyle(() => ({ flex: 1 - progress.value }));
@@ -160,6 +169,8 @@ export const FleetViewer = ({ username, visible, onClose, onMarkRead }: Props) =
     ? getCdnUrl({ src: currentFleet.user.profile.iconUrl, variant: "icon", width: 64 })
     : getIdenticonUrl(currentFleet?.user.id);
 
+  const isPaused = !!(currentFleet?.media && !isMediaLoaded);
+
   const getProgressBarState = (index: number): ProgressBarState => {
     if (index < currentIndex) return "past";
     if (index === currentIndex) return "current";
@@ -185,6 +196,7 @@ export const FleetViewer = ({ username, visible, onClose, onMarkRead }: Props) =
               <ProgressBar
                 key={i}
                 state={getProgressBarState(i)}
+                paused={i === currentIndex ? isPaused : false}
                 onComplete={goNext}
               />
             ))}
