@@ -1,7 +1,11 @@
 import { getCdnUrl, getIdenticonUrl } from "@/lib/media";
+import { cn } from "@/lib/utils";
 import { CatalystFleetRing } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
 import { Pressable, Text, View } from "react-native";
+import { withUniwind } from "uniwind";
+
+const UniImage = withUniwind(Image);
 
 type Props = {
   ring: CatalystFleetRing;
@@ -13,21 +17,19 @@ export const FleetRingItem = ({ ring, onPress }: Props) => {
     ? getCdnUrl({ src: ring.user.profile.iconUrl, variant: "icon", width: 64 })
     : getIdenticonUrl(ring.user.id);
 
-  const ringColor = ring.hasUnread ? "#e879a0" : "#9ca3af";
-
   return (
     <Pressable onPress={onPress} className="items-center mx-2">
       <View
-        style={{
-          padding: 2,
-          borderRadius: 999,
-          borderWidth: 2.5,
-          borderColor: ringColor,
-        }}
+        className={cn(
+          "p-0.5 rounded-full border-[2.5px]",
+          ring.hasUnread
+            ? "border-light-accent dark:border-dark-accent"
+            : "border-light-gray dark:border-dark-gray",
+        )}
       >
-        <Image
+        <UniImage
           source={{ uri: iconUrl }}
-          style={{ width: 52, height: 52, borderRadius: 26 }}
+          className="w-13 h-13 rounded-full"
           contentFit="cover"
         />
       </View>

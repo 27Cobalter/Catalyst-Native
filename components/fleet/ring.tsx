@@ -26,7 +26,7 @@ export const FleetRing = ({ onRingPress, refreshKey }: Props) => {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingVertical: 12, paddingHorizontal: 8 }}
+        contentContainerClassName="py-3 px-2"
       >
         {rings.map((ring) => (
           <FleetRingItem

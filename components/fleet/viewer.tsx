@@ -9,18 +9,19 @@ import {
   ActivityIndicator,
   Modal,
   Pressable,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
 import Animated, {
   cancelAnimation,
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { withUniwind } from "uniwind";
+
+const UniImage = withUniwind(Image);
 
 const FLEET_DURATION = 6000;
 
@@ -78,7 +79,7 @@ const ProgressBar = ({ state, onComplete }: ProgressBarProps) => {
     if (state === "current") {
       progress.value = 0;
       progress.value = withTiming(1, { duration: FLEET_DURATION }, (finished) => {
-        if (finished) runOnJS(onComplete)();
+        if (finished) onComplete();
       });
     } else {
       cancelAnimation(progress);
@@ -90,9 +91,9 @@ const ProgressBar = ({ state, onComplete }: ProgressBarProps) => {
   const emptyStyle = useAnimatedStyle(() => ({ flex: 1 - progress.value }));
 
   return (
-    <View style={styles.progressTrack}>
-      <Animated.View style={[styles.progressFilled, filledStyle]} />
-      <Animated.View style={[styles.progressEmpty, emptyStyle]} />
+    <View className="flex-1 h-[2.5px] flex-row rounded-full overflow-hidden">
+      <Animated.View className="bg-white" style={filledStyle} />
+      <Animated.View className="bg-white/40" style={emptyStyle} />
     </View>
   );
 };
@@ -105,7 +106,6 @@ export const FleetViewer = ({ username, visible, onClose, onMarkRead }: Props) =
   const [isLoading, setIsLoading] = useState(true);
   const [isMediaLoaded, setIsMediaLoaded] = useState(false);
 
-  // Load fleets when viewer opens
   useEffect(() => {
     if (!visible || !username || !client) return;
     setIsLoading(true);
@@ -122,12 +122,10 @@ export const FleetViewer = ({ username, visible, onClose, onMarkRead }: Props) =
       });
   }, [visible, username, client]);
 
-  // Reset media loaded state on fleet change
   useEffect(() => {
     setIsMediaLoaded(false);
   }, [currentIndex]);
 
-  // Mark current fleet as viewed
   useEffect(() => {
     if (!visible || isLoading || fleets.length === 0 || !client) return;
     const fleet = fleets[currentIndex];
@@ -176,14 +174,12 @@ export const FleetViewer = ({ username, visible, onClose, onMarkRead }: Props) =
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <View style={styles.container}>
+      <View className="flex-1 bg-black">
         {/* Progress bars */}
         {!isLoading && fleets.length > 0 && (
           <View
-            style={[
-              styles.progressContainer,
-              { paddingTop: insets.top + 8 },
-            ]}
+            className="flex-row gap-1 px-3 pb-2 z-10"
+            style={{ paddingTop: insets.top + 8 }}
           >
             {fleets.map((_, i) => (
               <ProgressBar
@@ -197,13 +193,13 @@ export const FleetViewer = ({ username, visible, onClose, onMarkRead }: Props) =
 
         {/* User header */}
         {!isLoading && currentFleet && (
-          <View style={styles.userHeader}>
-            <Image
+          <View className="flex-row items-center px-3 pb-2 z-10">
+            <UniImage
               source={{ uri: iconUrl }}
-              style={styles.avatar}
+              className="w-8 h-8 rounded-full"
               contentFit="cover"
             />
-            <Text style={styles.displayName} numberOfLines={1}>
+            <Text className="text-white ml-2 font-semibold text-sm flex-1" numberOfLines={1}>
               {currentFleet.user.displayName || currentFleet.user.screenName}
             </Text>
           </View>
@@ -211,122 +207,40 @@ export const FleetViewer = ({ username, visible, onClose, onMarkRead }: Props) =
 
         {/* Fleet content */}
         {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator color="white" size="large" />
+          <View className="flex-1 justify-center items-center">
+            <ActivityIndicator colorClassName="accent-white" size="large" />
           </View>
         ) : contentData ? (
-          <View style={styles.contentContainer}>
+          <View className="flex-1">
             <FleetContent
               fleet={contentData}
               onMediaLoad={currentFleet?.media ? handleMediaLoad : undefined}
             />
             {/* Media loading overlay */}
             {currentFleet?.media && !isMediaLoaded && (
-              <View style={styles.mediaLoadingOverlay}>
-                <ActivityIndicator color="white" size="large" />
+              <View className="absolute inset-0 justify-center items-center bg-black/30">
+                <ActivityIndicator colorClassName="accent-white" size="large" />
               </View>
             )}
           </View>
         ) : null}
 
         {/* Tap areas: left = prev, right = next */}
-        <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
-          <View style={styles.tapRow} pointerEvents="box-none">
-            <Pressable style={styles.tapArea} onPress={goPrev} />
-            <Pressable style={styles.tapArea} onPress={goNext} />
-          </View>
+        <View className="absolute inset-0 flex-row" pointerEvents="box-none">
+          <Pressable className="flex-1" onPress={goPrev} />
+          <Pressable className="flex-1" onPress={goNext} />
         </View>
 
         {/* Close button */}
         <Pressable
           onPress={onClose}
-          style={[styles.closeButton, { top: insets.top + 48 }]}
+          className="absolute right-4 z-20 w-8 h-8 justify-center items-center"
+          style={{ top: insets.top + 48 }}
           hitSlop={16}
         >
-          <Text style={styles.closeText}>✕</Text>
+          <Text className="text-white text-lg font-semibold">✕</Text>
         </Pressable>
       </View>
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "black",
-  },
-  progressContainer: {
-    flexDirection: "row",
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingBottom: 8,
-    zIndex: 10,
-  },
-  progressTrack: {
-    flex: 1,
-    height: 2.5,
-    flexDirection: "row",
-    borderRadius: 1.25,
-    overflow: "hidden",
-  },
-  progressFilled: {
-    backgroundColor: "white",
-  },
-  progressEmpty: {
-    backgroundColor: "rgba(255, 255, 255, 0.4)",
-  },
-  userHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingBottom: 8,
-    zIndex: 10,
-  },
-  avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-  },
-  displayName: {
-    color: "white",
-    marginLeft: 8,
-    fontWeight: "600",
-    fontSize: 14,
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  contentContainer: {
-    flex: 1,
-  },
-  mediaLoadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.3)",
-  },
-  tapRow: {
-    flex: 1,
-    flexDirection: "row",
-  },
-  tapArea: {
-    flex: 1,
-  },
-  closeButton: {
-    position: "absolute",
-    right: 16,
-    zIndex: 20,
-    width: 32,
-    height: 32,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  closeText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-});
