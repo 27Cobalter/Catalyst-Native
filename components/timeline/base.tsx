@@ -22,6 +22,7 @@ const LoadingIndicator = () => {
 
 type Props = {
   fetcher: (since: string | null, until: string | null) => Promise<CatalystStatus[]>;
+  ListHeaderComponent?: React.ComponentType;
   ListEmptyComponent?: React.ComponentType;
   ListEmptyComponentStyle?: StyleProp<ViewStyle>;
   ref?: React.Ref<TimelineHandle>;
@@ -31,7 +32,7 @@ export type TimelineHandle = {
   scrollToTop: () => void;
 };
 
-export const TimelineBase = ({ fetcher, ListEmptyComponent, ListEmptyComponentStyle, ref }: Props) => {
+export const TimelineBase = ({ fetcher, ListHeaderComponent, ListEmptyComponent, ListEmptyComponentStyle, ref }: Props) => {
   const [items, setItems] = useState<CatalystStatus[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -108,6 +109,7 @@ export const TimelineBase = ({ fetcher, ListEmptyComponent, ListEmptyComponentSt
       onEndReached={onLoadMore}
       onEndReachedThreshold={0.75}
       ItemSeparatorComponent={ItemSeparator}
+      ListHeaderComponent={ListHeaderComponent}
       ListFooterComponent={isLoading ? <LoadingIndicator /> : null}
       ListEmptyComponent={!isLoading ? ListEmptyComponent : undefined}
       ListEmptyComponentStyle={!isLoading ? ListEmptyComponentStyle : undefined}
