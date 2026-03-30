@@ -258,7 +258,7 @@ export const FleetViewer = ({ username, usernames, visible, onClose, onMarkRead 
           </View>
         ) : contentData ? (
           <View className="flex-1">
-            <FleetContent fleet={contentData} onMediaLoad={currentFleet?.media ? handleMediaLoad : undefined} />
+            <FleetContent key={currentFleet?.id} fleet={contentData} onMediaLoad={currentFleet?.media ? handleMediaLoad : undefined} />
             {/* Media loading overlay */}
             {currentFleet?.media && !isMediaLoaded && (
               <View className="absolute inset-0 justify-center items-center bg-black/30">
