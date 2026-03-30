@@ -280,7 +280,9 @@ const AlbumVisualContent = ({
     try {
       const since = items[0]?.id ?? null;
       const newItems = await fetcher(since, null);
-      setItems((prev) => merge(newItems, prev, sets.current, (item) => item.id));
+      if (newItems.length > 0) {
+        setItems((prev) => merge(newItems, prev, sets.current, (item) => item.id));
+      }
     } finally {
       setIsRefreshing(false);
     }

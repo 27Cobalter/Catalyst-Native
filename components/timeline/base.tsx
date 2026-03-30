@@ -32,7 +32,13 @@ export type TimelineHandle = {
   scrollToTop: () => void;
 };
 
-export const TimelineBase = ({ fetcher, ListHeaderComponent, ListEmptyComponent, ListEmptyComponentStyle, ref }: Props) => {
+export const TimelineBase = ({
+  fetcher,
+  ListHeaderComponent,
+  ListEmptyComponent,
+  ListEmptyComponentStyle,
+  ref,
+}: Props) => {
   const [items, setItems] = useState<CatalystStatus[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,7 +56,7 @@ export const TimelineBase = ({ fetcher, ListHeaderComponent, ListEmptyComponent,
       const since = items.length > 0 ? items[0].id : null;
       const newItems = await fetcher(since, null);
 
-      if (newItems) {
+      if (newItems.length > 0) {
         setItems((prevItems) => merge(newItems, prevItems, sets.current, (item) => item.id));
       }
     } finally {
@@ -65,7 +71,7 @@ export const TimelineBase = ({ fetcher, ListHeaderComponent, ListEmptyComponent,
       const until = items.length > 0 ? items.slice(-1)[0].id : null;
       const newItems = await fetcher(null, until);
 
-      if (newItems) {
+      if (newItems.length > 0) {
         setItems((prevItems) => merge(prevItems, newItems, sets.current, (item) => item.id));
       }
     } finally {
