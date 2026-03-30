@@ -4,13 +4,14 @@ import { clientAtom } from "@/models/atoms/credential";
 import { CatalystFleet } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
 import { useAtomValue } from "jotai";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, Text, View } from "react-native";
 import Animated, {
   cancelAnimation,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
+  withSequence,
   withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -22,6 +23,7 @@ const FLEET_DURATION = 1000 * 6; // 6 seconds
 
 type Props = {
   username: string | null;
+  usernames: string[];
   visible: boolean;
   onClose: () => void;
   onMarkRead: (username: string) => void;
@@ -70,8 +72,16 @@ type ProgressBarProps = {
 
 const ProgressBar = ({ state, paused, onComplete }: ProgressBarProps) => {
   const progress = useSharedValue(state === "past" ? 1 : 0);
+  const prevStateRef = useRef(state);
+
+  const handleComplete = useCallback(() => {
+    onComplete();
+  }, [onComplete]);
 
   useEffect(() => {
+    const prevState = prevStateRef.current;
+    prevStateRef.current = state;
+
     if (state !== "current") {
       cancelAnimation(progress);
       progress.value = state === "past" ? 1 : 0;
@@ -83,12 +93,23 @@ const ProgressBar = ({ state, paused, onComplete }: ProgressBarProps) => {
       return;
     }
 
-    // 現在の進捗から残り時間を計算して再開
-    const remaining = FLEET_DURATION * (1 - progress.value);
-    progress.value = withTiming(1, { duration: remaining }, (finished) => {
-      if (finished) runOnJS(onComplete)();
-    });
-  }, [state, paused, onComplete, progress]);
+    if (prevState !== "current") {
+      // 別の状態から "current" に遷移した場合は 0 から開始
+      cancelAnimation(progress);
+      progress.value = withSequence(
+        withTiming(0, { duration: 0 }),
+        withTiming(1, { duration: FLEET_DURATION }, (finished) => {
+          if (finished) runOnJS(handleComplete)();
+        }),
+      );
+    } else {
+      // pause 解除などで再開する場合は現在位置から続行
+      const remaining = FLEET_DURATION * (1 - progress.value);
+      progress.value = withTiming(1, { duration: remaining }, (finished) => {
+        if (finished) runOnJS(handleComplete)();
+      });
+    }
+  }, [state, paused, handleComplete, progress]);
 
   const filledStyle = useAnimatedStyle(() => ({ flex: progress.value }));
   const emptyStyle = useAnimatedStyle(() => ({ flex: 1 - progress.value }));
@@ -101,20 +122,28 @@ const ProgressBar = ({ state, paused, onComplete }: ProgressBarProps) => {
   );
 };
 
-export const FleetViewer = ({ username, visible, onClose, onMarkRead }: Props) => {
+export const FleetViewer = ({ username, usernames, visible, onClose, onMarkRead }: Props) => {
   const client = useAtomValue(clientAtom);
   const insets = useSafeAreaInsets();
+  const [activeUsername, setActiveUsername] = useState<string | null>(null);
   const [fleets, setFleets] = useState<CatalystFleet[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isMediaLoaded, setIsMediaLoaded] = useState(false);
 
+  // 外部から username が変わったら activeUsername を同期
   useEffect(() => {
-    if (!visible || !username || !client) return;
+    if (visible && username) {
+      setActiveUsername(username);
+    }
+  }, [visible, username]);
+
+  useEffect(() => {
+    if (!visible || !activeUsername || !client) return;
     setIsLoading(true);
     setCurrentIndex(0);
     client.catalyst
-      .fleetByUsername(username)
+      .fleetByUsername(activeUsername)
       .then((data) => {
         setFleets(data);
         setIsLoading(false);
@@ -123,7 +152,7 @@ export const FleetViewer = ({ username, visible, onClose, onMarkRead }: Props) =
         setIsLoading(false);
         onClose();
       });
-  }, [visible, username, client]);
+  }, [visible, activeUsername, client]);
 
   useEffect(() => {
     setIsMediaLoaded(false);
@@ -137,19 +166,67 @@ export const FleetViewer = ({ username, visible, onClose, onMarkRead }: Props) =
     }
   }, [visible, isLoading, currentIndex, fleets, client]);
 
-  const goNext = useCallback(() => {
+  const activeUsernameRef = useRef(activeUsername);
+  activeUsernameRef.current = activeUsername;
+  const usernamesRef = useRef(usernames);
+  usernamesRef.current = usernames;
+  const fleetsRef = useRef(fleets);
+  fleetsRef.current = fleets;
+
+  // ユーザー操作で進行/後退した際にインクリメントし、古い自動進行を無視する
+  const navEpochRef = useRef(0);
+
+  const autoAdvance = useCallback(() => {
+    const epoch = navEpochRef.current;
     setCurrentIndex((prev) => {
-      if (prev + 1 >= fleets.length) {
-        if (username) onMarkRead(username);
+      // ユーザーが手動でナビゲーションした場合、この自動進行を無視
+      if (navEpochRef.current !== epoch) return prev;
+      if (prev + 1 >= fleetsRef.current.length) {
+        const name = activeUsernameRef.current;
+        if (name) onMarkRead(name);
+        const userIndex = usernamesRef.current.indexOf(name ?? "");
+        if (userIndex >= 0 && userIndex + 1 < usernamesRef.current.length) {
+          setActiveUsername(usernamesRef.current[userIndex + 1]);
+          return 0;
+        }
         onClose();
         return prev;
       }
       return prev + 1;
     });
-  }, [fleets.length, username, onClose, onMarkRead]);
+  }, [onClose, onMarkRead]);
+
+  const goNext = useCallback(() => {
+    navEpochRef.current += 1;
+    setCurrentIndex((prev) => {
+      if (prev + 1 >= fleetsRef.current.length) {
+        const name = activeUsernameRef.current;
+        if (name) onMarkRead(name);
+        const userIndex = usernamesRef.current.indexOf(name ?? "");
+        if (userIndex >= 0 && userIndex + 1 < usernamesRef.current.length) {
+          setActiveUsername(usernamesRef.current[userIndex + 1]);
+          return 0;
+        }
+        onClose();
+        return prev;
+      }
+      return prev + 1;
+    });
+  }, [onClose, onMarkRead]);
 
   const goPrev = useCallback(() => {
-    setCurrentIndex((prev) => Math.max(0, prev - 1));
+    navEpochRef.current += 1;
+    setCurrentIndex((prev) => {
+      if (prev === 0) {
+        const name = activeUsernameRef.current;
+        const userIndex = usernamesRef.current.indexOf(name ?? "");
+        if (userIndex > 0) {
+          setActiveUsername(usernamesRef.current[userIndex - 1]);
+        }
+        return 0;
+      }
+      return prev - 1;
+    });
   }, []);
 
   const handleMediaLoad = useCallback(() => {
@@ -200,7 +277,7 @@ export const FleetViewer = ({ username, visible, onClose, onMarkRead }: Props) =
                   key={i}
                   state={getProgressBarState(i)}
                   paused={i === currentIndex ? isPaused : false}
-                  onComplete={goNext}
+                  onComplete={autoAdvance}
                 />
               ))}
             </View>

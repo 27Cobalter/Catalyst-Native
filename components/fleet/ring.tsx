@@ -7,17 +7,21 @@ import { FleetRingItem } from "./ring-item";
 
 type Props = {
   onRingPress: (username: string) => void;
+  onUsernamesChange?: (usernames: string[]) => void;
   refreshKey?: number;
 };
 
-export const FleetRing = ({ onRingPress, refreshKey }: Props) => {
+export const FleetRing = ({ onRingPress, onUsernamesChange, refreshKey }: Props) => {
   const client = useAtomValue(clientAtom);
   const [rings, setRings] = useState<CatalystFleetRing[]>([]);
 
   useEffect(() => {
     if (!client) return;
-    client.catalyst.fleets().then(setRings).catch(() => {});
-  }, [client, refreshKey]);
+    client.catalyst.fleets().then((data) => {
+      setRings(data);
+      onUsernamesChange?.(data.map((r) => r.user.screenName));
+    }).catch(() => {});
+  }, [client, refreshKey, onUsernamesChange]);
 
   if (rings.length === 0) return null;
 

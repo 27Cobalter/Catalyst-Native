@@ -12,6 +12,7 @@ type Props = {
 export const FollowingTimeline = ({ ref }: Props) => {
   const client = useAtomValue(clientAtom);
   const [viewerUsername, setViewerUsername] = useState<string | null>(null);
+  const [fleetUsernames, setFleetUsernames] = useState<string[]>([]);
   const [ringRefreshKey, setRingRefreshKey] = useState(0);
 
   const fetcher = useCallback(
@@ -39,14 +40,19 @@ export const FollowingTimeline = ({ ref }: Props) => {
     // Ring will refresh via ringRefreshKey on viewer close
   }, []);
 
+  const handleUsernamesChange = useCallback((usernames: string[]) => {
+    setFleetUsernames(usernames);
+  }, []);
+
   const Header = useCallback(
     () => (
       <FleetRing
         onRingPress={handleRingPress}
+        onUsernamesChange={handleUsernamesChange}
         refreshKey={ringRefreshKey}
       />
     ),
-    [handleRingPress, ringRefreshKey],
+    [handleRingPress, handleUsernamesChange, ringRefreshKey],
   );
 
   return (
@@ -54,6 +60,7 @@ export const FollowingTimeline = ({ ref }: Props) => {
       <TimelineBase ref={ref} fetcher={fetcher} ListHeaderComponent={Header} />
       <FleetViewer
         username={viewerUsername}
+        usernames={fleetUsernames}
         visible={!!viewerUsername}
         onClose={handleViewerClose}
         onMarkRead={handleMarkRead}
