@@ -356,7 +356,7 @@ export default function FleetComposerScreen() {
     <>
       <Stack.Screen
         options={{
-          title: "フリート",
+          title: "Fleet",
           headerBackTitle: "キャンセル",
           headerRight: () => (
             <Pressable onPress={handleSubmit} disabled={!canPost}>
@@ -394,8 +394,8 @@ export default function FleetComposerScreen() {
               </GestureDetector>
             ) : (
               <Pressable onPress={handlePickImage} className="flex-1 items-center justify-center gap-2">
-                <UniImageIcon size={40} className="text-white/60" />
-                <Text className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>タップして画像を選択</Text>
+                <UniImageIcon size={40} className="text-light-icon dark:text-dark-icon" />
+                <Text className="text-sm text-light-text-muted dark:text-dark-text-muted">タップして画像を選択</Text>
               </Pressable>
             )}
 
@@ -470,9 +470,9 @@ export default function FleetComposerScreen() {
                 {texts.map((item) => (
                   <View
                     key={item.id}
-                    className="flex-row items-center gap-1 rounded-full border border-light-border bg-light-surface px-2 py-1 dark:border-dark-border dark:bg-dark-surface"
+                    className="flex-row items-center gap-1 rounded-full border border-light-border bg-light-surface px-3 py-2 dark:border-dark-border dark:bg-dark-surface"
                   >
-                    <Text className="max-w-28 text-xs text-light-text dark:text-dark-text" numberOfLines={1}>{item.body}</Text>
+                    <Text className="max-w-28 text-sm text-light-text dark:text-dark-text text-ellipsis" numberOfLines={1}>{item.body}</Text>
                     <Pressable onPress={() => openEditText(item)} className="p-1" hitSlop={8}>
                       <UniPencil size={12} className="text-light-text-muted dark:text-dark-text-muted" />
                     </Pressable>
