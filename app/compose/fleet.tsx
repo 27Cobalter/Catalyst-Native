@@ -71,6 +71,8 @@ type SelectedImage = {
 type TextItem = {
   id: string;
   body: string;
+  scale: number;
+  rotation: number;
 };
 
 // ─── DraggableText ───────────────────────────────────────────────────────────
@@ -184,10 +186,7 @@ export default function FleetComposerScreen() {
   const [image, setImage] = useState<SelectedImage | null>(null);
   const [backgroundColor, setBackgroundColor] = useState("#000000");
   const [texts, setTexts] = useState<TextItem[]>([]);
-  const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
-  const [sliderScale, setSliderScale] = useState(1);
-  const [sliderRotation, setSliderRotation] = useState(0);
-  const [editingText, setEditingText] = useState<{ id: string | null; body: string } | null>(null);
+  const [editingText, setEditingText] = useState<{ id: string | null; body: string; scale: number; rotation: number } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sheetContentHeight, setSheetContentHeight] = useState(0);
 
@@ -261,39 +260,13 @@ export default function FleetComposerScreen() {
     }
   }, [imgTranslateX, imgTranslateY, imgSavedX, imgSavedY, imgScale, imgSavedScale]);
 
-  const handleSelectText = useCallback((id: string) => {
-    setSelectedTextId(id);
-    const h = textRefsMap.current.get(id);
-    if (h) {
-      setSliderScale(h.getScale());
-      setSliderRotation(h.getRotation());
-    }
-  }, []);
-
-  const handleDeselectText = useCallback(() => {
-    setSelectedTextId(null);
-  }, []);
-
-  const handleSliderScale = useCallback((v: number) => {
-    setSliderScale(v);
-    if (selectedTextId) {
-      textRefsMap.current.get(selectedTextId)?.setScale(v);
-    }
-  }, [selectedTextId]);
-
-  const handleSliderRotation = useCallback((v: number) => {
-    setSliderRotation(v);
-    if (selectedTextId) {
-      textRefsMap.current.get(selectedTextId)?.setRotation(v);
-    }
-  }, [selectedTextId]);
-
   const openAddText = useCallback(() => {
-    setEditingText({ id: null, body: "" });
+    setEditingText({ id: null, body: "", scale: 1, rotation: 0 });
   }, []);
 
   const openEditText = useCallback((item: TextItem) => {
-    setEditingText({ id: item.id, body: item.body });
+    const h = textRefsMap.current.get(item.id);
+    setEditingText({ id: item.id, body: item.body, scale: h?.getScale() ?? 1, rotation: h?.getRotation() ?? 0 });
   }, []);
 
   const handleConfirmText = useCallback(() => {
@@ -301,12 +274,17 @@ export default function FleetComposerScreen() {
       setEditingText(null);
       return;
     }
-    const body = editingText.body.trim();
+    const { body, scale, rotation } = { body: editingText.body.trim(), scale: editingText.scale, rotation: editingText.rotation };
     if (editingText.id === null) {
       const id = `${Date.now()}-${Math.random()}`;
-      setTexts((prev) => [...prev, { id, body }]);
+      setTexts((prev) => [...prev, { id, body, scale, rotation }]);
     } else {
+      // scale/rotation は DraggableText の shared value が正なので body のみ更新
       setTexts((prev) => prev.map((t) => (t.id === editingText.id ? { ...t, body } : t)));
+      // スライダー値をプレビューにも反映
+      const h = textRefsMap.current.get(editingText.id);
+      h?.setScale(scale);
+      h?.setRotation(rotation);
     }
     setEditingText(null);
   }, [editingText]);
@@ -314,8 +292,7 @@ export default function FleetComposerScreen() {
   const handleDeleteText = useCallback((id: string) => {
     setTexts((prev) => prev.filter((t) => t.id !== id));
     textRefsMap.current.delete(id);
-    if (selectedTextId === id) setSelectedTextId(null);
-  }, [selectedTextId]);
+  }, []);
 
   const handleSubmit = useCallback(async () => {
     if (!canPost || !account || !image) return;
@@ -370,7 +347,6 @@ export default function FleetComposerScreen() {
     }
   }, [canPost, account, image, backgroundColor, texts, containerWidth, containerHeight, imgTranslateX, imgTranslateY, imgScale, router]);
 
-  const selectedText = texts.find((t) => t.id === selectedTextId);
   const sheetBg = theme === "dark" ? "#1C1C1E" : "#FFFFFF";
   const handleColor = theme === "dark" ? "#48484A" : "#C7C7CC";
   const trackColor = theme === "dark" ? "#555" : "#ccc";
@@ -492,10 +468,9 @@ export default function FleetComposerScreen() {
             {texts.length > 0 && (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
                 {texts.map((item) => (
-                  <Pressable
+                  <View
                     key={item.id}
-                    onPress={() => selectedTextId === item.id ? handleDeselectText() : handleSelectText(item.id)}
-                    className={`flex-row items-center gap-1 rounded-full border px-2 py-1 ${selectedTextId === item.id ? "border-light-accent bg-light-toggle dark:border-dark-accent dark:bg-dark-toggle" : "border-light-border bg-light-surface dark:border-dark-border dark:bg-dark-surface"}`}
+                    className="flex-row items-center gap-1 rounded-full border border-light-border bg-light-surface px-2 py-1 dark:border-dark-border dark:bg-dark-surface"
                   >
                     <Text className="max-w-28 text-xs text-light-text dark:text-dark-text" numberOfLines={1}>{item.body}</Text>
                     <Pressable onPress={() => openEditText(item)} className="p-1" hitSlop={8}>
@@ -504,50 +479,9 @@ export default function FleetComposerScreen() {
                     <Pressable onPress={() => handleDeleteText(item.id)} className="p-1" hitSlop={8}>
                       <UniTrash2 size={12} className="text-light-error dark:text-dark-error" />
                     </Pressable>
-                  </Pressable>
+                  </View>
                 ))}
               </ScrollView>
-            )}
-
-            {/* Sliders for selected text */}
-            {selectedText && (
-              <View className="gap-2 rounded-xl border border-light-border bg-light-surface px-3 py-2 dark:border-dark-border dark:bg-dark-surface">
-                <Text className="text-xs font-semibold text-light-text dark:text-dark-text" numberOfLines={1}>
-                  「{selectedText.body}」の調整
-                </Text>
-                <View className="flex-row items-center gap-2">
-                  <Text className="w-12 text-xs text-light-text-muted dark:text-dark-text-muted">拡大縮小</Text>
-                  <Slider
-                    style={{ flex: 1 }}
-                    minimumValue={SCALE_MIN}
-                    maximumValue={SCALE_MAX}
-                    value={sliderScale}
-                    onValueChange={handleSliderScale}
-                    minimumTrackTintColor="#e879a0"
-                    maximumTrackTintColor={trackColor}
-                    thumbTintColor="#e879a0"
-                  />
-                  <Text className="w-10 text-right text-xs text-light-text-muted dark:text-dark-text-muted">
-                    {sliderScale.toFixed(2)}x
-                  </Text>
-                </View>
-                <View className="flex-row items-center gap-2">
-                  <Text className="w-12 text-xs text-light-text-muted dark:text-dark-text-muted">回転</Text>
-                  <Slider
-                    style={{ flex: 1 }}
-                    minimumValue={-180}
-                    maximumValue={180}
-                    value={sliderRotation}
-                    onValueChange={handleSliderRotation}
-                    minimumTrackTintColor="#e879a0"
-                    maximumTrackTintColor={trackColor}
-                    thumbTintColor="#e879a0"
-                  />
-                  <Text className="w-10 text-right text-xs text-light-text-muted dark:text-dark-text-muted">
-                    {Math.round(sliderRotation)}°
-                  </Text>
-                </View>
-              </View>
             )}
 
             {!image && (
@@ -583,6 +517,49 @@ export default function FleetComposerScreen() {
               <Text className="text-right text-xs text-light-text-muted dark:text-dark-text-muted">
                 {(editingText?.body ?? "").length} / 500
               </Text>
+
+              {/* Scale slider */}
+              <View className="flex-row items-center gap-2">
+                <Text className="w-12 text-xs text-light-text-muted dark:text-dark-text-muted">拡大縮小</Text>
+                <Slider
+                  style={{ flex: 1 }}
+                  minimumValue={SCALE_MIN}
+                  maximumValue={SCALE_MAX}
+                  value={editingText?.scale ?? 1}
+                  onValueChange={(v) => {
+                    setEditingText((prev) => prev && { ...prev, scale: v });
+                    if (editingText?.id) textRefsMap.current.get(editingText.id)?.setScale(v);
+                  }}
+                  minimumTrackTintColor="#e879a0"
+                  maximumTrackTintColor={trackColor}
+                  thumbTintColor="#e879a0"
+                />
+                <Text className="w-10 text-right text-xs text-light-text-muted dark:text-dark-text-muted">
+                  {(editingText?.scale ?? 1).toFixed(2)}x
+                </Text>
+              </View>
+
+              {/* Rotation slider */}
+              <View className="flex-row items-center gap-2">
+                <Text className="w-12 text-xs text-light-text-muted dark:text-dark-text-muted">回転</Text>
+                <Slider
+                  style={{ flex: 1 }}
+                  minimumValue={-180}
+                  maximumValue={180}
+                  value={editingText?.rotation ?? 0}
+                  onValueChange={(v) => {
+                    setEditingText((prev) => prev && { ...prev, rotation: v });
+                    if (editingText?.id) textRefsMap.current.get(editingText.id)?.setRotation(v);
+                  }}
+                  minimumTrackTintColor="#e879a0"
+                  maximumTrackTintColor={trackColor}
+                  thumbTintColor="#e879a0"
+                />
+                <Text className="w-10 text-right text-xs text-light-text-muted dark:text-dark-text-muted">
+                  {Math.round(editingText?.rotation ?? 0)}°
+                </Text>
+              </View>
+
               <Pressable
                 onPress={handleConfirmText}
                 disabled={!editingText?.body.trim()}
