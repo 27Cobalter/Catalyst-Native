@@ -20,13 +20,12 @@ import {
   Modal,
   Platform,
   Pressable,
-  ScrollView,
   Text,
   TextInput,
   View,
   useColorScheme,
 } from "react-native";
-import { Gesture, GestureDetector, GestureType } from "react-native-gesture-handler";
+import { Gesture, GestureDetector, GestureType, ScrollView } from "react-native-gesture-handler";
 import Animated, { SharedValue, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
@@ -731,6 +730,7 @@ export default function FleetComposerScreen() {
         <BottomSheet
           index={0}
           enableDynamicSizing
+          enableContentPanningGesture={false}
           enablePanDownToClose={false}
           backgroundStyle={{ backgroundColor: sheetBg }}
           handleIndicatorStyle={{ backgroundColor: handleColor }}
@@ -762,53 +762,55 @@ export default function FleetComposerScreen() {
 
             {/* Actions */}
             <View className="flex-row gap-3">
-              <Pressable
-                onPress={handlePickImage}
-                className="flex-row items-center gap-1.5 rounded-full border border-light-border px-3 py-2 dark:border-dark-border"
-              >
-                <UniImageIcon size={16} className="text-light-text dark:text-dark-text" />
-                <Text className="text-sm text-light-text dark:text-dark-text">
-                  {image ? "画像を変更" : "画像を選択"}
-                </Text>
-              </Pressable>
-
-              {texts.length < MAX_TEXTS ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
                 <Pressable
-                  onPress={openAddText}
+                  onPress={handlePickImage}
                   className="flex-row items-center gap-1.5 rounded-full border border-light-border px-3 py-2 dark:border-dark-border"
                 >
-                  <UniType size={16} className="text-light-text dark:text-dark-text" />
-                  <UniPlus size={14} className="text-light-text dark:text-dark-text" />
+                  <UniImageIcon size={16} className="text-light-text dark:text-dark-text" />
                   <Text className="text-sm text-light-text dark:text-dark-text">
-                    テキスト追加 ({texts.length}/{MAX_TEXTS})
+                    {image ? "画像を変更" : "画像を選択"}
                   </Text>
                 </Pressable>
-              ) : (
-                <View className="flex-row items-center gap-1.5 rounded-full border border-light-border px-3 py-2 opacity-40 dark:border-dark-border">
-                  <UniType size={16} className="text-light-text dark:text-dark-text" />
-                  <Text className="text-sm text-light-text dark:text-dark-text">
-                    テキスト ({texts.length}/{MAX_TEXTS})
-                  </Text>
-                </View>
-              )}
 
-              {stickers.length < MAX_STICKERS ? (
-                <Pressable
-                  onPress={openAddSticker}
-                  className="flex-row items-center gap-1.5 rounded-full border border-light-border px-3 py-2 dark:border-dark-border"
-                >
-                  <UniPlus size={14} className="text-light-text dark:text-dark-text" />
-                  <Text className="text-sm text-light-text dark:text-dark-text">
-                    ステッカー追加 ({stickers.length}/{MAX_STICKERS})
-                  </Text>
-                </Pressable>
-              ) : (
-                <View className="flex-row items-center gap-1.5 rounded-full border border-light-border px-3 py-2 opacity-40 dark:border-dark-border">
-                  <Text className="text-sm text-light-text dark:text-dark-text">
-                    ステッカー ({stickers.length}/{MAX_STICKERS})
-                  </Text>
-                </View>
-              )}
+                {texts.length < MAX_TEXTS ? (
+                  <Pressable
+                    onPress={openAddText}
+                    className="flex-row items-center gap-1.5 rounded-full border border-light-border px-3 py-2 dark:border-dark-border"
+                  >
+                    <UniType size={16} className="text-light-text dark:text-dark-text" />
+                    <UniPlus size={14} className="text-light-text dark:text-dark-text" />
+                    <Text className="text-sm text-light-text dark:text-dark-text">
+                      テキスト追加 ({texts.length}/{MAX_TEXTS})
+                    </Text>
+                  </Pressable>
+                ) : (
+                  <View className="flex-row items-center gap-1.5 rounded-full border border-light-border px-3 py-2 opacity-40 dark:border-dark-border">
+                    <UniType size={16} className="text-light-text dark:text-dark-text" />
+                    <Text className="text-sm text-light-text dark:text-dark-text">
+                      テキスト ({texts.length}/{MAX_TEXTS})
+                    </Text>
+                  </View>
+                )}
+
+                {stickers.length < MAX_STICKERS ? (
+                  <Pressable
+                    onPress={openAddSticker}
+                    className="flex-row items-center gap-1.5 rounded-full border border-light-border px-3 py-2 dark:border-dark-border"
+                  >
+                    <UniPlus size={14} className="text-light-text dark:text-dark-text" />
+                    <Text className="text-sm text-light-text dark:text-dark-text">
+                      ステッカー追加 ({stickers.length}/{MAX_STICKERS})
+                    </Text>
+                  </Pressable>
+                ) : (
+                  <View className="flex-row items-center gap-1.5 rounded-full border border-light-border px-3 py-2 opacity-40 dark:border-dark-border">
+                    <Text className="text-sm text-light-text dark:text-dark-text">
+                      ステッカー ({stickers.length}/{MAX_STICKERS})
+                    </Text>
+                  </View>
+                )}
+              </ScrollView>
             </View>
 
             {/* Text chip list */}
