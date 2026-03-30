@@ -274,6 +274,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.% ` },
+  "@react-native-community/slider@5.1.2": { id: "@react-native-community/slider@5.1.2", name: "@react-native-community/slider", content: `undefined` },
   "@react-native-firebase/app@23.8.8": { id: "@react-native-firebase/app@23.8.8", name: "@react-native-firebase/app", content: `Apache-2.0 License
 ------------------
 

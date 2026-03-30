@@ -1,4 +1,6 @@
 import { accountAtom } from "@/models/atoms/account";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import Slider from "@react-native-community/slider";
 import * as FileSystem from "expo-file-system";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
@@ -31,6 +33,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { withUniwind } from "uniwind";
 
@@ -73,7 +76,11 @@ type TextItem = {
 // ─── DraggableText ───────────────────────────────────────────────────────────
 
 type DraggableTextHandle = {
-  getPlacement: () => { posX: number; posY: number; scale: number };
+  getPlacement: () => { posX: number; posY: number; scale: number; rotation: number };
+  setScale: (v: number) => void;
+  setRotation: (v: number) => void;
+  getScale: () => number;
+  getRotation: () => number;
 };
 
 type DraggableTextProps = {
@@ -92,19 +99,19 @@ const DraggableText = forwardRef<DraggableTextHandle, DraggableTextProps>(
     const savedY = useSharedValue(0);
     const scale = useSharedValue(1);
     const savedScale = useSharedValue(1);
+    const rotation = useSharedValue(0);
 
     useImperativeHandle(ref, () => ({
       getPlacement: () => ({
-        posX:
-          containerWidth.value > 0
-            ? translateX.value / containerWidth.value + 0.5
-            : 0.5,
-        posY:
-          containerHeight.value > 0
-            ? translateY.value / containerHeight.value + 0.5
-            : 0.5,
+        posX: containerWidth.value > 0 ? translateX.value / containerWidth.value + 0.5 : 0.5,
+        posY: containerHeight.value > 0 ? translateY.value / containerHeight.value + 0.5 : 0.5,
         scale: scale.value,
+        rotation: rotation.value,
       }),
+      setScale: (v: number) => { scale.value = v; },
+      setRotation: (v: number) => { rotation.value = v; },
+      getScale: () => scale.value,
+      getRotation: () => rotation.value,
     }));
 
     const panGesture = Gesture.Pan()
@@ -122,10 +129,7 @@ const DraggableText = forwardRef<DraggableTextHandle, DraggableTextProps>(
         savedScale.value = scale.value;
       })
       .onUpdate((e) => {
-        scale.value = Math.min(
-          SCALE_MAX,
-          Math.max(SCALE_MIN, savedScale.value * e.scale),
-        );
+        scale.value = Math.min(SCALE_MAX, Math.max(SCALE_MIN, savedScale.value * e.scale));
       });
 
     const composed = Gesture.Simultaneous(
@@ -138,22 +142,14 @@ const DraggableText = forwardRef<DraggableTextHandle, DraggableTextProps>(
         { translateX: translateX.value },
         { translateY: translateY.value },
         { scale: scale.value },
+        { rotate: `${rotation.value}deg` },
       ],
     }));
 
     return (
-      // box-none: このViewはタッチを透過し、子要素だけが当たり判定を持つ
       <View
         pointerEvents="box-none"
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}
       >
         <GestureDetector gesture={composed}>
           <Animated.View style={animatedStyle}>
@@ -183,20 +179,19 @@ export default function FleetComposerScreen() {
   const theme = useColorScheme() ?? "light";
   const router = useRouter();
   const account = useAtomValue(accountAtom);
+  const insets = useSafeAreaInsets();
 
   const [image, setImage] = useState<SelectedImage | null>(null);
   const [backgroundColor, setBackgroundColor] = useState("#000000");
   const [texts, setTexts] = useState<TextItem[]>([]);
-  const [editingText, setEditingText] = useState<{
-    id: string | null;
-    body: string;
-  } | null>(null);
+  const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
+  const [sliderScale, setSliderScale] = useState(1);
+  const [sliderRotation, setSliderRotation] = useState(0);
+  const [editingText, setEditingText] = useState<{ id: string | null; body: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sheetContentHeight, setSheetContentHeight] = useState(0);
 
-  // refs to read final placements from each DraggableText on submit
   const textRefsMap = useRef<Map<string, DraggableTextHandle | null>>(new Map());
-
-  // refs for image gestures — passed to DraggableText for blocksExternalGesture
   const imgPanRef = useRef<GestureType>(undefined!);
   const imgPinchRef = useRef<GestureType>(undefined!);
 
@@ -229,10 +224,7 @@ export default function FleetComposerScreen() {
       imgSavedScale.value = imgScale.value;
     })
     .onUpdate((e) => {
-      imgScale.value = Math.min(
-        SCALE_MAX,
-        Math.max(SCALE_MIN, imgSavedScale.value * e.scale),
-      );
+      imgScale.value = Math.min(SCALE_MAX, Math.max(SCALE_MIN, imgSavedScale.value * e.scale));
     });
 
   const imgGesture = Gesture.Simultaneous(imgPan, imgPinch);
@@ -246,13 +238,10 @@ export default function FleetComposerScreen() {
   }));
 
   // ── handlers ────────────────────────────────────────────────────────────────
-  const handlePreviewLayout = useCallback(
-    (e: LayoutChangeEvent) => {
-      containerWidth.value = e.nativeEvent.layout.width;
-      containerHeight.value = e.nativeEvent.layout.height;
-    },
-    [containerWidth, containerHeight],
-  );
+  const handlePreviewLayout = useCallback((e: LayoutChangeEvent) => {
+    containerWidth.value = e.nativeEvent.layout.width;
+    containerHeight.value = e.nativeEvent.layout.height;
+  }, [containerWidth, containerHeight]);
 
   const handlePickImage = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -260,15 +249,9 @@ export default function FleetComposerScreen() {
       allowsMultipleSelection: false,
       quality: 1,
     });
-
     if (!result.canceled && result.assets.length > 0) {
       const asset = result.assets[0];
-      setImage({
-        uri: asset.uri,
-        width: asset.width,
-        height: asset.height,
-        fileSize: asset.fileSize ?? undefined,
-      });
+      setImage({ uri: asset.uri, width: asset.width, height: asset.height, fileSize: asset.fileSize ?? undefined });
       imgTranslateX.value = 0;
       imgTranslateY.value = 0;
       imgSavedX.value = 0;
@@ -277,6 +260,33 @@ export default function FleetComposerScreen() {
       imgSavedScale.value = 1;
     }
   }, [imgTranslateX, imgTranslateY, imgSavedX, imgSavedY, imgScale, imgSavedScale]);
+
+  const handleSelectText = useCallback((id: string) => {
+    setSelectedTextId(id);
+    const h = textRefsMap.current.get(id);
+    if (h) {
+      setSliderScale(h.getScale());
+      setSliderRotation(h.getRotation());
+    }
+  }, []);
+
+  const handleDeselectText = useCallback(() => {
+    setSelectedTextId(null);
+  }, []);
+
+  const handleSliderScale = useCallback((v: number) => {
+    setSliderScale(v);
+    if (selectedTextId) {
+      textRefsMap.current.get(selectedTextId)?.setScale(v);
+    }
+  }, [selectedTextId]);
+
+  const handleSliderRotation = useCallback((v: number) => {
+    setSliderRotation(v);
+    if (selectedTextId) {
+      textRefsMap.current.get(selectedTextId)?.setRotation(v);
+    }
+  }, [selectedTextId]);
 
   const openAddText = useCallback(() => {
     setEditingText({ id: null, body: "" });
@@ -293,14 +303,10 @@ export default function FleetComposerScreen() {
     }
     const body = editingText.body.trim();
     if (editingText.id === null) {
-      // add new
       const id = `${Date.now()}-${Math.random()}`;
       setTexts((prev) => [...prev, { id, body }]);
     } else {
-      // update existing
-      setTexts((prev) =>
-        prev.map((t) => (t.id === editingText.id ? { ...t, body } : t)),
-      );
+      setTexts((prev) => prev.map((t) => (t.id === editingText.id ? { ...t, body } : t)));
     }
     setEditingText(null);
   }, [editingText]);
@@ -308,41 +314,31 @@ export default function FleetComposerScreen() {
   const handleDeleteText = useCallback((id: string) => {
     setTexts((prev) => prev.filter((t) => t.id !== id));
     textRefsMap.current.delete(id);
-  }, []);
+    if (selectedTextId === id) setSelectedTextId(null);
+  }, [selectedTextId]);
 
   const handleSubmit = useCallback(async () => {
     if (!canPost || !account || !image) return;
-
     setIsSubmitting(true);
-
     try {
       const client = account.credential.client;
       const uploadUrls = await client.media.upload();
       const file = new FileSystem.File(image.uri);
       const ab = await file.arrayBuffer();
-
-      await fetch(uploadUrls.signedUrl, {
-        method: "PUT",
-        body: ab,
-        headers: { "Content-Type": "image/jpeg" },
-      });
+      await fetch(uploadUrls.signedUrl, { method: "PUT", body: ab, headers: { "Content-Type": "image/jpeg" } });
 
       const textPayload = texts.map((t) => {
-        const placement = textRefsMap.current.get(t.id)?.getPlacement() ?? {
-          posX: 0.5,
-          posY: 0.5,
-          scale: 1,
-        };
+        const p = textRefsMap.current.get(t.id)?.getPlacement() ?? { posX: 0.5, posY: 0.5, scale: 1, rotation: 0 };
         return {
           body: t.body,
           textStyle: "default" as const,
           textAlignment: "center" as const,
           color: "#ffffff",
           backgroundColor: "transparent",
-          posX: placement.posX,
-          posY: placement.posY,
-          scale: placement.scale,
-          rotation: 0,
+          posX: p.posX,
+          posY: p.posY,
+          scale: p.scale,
+          rotation: p.rotation,
         };
       });
 
@@ -354,14 +350,8 @@ export default function FleetComposerScreen() {
           height: image.height,
           bytes: image.fileSize ?? 0,
           placement: {
-            posX:
-              containerWidth.value > 0
-                ? imgTranslateX.value / containerWidth.value + 0.5
-                : 0.5,
-            posY:
-              containerHeight.value > 0
-                ? imgTranslateY.value / containerHeight.value + 0.5
-                : 0.5,
+            posX: containerWidth.value > 0 ? imgTranslateX.value / containerWidth.value + 0.5 : 0.5,
+            posY: containerHeight.value > 0 ? imgTranslateY.value / containerHeight.value + 0.5 : 0.5,
             scale: imgScale.value,
             rotation: 0,
           },
@@ -374,27 +364,16 @@ export default function FleetComposerScreen() {
       Toast.show({ type: "success", text1: "フリートを投稿しました" });
     } catch (error) {
       console.error("Failed to create fleet:", error);
-      Toast.show({
-        type: "error",
-        text1: "エラー",
-        text2: "フリートの投稿に失敗しました",
-      });
+      Toast.show({ type: "error", text1: "エラー", text2: "フリートの投稿に失敗しました" });
     } finally {
       setIsSubmitting(false);
     }
-  }, [
-    canPost,
-    account,
-    image,
-    backgroundColor,
-    texts,
-    containerWidth,
-    containerHeight,
-    imgTranslateX,
-    imgTranslateY,
-    imgScale,
-    router,
-  ]);
+  }, [canPost, account, image, backgroundColor, texts, containerWidth, containerHeight, imgTranslateX, imgTranslateY, imgScale, router]);
+
+  const selectedText = texts.find((t) => t.id === selectedTextId);
+  const sheetBg = theme === "dark" ? "#1C1C1E" : "#FFFFFF";
+  const handleColor = theme === "dark" ? "#48484A" : "#C7C7CC";
+  const trackColor = theme === "dark" ? "#555" : "#ccc";
 
   // ── render ──────────────────────────────────────────────────────────────────
   return (
@@ -405,9 +384,7 @@ export default function FleetComposerScreen() {
           headerBackTitle: "キャンセル",
           headerRight: () => (
             <Pressable onPress={handleSubmit} disabled={!canPost}>
-              <Text
-                className={`text-base font-semibold ${canPost ? "text-light-accent dark:text-dark-accent" : "text-light-text-subtle dark:text-dark-text-subtle"}`}
-              >
+              <Text className={`text-base font-semibold ${canPost ? "text-light-accent dark:text-dark-accent" : "text-light-text-subtle dark:text-dark-text-subtle"}`}>
                 投稿
               </Text>
             </Pressable>
@@ -421,59 +398,35 @@ export default function FleetComposerScreen() {
           </View>
         )}
 
-        {/* Preview */}
-        <View className="flex-1 items-center justify-center px-4">
+        {/* Preview — paddingBottom prevents sheet from covering content */}
+        <View
+          className="flex-1 items-center justify-center px-4"
+          style={{ paddingBottom: sheetContentHeight }}
+        >
           <View
             className="w-full overflow-hidden rounded-2xl"
             style={{ aspectRatio: 9 / 16, backgroundColor }}
             onLayout={handlePreviewLayout}
           >
-            {/* Image layer (bottom) */}
             {image ? (
               <GestureDetector gesture={imgGesture}>
                 <Animated.View
-                  style={[
-                    {
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    },
-                    imgAnimatedStyle,
-                  ]}
+                  style={[{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" }, imgAnimatedStyle]}
                 >
-                  <Image
-                    source={{ uri: image.uri }}
-                    style={{ width: "100%", height: "100%" }}
-                    contentFit="contain"
-                  />
+                  <Image source={{ uri: image.uri }} style={{ width: "100%", height: "100%" }} contentFit="contain" />
                 </Animated.View>
               </GestureDetector>
             ) : (
-              <Pressable
-                onPress={handlePickImage}
-                className="flex-1 items-center justify-center gap-2"
-              >
+              <Pressable onPress={handlePickImage} className="flex-1 items-center justify-center gap-2">
                 <UniImageIcon size={40} className="text-white/60" />
-                <Text
-                  className="text-sm"
-                  style={{ color: "rgba(255,255,255,0.6)" }}
-                >
-                  タップして画像を選択
-                </Text>
+                <Text className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>タップして画像を選択</Text>
               </Pressable>
             )}
 
-            {/* Text layers (top — gestures take priority over image) */}
             {texts.map((item) => (
               <DraggableText
                 key={item.id}
-                ref={(r) => {
-                  textRefsMap.current.set(item.id, r);
-                }}
+                ref={(r) => { textRefsMap.current.set(item.id, r); }}
                 body={item.body}
                 containerWidth={containerWidth}
                 containerHeight={containerHeight}
@@ -484,132 +437,129 @@ export default function FleetComposerScreen() {
           </View>
         </View>
 
-        {/* Toolbar */}
-        <View className="gap-3 border-t border-light-divider px-4 py-3 dark:border-dark-divider">
-          {/* Background color */}
-          <View className="flex-row items-center gap-2">
-            <Text className="w-16 text-xs text-light-text-muted dark:text-dark-text-muted">
-              背景色
-            </Text>
-            <View className="flex-1 flex-row gap-2">
-              {BG_COLORS.map((color) => (
-                <Pressable
-                  key={color}
-                  onPress={() => setBackgroundColor(color)}
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 14,
-                    backgroundColor: color,
-                    borderWidth: backgroundColor === color ? 2.5 : 1,
-                    borderColor:
-                      backgroundColor === color
-                        ? "#888"
-                        : "rgba(128,128,128,0.4)",
-                  }}
-                />
-              ))}
+        {/* Bottom Sheet — always visible toolbar */}
+        <BottomSheet
+          index={0}
+          enableDynamicSizing
+          enablePanDownToClose={false}
+          backgroundStyle={{ backgroundColor: sheetBg }}
+          handleIndicatorStyle={{ backgroundColor: handleColor }}
+        >
+          <BottomSheetView
+            onLayout={(e) => setSheetContentHeight(e.nativeEvent.layout.height + 24 /* handle height */)}
+            style={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 8, gap: 12 }}
+          >
+            {/* Background color */}
+            <View className="flex-row items-center gap-2">
+              <Text className="w-16 text-xs text-light-text-muted dark:text-dark-text-muted">背景色</Text>
+              <View className="flex-1 flex-row gap-2">
+                {BG_COLORS.map((color) => (
+                  <Pressable
+                    key={color}
+                    onPress={() => setBackgroundColor(color)}
+                    style={{
+                      width: 28, height: 28, borderRadius: 14, backgroundColor: color,
+                      borderWidth: backgroundColor === color ? 2.5 : 1,
+                      borderColor: backgroundColor === color ? "#888" : "rgba(128,128,128,0.4)",
+                    }}
+                  />
+                ))}
+              </View>
             </View>
-          </View>
 
-          {/* Actions */}
-          <View className="flex-row gap-3">
-            <Pressable
-              onPress={handlePickImage}
-              className="flex-row items-center gap-1.5 rounded-full border border-light-border px-3 py-2 dark:border-dark-border"
-            >
-              <UniImageIcon size={16} className="text-light-text dark:text-dark-text" />
-              <Text className="text-sm text-light-text dark:text-dark-text">
-                {image ? "画像を変更" : "画像を選択"}
-              </Text>
-            </Pressable>
-
-            {texts.length < MAX_TEXTS ? (
-              <Pressable
-                onPress={openAddText}
-                className="flex-row items-center gap-1.5 rounded-full border border-light-border px-3 py-2 dark:border-dark-border"
-              >
-                <UniType size={16} className="text-light-text dark:text-dark-text" />
-                <UniPlus size={14} className="text-light-text dark:text-dark-text" />
-                <Text className="text-sm text-light-text dark:text-dark-text">
-                  テキスト追加 ({texts.length}/{MAX_TEXTS})
-                </Text>
+            {/* Actions */}
+            <View className="flex-row gap-3">
+              <Pressable onPress={handlePickImage} className="flex-row items-center gap-1.5 rounded-full border border-light-border px-3 py-2 dark:border-dark-border">
+                <UniImageIcon size={16} className="text-light-text dark:text-dark-text" />
+                <Text className="text-sm text-light-text dark:text-dark-text">{image ? "画像を変更" : "画像を選択"}</Text>
               </Pressable>
-            ) : (
-              <View className="flex-row items-center gap-1.5 rounded-full border border-light-border px-3 py-2 opacity-40 dark:border-dark-border">
-                <UniType size={16} className="text-light-text dark:text-dark-text" />
-                <Text className="text-sm text-light-text dark:text-dark-text">
-                  テキスト ({texts.length}/{MAX_TEXTS})
+
+              {texts.length < MAX_TEXTS ? (
+                <Pressable onPress={openAddText} className="flex-row items-center gap-1.5 rounded-full border border-light-border px-3 py-2 dark:border-dark-border">
+                  <UniType size={16} className="text-light-text dark:text-dark-text" />
+                  <UniPlus size={14} className="text-light-text dark:text-dark-text" />
+                  <Text className="text-sm text-light-text dark:text-dark-text">テキスト追加 ({texts.length}/{MAX_TEXTS})</Text>
+                </Pressable>
+              ) : (
+                <View className="flex-row items-center gap-1.5 rounded-full border border-light-border px-3 py-2 opacity-40 dark:border-dark-border">
+                  <UniType size={16} className="text-light-text dark:text-dark-text" />
+                  <Text className="text-sm text-light-text dark:text-dark-text">テキスト ({texts.length}/{MAX_TEXTS})</Text>
+                </View>
+              )}
+            </View>
+
+            {/* Text chip list */}
+            {texts.length > 0 && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
+                {texts.map((item) => (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => selectedTextId === item.id ? handleDeselectText() : handleSelectText(item.id)}
+                    className={`flex-row items-center gap-1 rounded-full border px-2 py-1 ${selectedTextId === item.id ? "border-light-accent bg-light-toggle dark:border-dark-accent dark:bg-dark-toggle" : "border-light-border bg-light-surface dark:border-dark-border dark:bg-dark-surface"}`}
+                  >
+                    <Text className="max-w-28 text-xs text-light-text dark:text-dark-text" numberOfLines={1}>{item.body}</Text>
+                    <Pressable onPress={() => openEditText(item)} className="p-1" hitSlop={8}>
+                      <UniPencil size={12} className="text-light-text-muted dark:text-dark-text-muted" />
+                    </Pressable>
+                    <Pressable onPress={() => handleDeleteText(item.id)} className="p-1" hitSlop={8}>
+                      <UniTrash2 size={12} className="text-light-error dark:text-dark-error" />
+                    </Pressable>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            )}
+
+            {/* Sliders for selected text */}
+            {selectedText && (
+              <View className="gap-2 rounded-xl border border-light-border bg-light-surface px-3 py-2 dark:border-dark-border dark:bg-dark-surface">
+                <Text className="text-xs font-semibold text-light-text dark:text-dark-text" numberOfLines={1}>
+                  「{selectedText.body}」の調整
                 </Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className="w-12 text-xs text-light-text-muted dark:text-dark-text-muted">拡大縮小</Text>
+                  <Slider
+                    style={{ flex: 1 }}
+                    minimumValue={SCALE_MIN}
+                    maximumValue={SCALE_MAX}
+                    value={sliderScale}
+                    onValueChange={handleSliderScale}
+                    minimumTrackTintColor="#e879a0"
+                    maximumTrackTintColor={trackColor}
+                    thumbTintColor="#e879a0"
+                  />
+                  <Text className="w-10 text-right text-xs text-light-text-muted dark:text-dark-text-muted">
+                    {sliderScale.toFixed(2)}x
+                  </Text>
+                </View>
+                <View className="flex-row items-center gap-2">
+                  <Text className="w-12 text-xs text-light-text-muted dark:text-dark-text-muted">回転</Text>
+                  <Slider
+                    style={{ flex: 1 }}
+                    minimumValue={-180}
+                    maximumValue={180}
+                    value={sliderRotation}
+                    onValueChange={handleSliderRotation}
+                    minimumTrackTintColor="#e879a0"
+                    maximumTrackTintColor={trackColor}
+                    thumbTintColor="#e879a0"
+                  />
+                  <Text className="w-10 text-right text-xs text-light-text-muted dark:text-dark-text-muted">
+                    {Math.round(sliderRotation)}°
+                  </Text>
+                </View>
               </View>
             )}
-          </View>
 
-          {/* Text list */}
-          {texts.length > 0 && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              className="gap-2"
-              contentContainerClassName="gap-2"
-            >
-              {texts.map((item) => (
-                <View
-                  key={item.id}
-                  className="flex-row items-center gap-1 rounded-full border border-light-border bg-light-surface px-2 py-1 dark:border-dark-border dark:bg-dark-surface"
-                >
-                  <Text
-                    className="max-w-28 text-xs text-light-text dark:text-dark-text"
-                    numberOfLines={1}
-                  >
-                    {item.body}
-                  </Text>
-                  <Pressable
-                    onPress={() => openEditText(item)}
-                    className="p-1"
-                    hitSlop={8}
-                  >
-                    <UniPencil
-                      size={12}
-                      className="text-light-text-muted dark:text-dark-text-muted"
-                    />
-                  </Pressable>
-                  <Pressable
-                    onPress={() => handleDeleteText(item.id)}
-                    className="p-1"
-                    hitSlop={8}
-                  >
-                    <UniTrash2
-                      size={12}
-                      className="text-light-error dark:text-dark-error"
-                    />
-                  </Pressable>
-                </View>
-              ))}
-            </ScrollView>
-          )}
-
-          {!image && (
-            <Text className="text-xs text-light-error dark:text-dark-error">
-              ※ 画像は必須です
-            </Text>
-          )}
-        </View>
+            {!image && (
+              <Text className="text-xs text-light-error dark:text-dark-error">※ 画像は必須です</Text>
+            )}
+          </BottomSheetView>
+        </BottomSheet>
 
         {/* Text add / edit modal */}
-        <Modal
-          visible={editingText !== null}
-          animationType="slide"
-          transparent
-        >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            className="flex-1"
-          >
-            <Pressable
-              className="flex-1"
-              onPress={() => setEditingText(null)}
-            />
+        <Modal visible={editingText !== null} animationType="slide" transparent>
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
+            <Pressable className="flex-1" onPress={() => setEditingText(null)} />
             <View className="gap-3 rounded-t-2xl bg-light-surface-elevated p-4 dark:bg-dark-surface-elevated">
               <View className="flex-row items-center justify-between">
                 <Text className="text-base font-semibold text-light-text dark:text-dark-text">
@@ -621,9 +571,7 @@ export default function FleetComposerScreen() {
               </View>
               <TextInput
                 value={editingText?.body ?? ""}
-                onChangeText={(v) =>
-                  setEditingText((prev) => prev && { ...prev, body: v })
-                }
+                onChangeText={(v) => setEditingText((prev) => prev && { ...prev, body: v })}
                 placeholder="テキストを入力..."
                 placeholderTextColor={theme === "dark" ? "#666" : "#999"}
                 multiline
@@ -640,9 +588,7 @@ export default function FleetComposerScreen() {
                 disabled={!editingText?.body.trim()}
                 className={`items-center rounded-lg py-3 ${editingText?.body.trim() ? "bg-light-accent dark:bg-dark-accent" : "bg-light-surface-muted dark:bg-dark-surface-muted"}`}
               >
-                <Text
-                  className={`text-sm font-semibold ${editingText?.body.trim() ? "text-light-accent-foreground dark:text-dark-accent-foreground" : "text-light-text-subtle dark:text-dark-text-subtle"}`}
-                >
+                <Text className={`text-sm font-semibold ${editingText?.body.trim() ? "text-light-accent-foreground dark:text-dark-accent-foreground" : "text-light-text-subtle dark:text-dark-text-subtle"}`}>
                   {editingText?.id === null ? "追加" : "更新"}
                 </Text>
               </Pressable>

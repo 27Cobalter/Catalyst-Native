@@ -49,6 +49,9 @@ importers:
       '@react-native-community/push-notification-ios':
         specifier: ^1.12.0
         version: 1.12.0(react-native@0.83.2(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
+      '@react-native-community/slider':
+        specifier: ^5.1.2
+        version: 5.1.2
       '@react-native-firebase/app':
         specifier: ^23.8.8
         version: 23.8.8(@react-native-async-storage/async-storage@3.0.1(react-native@0.83.2(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(expo@55.0.6)(react-native@0.83.2(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
@@ -2140,6 +2143,9 @@ packages:
     peerDependencies:
       react: '>=16.6.3'
       react-native: '>=0.58.4'
+
+  '@react-native-community/slider@5.1.2':
+    resolution: {integrity: sha512-UV/MjCyCtSjS5BQDrrGIMmCXm309xEG6XbR0Dj65kzTraJSVDxSjQS2uBUXgX+5SZUOCzCxzv3OufOZBdtQY4w==}
 
   '@react-native-firebase/app@23.8.8':
     resolution: {integrity: sha512-9KeKToqsEPhaL+KlTYIdUB0bsXYAcKk0Zzpu608zf2qsXbyTscuYs1caLWxk8AdGtt3+j7ZsoOFt/8qnlo4Ugg==}
@@ -9571,6 +9577,8 @@ snapshots:
       invariant: 2.2.4
       react: 19.2.4
       react-native: 0.83.2(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4)
+
+  '@react-native-community/slider@5.1.2': {}
 
   '@react-native-firebase/app@23.8.8(@react-native-async-storage/async-storage@3.0.1(react-native@0.83.2(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(expo@55.0.6)(react-native@0.83.2(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)':
     dependencies:
