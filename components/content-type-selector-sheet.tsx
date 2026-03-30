@@ -42,6 +42,12 @@ const CONTENT_TYPES: ContentType[] = [
     description: "ハッシュタグに基づいて自動更新されるアルバムを作成します",
     icon: UniBookImage,
   },
+  {
+    key: "fleet",
+    title: "Fleet",
+    description: "24時間で消えるデコレーションできる写真を投稿します",
+    icon: UniPenLine,
+  }
 ];
 
 export type ContentTypeSelectorSheetRef = {

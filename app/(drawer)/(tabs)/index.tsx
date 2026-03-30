@@ -35,11 +35,17 @@ export default function HomeScreen() {
         case "post":
           router.push("/compose/post");
           break;
+
         case "album":
           router.push("/compose/album");
           break;
+
         case "smartAlbum":
           router.push("/compose/smart-album");
+          break;
+
+        case "fleet":
+          router.push("/compose/fleet");
           break;
       }
     },
