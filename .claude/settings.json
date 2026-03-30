@@ -17,7 +17,7 @@
       "Edit(models/**)",
       "Edit(package.json)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:npmjs.com)"
+      "WebFetch(domain:npmjs.com)",
     ],
     "deny": [
       "Read(./.env)",
@@ -33,11 +33,11 @@
       "Bash(npm publish)",
       "Bash(pnpm publish)",
       "Bash(yarn publish)",
-      "Edit(anrdoid/**)",
+      "Edit(android/**)",
       "Edit(ios/**)",
       "Edit(pnpm-lock.yaml)",
       "Edit(yarn.lock)",
-      "Edit(package-lock.json)"
-    ]
-  }
+      "Edit(package-lock.json)",
+    ],
+  },
 }
