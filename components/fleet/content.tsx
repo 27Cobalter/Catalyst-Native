@@ -88,9 +88,8 @@ export const FleetContent = ({ fleet, onMediaLoad }: Props) => {
     <View
       className="relative h-full w-full overflow-hidden bg-light-surface dark:bg-dark-surface items-center justify-center"
       style={{ backgroundColor: fleet.backgroundColor }}
-      onLayout={onLayout}
     >
-      <View style={{ aspectRatio: 9 / 16 }} className="w-full h-auto">
+      <View style={{ aspectRatio: 9 / 16 }} className="w-full h-auto" onLayout={onLayout}>
         {fleet.media ? (
           <View
             pointerEvents="none"
