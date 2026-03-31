@@ -10,7 +10,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { ArrowLeft, FileQuestion, Trophy } from "lucide-react-native";
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
@@ -32,8 +32,8 @@ const STATE_LABEL: Record<string, string> = {
 
 const fmt = (d: string) => abs(d);
 
-const InfoRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <View className="flex-row py-3 border-b border-light-divider dark:border-dark-divider">
+const InfoRow = ({ label, noBorder, children }: { label: string; noBorder?: boolean; children: React.ReactNode }) => (
+  <View className={cn("flex-row py-3", !noBorder && "border-b border-light-divider dark:border-dark-divider")}>
     <Text className="text-sm font-semibold text-light-text dark:text-dark-text w-28 shrink-0">{label}</Text>
     <View className="flex-1">{children}</View>
   </View>
@@ -49,6 +49,7 @@ type HeaderProps = {
 };
 
 const ContestHeader = ({ contest, topInset }: HeaderProps) => {
+  const { width: screenWidth } = useWindowDimensions();
   const terms = contest.terms
     ? contest.terms
         .split("\n")
@@ -56,25 +57,27 @@ const ContestHeader = ({ contest, topInset }: HeaderProps) => {
         .filter((t) => t.length > 0)
     : [];
 
-  const imageHeight = topInset + 176; // 176 = h-44
+  const imageHeight = screenWidth / 3; // 1500:500 = 3:1
 
   return (
     <View className="bg-light-background dark:bg-dark-background">
-      {/* ヘッダー画像（safe area を含む高さ） */}
-      {contest.headerUrl ? (
-        <UniImage
-          source={{ uri: getCdnUrl({ src: contest.headerUrl, variant: "header", width: 1500 }) }}
-          style={{ width: "100%", height: imageHeight }}
-          contentFit="cover"
-        />
-      ) : (
-        <View
-          className="w-full bg-neutral-200 dark:bg-neutral-800 items-center justify-center"
-          style={{ height: imageHeight }}
-        >
-          <UniTrophy size={56} className="text-neutral-400" />
-        </View>
-      )}
+      <View style={{ aspectRatio: 3 / 1 }}>
+        {/* ヘッダー画像（safe area を含む高さ） */}
+        {contest.headerUrl ? (
+          <UniImage
+            source={{ uri: getCdnUrl({ src: contest.headerUrl, variant: "header", width: 1500 }) }}
+            style={{ width: "100%", height: imageHeight }}
+            contentFit="cover"
+          />
+        ) : (
+          <View
+            className="w-full bg-neutral-200 dark:bg-neutral-800 items-center justify-center"
+            style={{ height: imageHeight }}
+          >
+            <UniTrophy size={56} className="text-neutral-400" />
+          </View>
+        )}
+      </View>
 
       {/* タイトル・状態 */}
       <View className="px-4 pt-4 pb-2 gap-2">
@@ -138,9 +141,7 @@ const ContestHeader = ({ contest, topInset }: HeaderProps) => {
         <InfoRow label="審査方法">
           <View className="gap-1">
             <InfoText value="審査員選択" />
-            {contest.voting?.isEnable && (
-              <InfoText value={`ユーザー投票あり（1人${contest.voting.maxVotes}票まで）`} />
-            )}
+            {contest.voting?.isEnable && <InfoText value={`ユーザー投票あり（1人${contest.voting.maxVotes}票まで）`} />}
           </View>
         </InfoRow>
 
@@ -164,9 +165,12 @@ const ContestHeader = ({ contest, topInset }: HeaderProps) => {
                     </Text>
                   )}
                   {rank.prize.length > 0 && (
-                    <Text className="text-xs text-light-text-muted dark:text-dark-text-muted mt-0.5">
-                      賞品: {rank.prize}
-                    </Text>
+                    <View>
+                      <Text className="text-xs text-light-text-muted dark:text-dark-text-muted mt-0.5">賞品:</Text>
+                      <Text className="text-xs text-light-text-muted dark:text-dark-text-muted mt-0.5">
+                        {rank.prize}
+                      </Text>
+                    </View>
                   )}
                 </View>
               ))}
@@ -174,17 +178,19 @@ const ContestHeader = ({ contest, topInset }: HeaderProps) => {
           )}
         </InfoRow>
 
-        {terms.length > 0 && (
-          <InfoRow label="応募規定">
-            <View className="gap-1">
-              {terms.map((term, i) => (
+        <InfoRow label="応募規定" noBorder>
+          <View className="gap-1">
+            {terms.length ? (
+              terms.map((term, i) => (
                 <Text key={`${i}-${term}`} className="text-sm text-light-text dark:text-dark-text">
                   · {term}
                 </Text>
-              ))}
-            </View>
-          </InfoRow>
-        )}
+              ))
+            ) : (
+              <Text className="text-sm text-light-text dark:text-dark-text">応募規定はありません</Text>
+            )}
+          </View>
+        </InfoRow>
 
         <View className="pb-4" />
       </View>
@@ -265,11 +271,7 @@ export default function ContestDetailPage() {
       {renderContent()}
 
       {/* 戻るボタンオーバーレイ */}
-      <View
-        className="absolute left-0 right-0 top-0"
-        style={{ paddingTop: insets.top }}
-        pointerEvents="box-none"
-      >
+      <View className="absolute left-0 right-0 top-0" style={{ paddingTop: insets.top }} pointerEvents="box-none">
         <TouchableOpacity className="p-2 m-2 self-start" onPress={() => router.back()}>
           <View className="w-9 h-9 rounded-full bg-black/75 items-center justify-center">
             <UniArrowLeft size={18} className="text-white" />
