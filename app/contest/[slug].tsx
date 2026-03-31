@@ -6,11 +6,12 @@ import { cn } from "@/lib/utils";
 import { clientAtom } from "@/models/atoms/credential";
 import type { CatalystContest } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
-import { FileQuestion, Trophy } from "lucide-react-native";
+import { ArrowLeft, FileQuestion, Trophy } from "lucide-react-native";
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
 import "@/global.css";
@@ -18,6 +19,7 @@ import "@/global.css";
 const UniImage = withUniwind(Image);
 const UniTrophy = withUniwind(Trophy);
 const UniFileQuestion = withUniwind(FileQuestion);
+const UniArrowLeft = withUniwind(ArrowLeft);
 
 const STATE_LABEL: Record<string, string> = {
   opening: "作品受付中",
@@ -43,9 +45,10 @@ const InfoText = ({ value }: { value: string }) => (
 
 type HeaderProps = {
   contest: CatalystContest;
+  topInset: number;
 };
 
-const ContestHeader = ({ contest }: HeaderProps) => {
+const ContestHeader = ({ contest, topInset }: HeaderProps) => {
   const terms = contest.terms
     ? contest.terms
         .split("\n")
@@ -53,17 +56,22 @@ const ContestHeader = ({ contest }: HeaderProps) => {
         .filter((t) => t.length > 0)
     : [];
 
+  const imageHeight = topInset + 176; // 176 = h-44
+
   return (
     <View className="bg-light-background dark:bg-dark-background">
-      {/* ヘッダー画像 */}
+      {/* ヘッダー画像（safe area を含む高さ） */}
       {contest.headerUrl ? (
         <UniImage
           source={{ uri: getCdnUrl({ src: contest.headerUrl, variant: "header", width: 1500 }) }}
-          className="w-full h-44"
+          style={{ width: "100%", height: imageHeight }}
           contentFit="cover"
         />
       ) : (
-        <View className="w-full h-44 bg-neutral-200 dark:bg-neutral-800 items-center justify-center">
+        <View
+          className="w-full bg-neutral-200 dark:bg-neutral-800 items-center justify-center"
+          style={{ height: imageHeight }}
+        >
           <UniTrophy size={56} className="text-neutral-400" />
         </View>
       )}
@@ -131,9 +139,7 @@ const ContestHeader = ({ contest }: HeaderProps) => {
           <View className="gap-1">
             <InfoText value="審査員選択" />
             {contest.voting?.isEnable && (
-              <InfoText
-                value={`ユーザー投票あり（1人${contest.voting.maxVotes}票まで）`}
-              />
+              <InfoText value={`ユーザー投票あり（1人${contest.voting.maxVotes}票まで）`} />
             )}
           </View>
         </InfoRow>
@@ -180,7 +186,6 @@ const ContestHeader = ({ contest }: HeaderProps) => {
           </InfoRow>
         )}
 
-        {/* 最後の行はボーダーなし */}
         <View className="pb-4" />
       </View>
 
@@ -195,6 +200,8 @@ const ContestHeader = ({ contest }: HeaderProps) => {
 export default function ContestDetailPage() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const client = useAtomValue(clientAtom);
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [contest, setContest] = useState<CatalystContest | null>(null);
   const [isNotFound, setIsNotFound] = useState(false);
 
@@ -222,37 +229,53 @@ export default function ContestDetailPage() {
     [client, slug],
   );
 
-  const Header = useCallback(() => {
-    if (!contest) return null;
-    return <ContestHeader contest={contest} />;
-  }, [contest]);
+  const Header = useCallback(
+    () => (contest ? <ContestHeader contest={contest} topInset={insets.top} /> : null),
+    [contest, insets.top],
+  );
 
-  if (isNotFound) {
-    return (
-      <View className="flex-1 bg-light-background dark:bg-dark-background items-center justify-center">
-        <UniFileQuestion size={64} className="text-light-gray dark:text-dark-gray" />
-        <Text className="font-semibold text-light-gray dark:text-dark-gray mt-2 text-center">
-          コンテストが見つかりません
-        </Text>
-        <Text className="text-sm text-light-gray dark:text-dark-gray mt-2 text-center">
-          削除されたか、アクセスできないコンテンツです
-        </Text>
-      </View>
-    );
-  }
+  const renderContent = () => {
+    if (isNotFound) {
+      return (
+        <View className="flex-1 items-center justify-center">
+          <UniFileQuestion size={64} className="text-light-gray dark:text-dark-gray" />
+          <Text className="font-semibold text-light-gray dark:text-dark-gray mt-2 text-center">
+            コンテストが見つかりません
+          </Text>
+          <Text className="text-sm text-light-gray dark:text-dark-gray mt-2 text-center">
+            削除されたか、アクセスできないコンテンツです
+          </Text>
+        </View>
+      );
+    }
 
-  if (!contest) {
-    return (
-      <View className="flex-1 bg-light-background dark:bg-dark-background items-center justify-center">
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
+    if (!contest) {
+      return (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" />
+        </View>
+      );
+    }
+
+    return <TimelineBase fetcher={fetcher} ListHeaderComponent={Header} />;
+  };
 
   return (
-    <TimelineBase
-      fetcher={fetcher}
-      ListHeaderComponent={Header}
-    />
+    <View className="flex-1 bg-light-background dark:bg-dark-background">
+      {renderContent()}
+
+      {/* 戻るボタンオーバーレイ */}
+      <View
+        className="absolute left-0 right-0 top-0"
+        style={{ paddingTop: insets.top }}
+        pointerEvents="box-none"
+      >
+        <TouchableOpacity className="p-2 m-2 self-start" onPress={() => router.back()}>
+          <View className="w-9 h-9 rounded-full bg-black/75 items-center justify-center">
+            <UniArrowLeft size={18} className="text-white" />
+          </View>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
