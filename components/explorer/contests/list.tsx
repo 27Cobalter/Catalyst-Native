@@ -1,0 +1,58 @@
+import { ContestCard } from "@/components/contest/card";
+import { useAsyncEffect } from "@/hooks/use-async-effect";
+import { clientAtom } from "@/models/atoms/credential";
+import type { CatalystContest } from "@natsuneko-laboratory/catalyst-sdk";
+import { FlashList, FlashListRef, ListRenderItem } from "@shopify/flash-list";
+import { useAtomValue } from "jotai";
+import { useCallback, useImperativeHandle, useRef, useState } from "react";
+import { ContestsEmptyResult } from "./empty-result";
+
+type TimelineHandle = {
+  scrollToTop: () => void;
+};
+
+type Props = {
+  states: string[];
+  query?: string;
+  ref?: React.Ref<TimelineHandle>;
+};
+
+export const ContestList = ({ states, query, ref }: Props) => {
+  const client = useAtomValue(clientAtom);
+  const [contests, setContests] = useState<CatalystContest[]>([]);
+  const list = useRef<FlashListRef<CatalystContest>>(null);
+
+  const onRender = useCallback<ListRenderItem<CatalystContest>>(({ item }) => {
+    return <ContestCard contest={item} />;
+  }, []);
+
+  useAsyncEffect(async () => {
+    if (client) {
+      const results = await Promise.all(
+        states.map((state) => client.catalyst.searchContest(state, query || undefined)),
+      );
+      setContests(results.flatMap((r) => r.contests));
+    }
+  }, [client, states, query]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      scrollToTop: () => {
+        list.current?.scrollToOffset({ offset: 0, animated: true });
+      },
+    }),
+    [],
+  );
+
+  return (
+    <FlashList
+      ref={list}
+      data={contests}
+      keyExtractor={(w) => w.slug}
+      renderItem={onRender}
+      ListEmptyComponent={ContestsEmptyResult}
+      ListEmptyComponentStyle={{ minHeight: "80%" }}
+    />
+  );
+};
