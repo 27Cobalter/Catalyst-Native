@@ -1,0 +1,4 @@
+minimumReleaseAge: 4320
+minimumReleaseAgeExclude:
+  - "@natsuneko-laboratory/catalyst-sdk"
+  - "@natsuneko-laboratory/react-native-twitter-text"
