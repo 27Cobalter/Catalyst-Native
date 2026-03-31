@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import type { CatalystContest } from "@natsuneko-laboratory/catalyst-sdk";
 import dayjs from "dayjs";
 import { Image } from "expo-image";
+import { useRouter } from "expo-router";
 import { Trophy } from "lucide-react-native";
 import { Pressable, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
@@ -44,8 +45,13 @@ const getPeriodText = (contest: CatalystContest): string => {
 };
 
 export const ContestCard = ({ contest }: Props) => {
+  const router = useRouter();
+
   return (
-    <Pressable className="mx-2 my-1.5 bg-light-surface dark:bg-dark-surface rounded-xl overflow-hidden">
+    <Pressable
+      className="mx-2 my-1.5 bg-light-surface dark:bg-dark-surface rounded-xl overflow-hidden"
+      onPress={() => router.push(`/contest/${contest.slug}` as never)}
+    >
       {/* ヘッダー画像 */}
       {contest.headerUrl ? (
         <UniImage
