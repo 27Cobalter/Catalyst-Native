@@ -4,13 +4,13 @@ import { abs } from "@/lib/dayjs";
 import { getCdnUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import { clientAtom } from "@/models/atoms/credential";
-import type { CatalystContest } from "@natsuneko-laboratory/catalyst-sdk";
+import type { CatalystContest, CatalystContestAward, CatalystStatus } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { ArrowLeft, FileQuestion, Trophy } from "lucide-react-native";
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
+import { ActivityIndicator, Pressable, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
@@ -43,12 +43,104 @@ const InfoText = ({ value }: { value: string }) => (
   <Text className="text-sm text-light-text dark:text-dark-text">{value}</Text>
 );
 
+type WinnerStatus = CatalystStatus & {
+  message?: string | null;
+  commentary?: string | null;
+};
+
+const AwardWinnerCard = ({ status }: { status: WinnerStatus }) => {
+  const router = useRouter();
+  const firstMedia = status.medias?.[0];
+  const user = status.user;
+
+  return (
+    <Pressable
+      className="flex-row gap-3 p-3 border-b border-light-divider dark:border-dark-divider"
+      onPress={() => router.push(`/status/${status.id}` as never)}
+    >
+      {/* サムネイル */}
+      <View className="w-20 h-20 rounded-lg overflow-hidden bg-neutral-200 dark:bg-neutral-800 shrink-0">
+        {firstMedia ? (
+          <UniImage
+            source={{ uri: getCdnUrl({ src: firstMedia.url, variant: "thumbnail", width: 256 }) }}
+            className="w-full h-full"
+            contentFit="cover"
+          />
+        ) : (
+          <View className="flex-1 items-center justify-center">
+            <UniTrophy size={24} className="text-neutral-400" />
+          </View>
+        )}
+      </View>
+
+      {/* テキスト情報 */}
+      <View className="flex-1 gap-1">
+        {/* 投稿者 */}
+        <View className="flex-row items-center gap-1.5">
+          {user?.profile?.iconUrl ? (
+            <UniImage
+              source={{ uri: getCdnUrl({ src: user.profile.iconUrl, variant: "icon", width: 64 }) }}
+              className="w-5 h-5 rounded-full"
+              contentFit="cover"
+            />
+          ) : (
+            <View className="w-5 h-5 rounded-full bg-neutral-300 dark:bg-neutral-700" />
+          )}
+          <Text className="text-xs font-semibold text-light-text dark:text-dark-text" numberOfLines={1}>
+            {user?.displayName}
+          </Text>
+          <Text className="text-xs text-light-text-muted dark:text-dark-text-muted" numberOfLines={1}>
+            @{user?.screenName}
+          </Text>
+        </View>
+
+        {/* 本文 */}
+        {status.body?.length > 0 && (
+          <Text className="text-sm text-light-text dark:text-dark-text" numberOfLines={3}>
+            {status.body}
+          </Text>
+        )}
+
+        {/* 主催者コメント */}
+        {status.commentary && (
+          <View className="mt-1 pl-2 border-l-2 border-light-accent dark:border-dark-accent">
+            <Text className="text-xs text-light-text-muted dark:text-dark-text-muted" numberOfLines={2}>
+              {status.commentary}
+            </Text>
+          </View>
+        )}
+      </View>
+    </Pressable>
+  );
+};
+
+const AwardSection = ({ award }: { award: CatalystContestAward }) => (
+  <View className="mb-2">
+    {/* 賞名ヘッダー */}
+    <View className="flex-row items-center gap-2 px-4 py-3 bg-light-surface dark:bg-dark-surface">
+      <UniTrophy size={16} className="text-light-accent dark:text-dark-accent" />
+      <Text className="flex-1 text-base font-bold text-light-text dark:text-dark-text">{award.name}</Text>
+      <Text className="text-xs text-light-text-muted dark:text-dark-text-muted">{award.winners.length}点</Text>
+    </View>
+
+    {/* 受賞作品リスト */}
+    {award.winners.length === 0 ? (
+      <View className="px-4 py-3">
+        <Text className="text-sm text-light-text-muted dark:text-dark-text-muted">受賞作品はありません</Text>
+      </View>
+    ) : (
+      (award.winners as unknown as WinnerStatus[]).map((winner) => <AwardWinnerCard key={winner.id} status={winner} />)
+    )}
+  </View>
+);
+
 type HeaderProps = {
   contest: CatalystContest;
   topInset: number;
+  awards: CatalystContestAward[];
 };
 
-const ContestHeader = ({ contest, topInset }: HeaderProps) => {
+const ContestHeader = ({ contest, topInset, awards }: HeaderProps) => {
   const { width: screenWidth } = useWindowDimensions();
   const terms = contest.terms
     ? contest.terms
@@ -62,7 +154,6 @@ const ContestHeader = ({ contest, topInset }: HeaderProps) => {
   return (
     <View className="bg-light-background dark:bg-dark-background">
       <View style={{ aspectRatio: 3 / 1 }}>
-        {/* ヘッダー画像（safe area を含む高さ） */}
         {contest.headerUrl ? (
           <UniImage
             source={{ uri: getCdnUrl({ src: contest.headerUrl, variant: "header", width: 1500 }) }}
@@ -195,6 +286,18 @@ const ContestHeader = ({ contest, topInset }: HeaderProps) => {
         <View className="pb-4" />
       </View>
 
+      {/* 受賞作品一覧（終了コンテストのみ） */}
+      {contest.state === "closed" && awards.length > 0 && (
+        <View className="mb-4">
+          <View className="px-4 pb-2 border-b border-light-divider dark:border-dark-divider mb-2">
+            <Text className="text-base font-bold text-light-text dark:text-dark-text">受賞作品一覧</Text>
+          </View>
+          {awards.map((award) => (
+            <AwardSection key={award.id} award={award} />
+          ))}
+        </View>
+      )}
+
       {/* タイムラインタイトル */}
       <View className="px-4 pb-2 border-b border-light-divider dark:border-dark-divider">
         <Text className="text-base font-bold text-light-text dark:text-dark-text">投稿作品一覧</Text>
@@ -209,6 +312,7 @@ export default function ContestDetailPage() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [contest, setContest] = useState<CatalystContest | null>(null);
+  const [awards, setAwards] = useState<CatalystContestAward[]>([]);
   const [isNotFound, setIsNotFound] = useState(false);
 
   useAsyncOneTimeEffect(async () => {
@@ -216,6 +320,11 @@ export default function ContestDetailPage() {
     try {
       const res = await client.catalyst.getContestBySlug(slug);
       setContest(res.contest);
+
+      if (res.contest.state === "closed") {
+        const awardsRes = await client.catalyst.getContestAwards(slug);
+        setAwards(awardsRes.awards);
+      }
     } catch {
       setIsNotFound(true);
     }
@@ -236,8 +345,8 @@ export default function ContestDetailPage() {
   );
 
   const Header = useCallback(
-    () => (contest ? <ContestHeader contest={contest} topInset={insets.top} /> : null),
-    [contest, insets.top],
+    () => (contest ? <ContestHeader contest={contest} topInset={insets.top} awards={awards} /> : null),
+    [contest, insets.top, awards],
   );
 
   const renderContent = () => {
