@@ -1,10 +1,12 @@
 import { accountAtom } from "@/models/atoms/account";
+import { ContestSelectorSheet, type ContestSelectorSheetRef } from "@/components/contest-selector-sheet";
+import type { CatalystContest } from "@natsuneko-laboratory/catalyst-sdk";
 import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { Stack, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
-import { Image as ImageIcon, X } from "lucide-react-native";
-import React, { useCallback, useMemo, useState } from "react";
+import { Image as ImageIcon, Trophy, X } from "lucide-react-native";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -20,6 +22,7 @@ import Toast from "react-native-toast-message";
 import { withUniwind } from "uniwind";
 
 const UniImageIcon = withUniwind(ImageIcon);
+const UniTrophy = withUniwind(Trophy);
 const UniX = withUniwind(X);
 
 const MAX_CHARACTER_COUNT = 1000;
@@ -53,6 +56,9 @@ export default function PostComposerScreen() {
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [isPrivateMetadata, setIsPrivateMetadata] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedContest, setSelectedContest] = useState<CatalystContest | null>(null);
+
+  const contestSelectorRef = useRef<ContestSelectorSheetRef>(null);
 
   const characterCount = text.length;
   const isOverLimit = characterCount > MAX_CHARACTER_COUNT;
@@ -120,11 +126,12 @@ export default function PostComposerScreen() {
         description: text.trim(),
         isNsfw,
         isSpoiler,
-        isSubmitToContest: false,
+        isSubmitToContest: selectedContest !== null,
         isHidingLikeAndViewCount: false,
         isPrivateMetadata,
         isAllowComments: true,
         privacy,
+        contestId: selectedContest?.slug,
         media: mediaList,
       });
 
@@ -136,12 +143,17 @@ export default function PostComposerScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [canPost, account, images, text, isNsfw, isSpoiler, isPrivateMetadata, privacy, router]);
+  }, [canPost, account, images, text, isNsfw, isSpoiler, isPrivateMetadata, privacy, selectedContest, router]);
+
+  const handleContestSelect = useCallback((contest: CatalystContest) => {
+    setSelectedContest(contest);
+  }, []);
 
   const selectedPrivacy = PRIVACY_OPTIONS.find((o) => o.value === privacy)!;
 
   return (
     <>
+      <ContestSelectorSheet ref={contestSelectorRef} onSelect={handleContestSelect} />
       <Stack.Screen
         options={{
           title: "新しい投稿",
@@ -248,6 +260,47 @@ export default function PostComposerScreen() {
                 ON にしてください。
               </Text>
             </View>
+          </View>
+
+          <View className="h-px bg-light-divider dark:bg-dark-divider" />
+
+          {/* コンテストセクション */}
+          <View className="gap-3">
+            <Text className="text-base font-semibold text-light-text dark:text-dark-text">コンテスト</Text>
+            {selectedContest ? (
+              <View className="flex-row items-center gap-3 rounded-lg border border-light-toggle-border dark:border-dark-toggle-border bg-light-toggle dark:bg-dark-toggle px-3 py-2.5">
+                <UniTrophy size={18} className="text-light-toggle-icon dark:text-dark-toggle-icon" />
+                <View className="flex-1">
+                  <Text className="text-sm font-semibold text-light-toggle-foreground dark:text-dark-toggle-foreground" numberOfLines={1}>
+                    {selectedContest.title}
+                  </Text>
+                  {selectedContest.theme ? (
+                    <Text className="text-xs text-light-toggle-foreground/70 dark:text-dark-toggle-foreground/70" numberOfLines={1}>
+                      テーマ: {selectedContest.theme}
+                    </Text>
+                  ) : null}
+                </View>
+                <Pressable
+                  onPress={() => setSelectedContest(null)}
+                  className="h-6 w-6 items-center justify-center rounded-full bg-black/10 dark:bg-white/10"
+                >
+                  <UniX size={14} className="text-light-toggle-foreground dark:text-dark-toggle-foreground" />
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable
+                onPress={() => contestSelectorRef.current?.open()}
+                className="flex-row items-center gap-2"
+              >
+                <UniTrophy size={18} className="text-light-tint dark:text-dark-tint" />
+                <Text className="text-sm text-light-tint dark:text-dark-tint">
+                  コンテストに参加する
+                </Text>
+              </Pressable>
+            )}
+            <Text className="text-xs text-light-text-muted dark:text-dark-text-muted">
+              コンテストに参加すると、この投稿がコンテストの応募作品として登録されます。
+            </Text>
           </View>
 
           <View className="h-px bg-light-divider dark:bg-dark-divider" />
