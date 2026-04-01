@@ -2,7 +2,7 @@ import { openUrlWithBrowser } from "@/models/browser-settings";
 import { extractEntities } from "@natsuneko-laboratory/react-native-twitter-text";
 import { Link } from "expo-router";
 import React, { Fragment, useCallback, useMemo } from "react";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 import { jsx, jsxs } from "react/jsx-runtime";
 import RehypeRaw from "rehype-raw";
 import RehypeReact from "rehype-react";
@@ -14,6 +14,15 @@ import { unified } from "unified";
 import { withUniwind } from "uniwind";
 
 const UniLink = withUniwind(Link);
+
+function wrapBareStrings(node: React.ReactNode): React.ReactNode {
+  if (typeof node === "string") {
+    const trimmed = node.trim();
+    return trimmed ? <Text className="text-sm text-light-text dark:text-dark-text">{trimmed}</Text> : null;
+  }
+
+  return node;
+}
 
 export const StatusText = React.memo(
   ({ status }: { status: string }) => {
@@ -109,8 +118,11 @@ export const StatusText = React.memo(
                 </Text>
               );
             },
-            br: () => <Text className="text-black dark:text-white">{"\n"}</Text>,
+            br: () => <View />,
             p: ({ children }: { children: React.ReactNode }) => (
+              <Text className="text-black dark:text-white">{children}</Text>
+            ),
+            span: ({ children }: { children: React.ReactNode }) => (
               <Text className="text-black dark:text-white">{children}</Text>
             ),
           },
@@ -119,7 +131,14 @@ export const StatusText = React.memo(
       return u.processSync(html).result;
     }, [status, handleLinkPress]);
 
-    return <Text className="text-black dark:text-white">{val}</Text>;
+    return (
+      <View>
+        {React.Children.map(
+          React.isValidElement(val) ? (val.props as { children?: React.ReactNode }).children : val,
+          wrapBareStrings,
+        )}
+      </View>
+    );
   },
   (a, b) => a.status === b.status,
 );
