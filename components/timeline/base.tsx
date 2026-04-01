@@ -22,6 +22,7 @@ const LoadingIndicator = () => {
 
 type Props = {
   fetcher: (since: string | null, until: string | null) => Promise<CatalystStatus[]>;
+  renderItem?: ListRenderItem<CatalystStatus>;
   ListHeaderComponent?: React.ComponentType;
   ListEmptyComponent?: React.ComponentType;
   ListEmptyComponentStyle?: StyleProp<ViewStyle>;
@@ -34,6 +35,7 @@ export type TimelineHandle = {
 
 export const TimelineBase = ({
   fetcher,
+  renderItem,
   ListHeaderComponent,
   ListEmptyComponent,
   ListEmptyComponentStyle,
@@ -45,9 +47,11 @@ export const TimelineBase = ({
   const listRef = useRef<FlashListRef<CatalystStatus>>(null);
   const sets = useRef<Set<string>>(new Set());
 
-  const onRender = useCallback<ListRenderItem<CatalystStatus>>(({ item }) => {
+  const defaultRender = useCallback<ListRenderItem<CatalystStatus>>(({ item }) => {
     return <TimelineStatus status={item} />;
   }, []);
+
+  const onRender = renderItem ?? defaultRender;
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);

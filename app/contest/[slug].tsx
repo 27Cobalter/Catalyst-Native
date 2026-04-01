@@ -1,4 +1,5 @@
 import { TimelineBase } from "@/components/timeline/base";
+import { TimelineStatus } from "@/components/timeline/status";
 import { Markdown } from "@/components/ui/markdown";
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { abs } from "@/lib/dayjs";
@@ -9,9 +10,9 @@ import type { CatalystContest, CatalystContestAward, CatalystStatus } from "@nat
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
-import { ArrowLeft, FileQuestion, Trophy } from "lucide-react-native";
+import { ArrowLeft, FileQuestion, ThumbsUp, Trophy } from "lucide-react-native";
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Pressable, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
+import { ActivityIndicator, Alert, Pressable, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
@@ -21,6 +22,7 @@ const UniImage = withUniwind(Image);
 const UniTrophy = withUniwind(Trophy);
 const UniFileQuestion = withUniwind(FileQuestion);
 const UniArrowLeft = withUniwind(ArrowLeft);
+const UniThumbsUp = withUniwind(ThumbsUp);
 
 const STATE_LABEL: Record<string, string> = {
   opening: "作品受付中",
@@ -302,6 +304,57 @@ const ContestHeader = ({ contest, awards }: HeaderProps) => {
   );
 };
 
+type VoteRights = {
+  remaining: number;
+  statuses: string[];
+};
+
+type VoteButtonProps = {
+  statusId: string;
+  voteRights: VoteRights;
+  onVote: (id: string) => void;
+  onUnvote: (id: string) => void;
+};
+
+const VoteButton = ({ statusId, voteRights, onVote, onUnvote }: VoteButtonProps) => {
+  const isVoted = voteRights.statuses.includes(statusId);
+  const canVote = isVoted || voteRights.remaining > 0;
+
+  return (
+    <View className="px-4 pb-2 flex-row justify-end">
+      <Pressable
+        onPress={() => (isVoted ? onUnvote(statusId) : onVote(statusId))}
+        disabled={!canVote}
+        className={cn(
+          "flex-row items-center gap-1.5 px-3 py-1.5 rounded-full border",
+          isVoted
+            ? "border-light-toggle-border dark:border-dark-toggle-border bg-light-toggle dark:bg-dark-toggle"
+            : canVote
+              ? "border-light-border dark:border-dark-border"
+              : "border-light-border dark:border-dark-border opacity-40",
+        )}
+      >
+        <UniThumbsUp
+          size={14}
+          className={cn(
+            isVoted ? "text-light-toggle-icon dark:text-dark-toggle-icon" : "text-light-icon dark:text-dark-icon",
+          )}
+        />
+        <Text
+          className={cn(
+            "text-xs font-medium",
+            isVoted
+              ? "text-light-toggle-foreground dark:text-dark-toggle-foreground"
+              : "text-light-text-muted dark:text-dark-text-muted",
+          )}
+        >
+          {isVoted ? "投票済み" : "投票する"}
+        </Text>
+      </Pressable>
+    </View>
+  );
+};
+
 export default function ContestDetailPage() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const client = useAtomValue(clientAtom);
@@ -310,6 +363,7 @@ export default function ContestDetailPage() {
   const [contest, setContest] = useState<CatalystContest | null>(null);
   const [awards, setAwards] = useState<CatalystContestAward[]>([]);
   const [isNotFound, setIsNotFound] = useState(false);
+  const [voteRights, setVoteRights] = useState<VoteRights | null>(null);
 
   useAsyncOneTimeEffect(async () => {
     if (!client || !slug) return;
@@ -321,10 +375,49 @@ export default function ContestDetailPage() {
         const awardsRes = await client.catalyst.getContestAwards(slug);
         setAwards(awardsRes.awards);
       }
+
+      if (res.contest.state === "voting" && res.contest.voting?.isEnable) {
+        const rights = await client.catalyst.getContestVotes(slug);
+        setVoteRights(rights);
+      }
     } catch {
       setIsNotFound(true);
     }
   });
+
+  const handleVote = useCallback(
+    async (statusId: string) => {
+      if (!client || !slug) return;
+      try {
+        await client.catalyst.addContestVoteToStatus(slug, statusId);
+        setVoteRights((prev) =>
+          prev
+            ? { remaining: prev.remaining - 1, statuses: [...prev.statuses, statusId] }
+            : prev,
+        );
+      } catch {
+        Alert.alert("エラー", "投票に失敗しました");
+      }
+    },
+    [client, slug],
+  );
+
+  const handleUnvote = useCallback(
+    async (statusId: string) => {
+      if (!client || !slug) return;
+      try {
+        await client.catalyst.removeContestVoteFromStatus(slug, statusId);
+        setVoteRights((prev) =>
+          prev
+            ? { remaining: prev.remaining + 1, statuses: prev.statuses.filter((id) => id !== statusId) }
+            : prev,
+        );
+      } catch {
+        Alert.alert("エラー", "投票の取り消しに失敗しました");
+      }
+    },
+    [client, slug],
+  );
 
   const fetcher = useCallback(
     async (since: string | null, until: string | null) => {
@@ -338,6 +431,23 @@ export default function ContestDetailPage() {
       );
     },
     [client, slug],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: CatalystStatus }) => (
+      <View>
+        <TimelineStatus status={item} />
+        {voteRights && (
+          <VoteButton
+            statusId={item.id}
+            voteRights={voteRights}
+            onVote={handleVote}
+            onUnvote={handleUnvote}
+          />
+        )}
+      </View>
+    ),
+    [voteRights, handleVote, handleUnvote],
   );
 
   const Header = useCallback(
@@ -368,7 +478,13 @@ export default function ContestDetailPage() {
       );
     }
 
-    return <TimelineBase fetcher={fetcher} ListHeaderComponent={Header} />;
+    return (
+      <TimelineBase
+        fetcher={fetcher}
+        renderItem={voteRights ? renderItem : undefined}
+        ListHeaderComponent={Header}
+      />
+    );
   };
 
   return (
