@@ -1,3 +1,4 @@
+import { Markdown } from "@/components/ui/markdown";
 import { TimelineBase } from "@/components/timeline/base";
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { abs } from "@/lib/dayjs";
@@ -136,11 +137,10 @@ const AwardSection = ({ award }: { award: CatalystContestAward }) => (
 
 type HeaderProps = {
   contest: CatalystContest;
-  topInset: number;
   awards: CatalystContestAward[];
 };
 
-const ContestHeader = ({ contest, topInset, awards }: HeaderProps) => {
+const ContestHeader = ({ contest, awards }: HeaderProps) => {
   const { width: screenWidth } = useWindowDimensions();
   const terms = contest.terms
     ? contest.terms
@@ -200,11 +200,7 @@ const ContestHeader = ({ contest, topInset, awards }: HeaderProps) => {
 
         <Text className="text-xl font-bold text-light-text dark:text-dark-text">{contest.title}</Text>
 
-        {contest.description?.length > 0 && (
-          <Text className="text-sm text-light-text-muted dark:text-dark-text-muted leading-relaxed">
-            {contest.description}
-          </Text>
-        )}
+        {contest.description?.length > 0 && <Markdown body={contest.description} />}
       </View>
 
       {/* 応募要項 */}
@@ -345,8 +341,8 @@ export default function ContestDetailPage() {
   );
 
   const Header = useCallback(
-    () => (contest ? <ContestHeader contest={contest} topInset={insets.top} awards={awards} /> : null),
-    [contest, insets.top, awards],
+    () => (contest ? <ContestHeader contest={contest} awards={awards} /> : null),
+    [contest, awards],
   );
 
   const renderContent = () => {

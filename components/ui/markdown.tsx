@@ -1,0 +1,108 @@
+import { openUrlWithBrowser } from "@/models/browser-settings";
+import React, { Fragment, useCallback, useMemo } from "react";
+import { Text, View } from "react-native";
+import { jsx, jsxs } from "react/jsx-runtime";
+import RehypeReact from "rehype-react";
+import RehypeSanitize from "rehype-sanitize";
+import RemarkBreaks from "remark-breaks";
+import RemarkParse from "remark-parse";
+import RemarkRehype from "remark-rehype";
+import { unified } from "unified";
+
+type Props = {
+  body: string;
+};
+
+export const Markdown = React.memo(({ body }: Props) => {
+  const handleLinkPress = useCallback((url: string) => {
+    openUrlWithBrowser(url);
+  }, []);
+
+  const content = useMemo(() => {
+    const u = unified()
+      .use(RemarkParse)
+      .use(RemarkBreaks)
+      .use(RemarkRehype)
+      .use(RehypeSanitize)
+      .use(RehypeReact, {
+        Fragment,
+        jsx,
+        jsxs,
+        components: {
+          h1: ({ children }: { children: React.ReactNode }) => (
+            <Text className="text-xl font-bold text-light-text dark:text-dark-text mt-4 mb-1">{children}</Text>
+          ),
+          h2: ({ children }: { children: React.ReactNode }) => (
+            <Text className="text-lg font-bold text-light-text dark:text-dark-text mt-3 mb-1">{children}</Text>
+          ),
+          h3: ({ children }: { children: React.ReactNode }) => (
+            <Text className="text-base font-bold text-light-text dark:text-dark-text mt-2 mb-1">{children}</Text>
+          ),
+          h4: ({ children }: { children: React.ReactNode }) => (
+            <Text className="text-sm font-bold text-light-text dark:text-dark-text mt-2 mb-0.5">{children}</Text>
+          ),
+          h5: ({ children }: { children: React.ReactNode }) => (
+            <Text className="text-sm font-semibold text-light-text dark:text-dark-text mt-2 mb-0.5">{children}</Text>
+          ),
+          h6: ({ children }: { children: React.ReactNode }) => (
+            <Text className="text-sm font-semibold text-light-text-muted dark:text-dark-text-muted mt-2 mb-0.5">{children}</Text>
+          ),
+          p: ({ children }: { children: React.ReactNode }) => (
+            <Text className="text-sm text-light-text dark:text-dark-text leading-relaxed mb-2">{children}</Text>
+          ),
+          strong: ({ children }: { children: React.ReactNode }) => (
+            <Text className="font-bold text-light-text dark:text-dark-text">{children}</Text>
+          ),
+          em: ({ children }: { children: React.ReactNode }) => (
+            <Text className="italic text-light-text dark:text-dark-text">{children}</Text>
+          ),
+          code: ({ children }: { children: React.ReactNode }) => (
+            <Text className="font-mono text-sm bg-light-surface-muted dark:bg-dark-surface-muted text-light-text dark:text-dark-text px-1 rounded">
+              {children}
+            </Text>
+          ),
+          pre: ({ children }: { children: React.ReactNode }) => (
+            <View className="bg-light-surface-muted dark:bg-dark-surface-muted rounded-lg p-3 my-2">
+              <Text className="font-mono text-xs text-light-text dark:text-dark-text">{children}</Text>
+            </View>
+          ),
+          blockquote: ({ children }: { children: React.ReactNode }) => (
+            <View className="border-l-4 border-light-border dark:border-dark-border pl-3 my-2">
+              <Text className="text-sm text-light-text-muted dark:text-dark-text-muted italic">{children}</Text>
+            </View>
+          ),
+          ul: ({ children }: { children: React.ReactNode }) => (
+            <View className="my-1 gap-0.5">{children}</View>
+          ),
+          ol: ({ children }: { children: React.ReactNode }) => (
+            <View className="my-1 gap-0.5">{children}</View>
+          ),
+          li: ({ children }: { children: React.ReactNode }) => (
+            <View className="flex-row items-start gap-1.5">
+              <Text className="text-sm text-light-text dark:text-dark-text mt-0.5">·</Text>
+              <Text className="flex-1 text-sm text-light-text dark:text-dark-text leading-relaxed">{children}</Text>
+            </View>
+          ),
+          hr: () => <View className="border-b border-light-divider dark:border-dark-divider my-3" />,
+          a: ({ href, children }: { href?: string; children: React.ReactNode }) => (
+            <Text
+              className="text-light-tint dark:text-dark-tint"
+              onPress={() => href && handleLinkPress(href)}
+            >
+              {children}
+            </Text>
+          ),
+          br: () => <Text>{"\n"}</Text>,
+          div: ({ children }: { children: React.ReactNode }) => (
+            <Text className="text-sm text-light-text dark:text-dark-text">{children}</Text>
+          ),
+        },
+      });
+
+    return u.processSync(body).result;
+  }, [body, handleLinkPress]);
+
+  return <View>{content}</View>;
+});
+
+Markdown.displayName = "Markdown";
