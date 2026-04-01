@@ -1,5 +1,5 @@
-import { Markdown } from "@/components/ui/markdown";
 import { TimelineBase } from "@/components/timeline/base";
+import { Markdown } from "@/components/ui/markdown";
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { abs } from "@/lib/dayjs";
 import { getCdnUrl } from "@/lib/media";
@@ -121,7 +121,7 @@ const AwardSection = ({ award }: { award: CatalystContestAward }) => (
     <View className="flex-row items-center gap-2 px-4 py-3 bg-light-surface dark:bg-dark-surface">
       <UniTrophy size={16} className="text-light-accent dark:text-dark-accent" />
       <Text className="flex-1 text-base font-bold text-light-text dark:text-dark-text">{award.name}</Text>
-      <Text className="text-xs text-light-text-muted dark:text-dark-text-muted">{award.winners.length}点</Text>
+      <Text className="text-xs text-light-text-muted dark:text-dark-text-muted">{award.winners.length}作品</Text>
     </View>
 
     {/* 受賞作品リスト */}
