@@ -1,6 +1,9 @@
 import { API_KEY } from "@/constants/apikey";
-import { CatalystTS } from "@natsuneko-laboratory/catalyst-sdk";
+import { ApiError, CatalystTS } from "@natsuneko-laboratory/catalyst-sdk";
+import type { RequestInterceptor } from "@natsuneko-laboratory/catalyst-sdk";
 import * as SecureStore from "expo-secure-store";
+import { getDefaultStore } from "jotai";
+import { accountAtom } from "@/models/atoms/account";
 
 export type Credential = {
   accessToken: string;
@@ -27,11 +30,50 @@ export const getCredential = async (): Promise<Credential> => {
   const refreshToken = await SecureStore.getItemAsync(KEYCHAIN_KEY_REFRESH_TOKEN);
 
   if (accessToken && refreshToken) {
-    const client = new CatalystTS({
+    let client: CatalystTS;
+    let isRefreshing = false;
+
+    const refreshInterceptor: RequestInterceptor = {
+      async adapt(request) {
+        return request;
+      },
+      async retry(_request, error) {
+        if (isRefreshing) return false;
+        if (!(error instanceof ApiError) || error.statusCode !== 401) return false;
+
+        isRefreshing = true;
+        try {
+          const newTokens = await client.refresh();
+          await saveCredential({ accessToken: newTokens.accessToken, refreshToken: newTokens.refreshToken });
+
+          const store = getDefaultStore();
+          const account = store.get(accountAtom);
+          if (account) {
+            store.set(accountAtom, {
+              ...account,
+              credential: {
+                ...account.credential,
+                accessToken: newTokens.accessToken,
+                refreshToken: newTokens.refreshToken,
+              },
+            });
+          }
+
+          return true;
+        } catch {
+          return false;
+        } finally {
+          isRefreshing = false;
+        }
+      },
+    };
+
+    client = new CatalystTS({
       accessToken,
       refreshToken,
       clientId: API_KEY.clientId,
       clientSecret: API_KEY.clientSecret,
+      interceptors: [refreshInterceptor],
     });
 
     return {
