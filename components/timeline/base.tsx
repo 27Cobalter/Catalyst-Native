@@ -46,6 +46,8 @@ export const TimelineBase = ({
   const [isLoading, setIsLoading] = useState(false);
   const listRef = useRef<FlashListRef<CatalystStatus>>(null);
   const sets = useRef<Set<string>>(new Set());
+  const hasMore = useRef(true);
+  const isLoadingRef = useRef(false);
 
   const defaultRender = useCallback<ListRenderItem<CatalystStatus>>(({ item }) => {
     return <TimelineStatus status={item} />;
@@ -55,6 +57,7 @@ export const TimelineBase = ({
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
+    hasMore.current = true;
 
     try {
       const since = items.length > 0 ? items[0].id : null;
@@ -69,7 +72,10 @@ export const TimelineBase = ({
   }, [items, fetcher]);
 
   const onLoadMore = useCallback(async () => {
+    if (!hasMore.current || isLoadingRef.current) return;
+
     setIsLoading(true);
+    isLoadingRef.current = true;
 
     try {
       const until = items.length > 0 ? items.slice(-1)[0].id : null;
@@ -77,9 +83,12 @@ export const TimelineBase = ({
 
       if (newItems.length > 0) {
         setItems((prevItems) => merge(prevItems, newItems, sets.current, (item) => item.id));
+      } else {
+        hasMore.current = false;
       }
     } finally {
       setIsLoading(false);
+      isLoadingRef.current = false;
     }
   }, [items, fetcher]);
 
