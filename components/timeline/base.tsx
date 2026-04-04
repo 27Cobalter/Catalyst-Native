@@ -64,7 +64,8 @@ export const TimelineBase = ({
       const newItems = await fetcher(since, null);
 
       if (newItems.length > 0) {
-        setItems((prevItems) => merge(newItems, prevItems, sets.current, (item) => item.id));
+        newItems.forEach((item) => sets.current.add(item.id));
+        setItems((prevItems) => [...newItems, ...prevItems]);
       }
     } finally {
       setIsRefreshing(false);
@@ -100,6 +101,7 @@ export const TimelineBase = ({
         const items = await fetcher(null, null);
 
         if (items) {
+          items.forEach((item) => sets.current.add(item.id));
           setItems(items);
         }
       }
