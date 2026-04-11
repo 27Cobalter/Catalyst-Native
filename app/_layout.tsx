@@ -115,6 +115,7 @@ export default Sentry.wrap(function RootLayout() {
             <Stack.Screen name="search/[query]" options={{ headerBackTitle: "戻る" }} />
             <Stack.Screen name="compose/post" options={{ title: "新しい投稿", headerBackTitle: "キャンセル" }} />
             <Stack.Screen name="compose/fleet" options={{ title: "Fleet", headerBackTitle: "キャンセル" }} />
+            <Stack.Screen name="report/[id]" options={{ title: "投稿を報告", headerBackTitle: "キャンセル" }} />
             <Stack.Screen
               name="profile/edit"
               options={{ title: "プロフィールを編集", headerBackTitle: "キャンセル" }}

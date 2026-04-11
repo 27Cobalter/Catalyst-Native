@@ -28,6 +28,7 @@ import {
   Clipboard as ClipboardIcon,
   ExternalLink,
   FileQuestion,
+  Flag,
   MoreHorizontal,
   Pencil,
   Send,
@@ -59,6 +60,7 @@ const UniBookmarkMinus = withUniwind(BookmarkMinus);
 const UniClipboardIcon = withUniwind(ClipboardIcon);
 const UniExternalLink = withUniwind(ExternalLink);
 const UniFileQuestion = withUniwind(FileQuestion);
+const UniFlag = withUniwind(Flag);
 const UniImage = withUniwind(Image);
 const UniMoreHorizontal = withUniwind(MoreHorizontal);
 const UniPencil = withUniwind(Pencil);
@@ -224,6 +226,9 @@ export default function StatusDetailsPage() {
             { text: "削除", style: "destructive", onPress: handleDeleteStatus },
           ]);
           break;
+        case "報告する":
+          router.push(`/report/${id}`);
+          break;
         case "ブラウザで開く":
           openUrlWithBrowser(statusUrl);
           break;
@@ -241,7 +246,7 @@ export default function StatusDetailsPage() {
           break;
       }
     },
-    [status, statusUrl, handleDeleteStatus],
+    [status, statusUrl, handleDeleteStatus, id, router],
   );
 
   const showMenu = useCallback(() => {
@@ -466,6 +471,17 @@ export default function StatusDetailsPage() {
                 label="削除する"
                 theme={theme}
                 onPress={() => handleMenuItemPress("削除する")}
+                destructive
+              />
+            </View>
+          )}
+          {!isMyself && isLoggedIn && (
+            <View className="px-2 my-2">
+              <MenuItem
+                icon={UniFlag}
+                label="報告する"
+                theme={theme}
+                onPress={() => handleMenuItemPress("報告する")}
                 destructive
               />
             </View>
