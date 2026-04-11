@@ -8,7 +8,7 @@ import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { MessageSquare } from "lucide-react-native";
 import React, { memo, useCallback, useImperativeHandle, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, View, useWindowDimensions } from "react-native";
+import { ActivityIndicator, Pressable, Text, useWindowDimensions, View } from "react-native";
 
 const COLUMNS = 3;
 const GAP = 1;
@@ -30,18 +30,30 @@ const ThumbnailCell = memo(({ status, cellSize }: { status: CatalystStatus; cell
     <Pressable onPress={() => router.push(`/status/${status.id}`)} style={{ width: cellSize, height: cellSize }}>
       {media ? (
         <View style={{ width: cellSize, height: cellSize }}>
-          <Image
-            source={{
-              uri: getCdnUrl({
-                src: media.url,
-                variant: "tiny",
-                width: cellSize,
-              }),
-            }}
-            style={{ width: cellSize, height: cellSize }}
-            contentFit="cover"
-            onLoadEnd={() => setIsImageLoading(false)}
-          />
+          <View className="relative">
+            <Image
+              source={{
+                uri: getCdnUrl({
+                  src: media.url,
+                  variant: "tiny",
+                  width: cellSize,
+                }),
+              }}
+              style={{ width: cellSize, height: cellSize }}
+              contentFit="cover"
+              onLoadEnd={() => setIsImageLoading(false)}
+            />
+            {status.medias.some((w) => w.metadata?.isSensitive) && (
+              <View className="absolute inset-0 flex items-center justify-center bg-light-skeleton dark:bg-dark-skeleton bg-opacity-50">
+                <Text className="text-light-text dark:text-dark-text">Sensitive Content</Text>
+              </View>
+            )}
+            {status.medias.some((w) => w.metadata?.isSpoiler) && (
+              <View className="absolute inset-0 flex items-center justify-center bg-light-skeleton dark:bg-dark-skeleton bg-opacity-50">
+                <Text className="text-light-text dark:text-dark-text">Spoiler Content</Text>
+              </View>
+            )}
+          </View>
           {isImageLoading && (
             <View className="absolute inset-0 items-center justify-center bg-light-skeleton dark:bg-dark-skeleton">
               <ActivityIndicator />
