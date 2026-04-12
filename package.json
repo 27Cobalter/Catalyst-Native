@@ -10,6 +10,7 @@
     "bin:license-list": "tsx ./bin/license-list.ts",
     "run:android": "pnpm run prebuilt && expo run:android",
     "run:ios": "pnpm run prebuilt && expo run:ios",
+    "build:production": "run-s -c build:*:production",
     "build:android:development": "pnpm run prebuilt && eas build --platform android --profile development --local",
     "build:android:preview": "pnpm run prebuilt && eas build --platform android --profile preview --local",
     "build:android:production": "pnpm run prebuilt && eas build --platform android --profile production --local",
