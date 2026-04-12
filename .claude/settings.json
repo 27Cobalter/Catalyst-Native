@@ -1,6 +1,8 @@
 {
   "permissions": {
     "allow": [
+      "Read(//Users/natsuneko/ghq/github.com/mika-f/teyvat/**)",
+      "Read(//Users/natsuneko/ghq/github.com/mika-f/CatalystSDK/**)",
       "Bash(pnpm exec vitest:*)",
       "Bash(pnpm run build:*)",
       "Bash(pnpm run typecheck)",
@@ -9,6 +11,10 @@
       "Bash(git diff *)",
       "Bash(git log *)",
       "Bash(gh pr view:*)",
+      "Bash(find /Users/natsuneko/ghq/github.com/mika-f/teyvat/** -type f)",
+      "Bash(find /Users/natsuneko/ghq/github.com/mika-f/CatalystSDK/** -type f)",
+      "Bash(ls -la /Users/natsuneko/ghq/github.com/mika-f/teyvat/**)",
+      "Bash(ls -la /Users/natsuneko/ghq/github.com/mika-f/CatalystSDK/**)",
       "Edit(app/**)",
       "Edit(components/**)",
       "Edit(constants/**)",
