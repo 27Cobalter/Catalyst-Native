@@ -82,7 +82,7 @@ export const ProfileHeader = ({ user, onLayout }: Props) => {
       </View>
 
       <View className="relative flex-row items-end px-4 -mt-8">
-        <View className="border-light-background dark:border-dark-background rounded-full border-4">
+        <View className="border-light-background bg-light-background dark:border-dark-background dark:bg-dark-background rounded-full border-4">
           {user ? (
             <UniImage
               source={{
