@@ -83,7 +83,12 @@ export const TimelineBase = ({
       const newItems = await fetcher(null, until);
 
       if (newItems.length > 0) {
-        setItems((prevItems) => merge(prevItems, newItems, sets.current, (item) => item.id));
+        const actuallyNew = newItems.filter((item) => !sets.current.has(item.id));
+        if (actuallyNew.length > 0) {
+          setItems((prevItems) => merge(prevItems, newItems, sets.current, (item) => item.id));
+        } else {
+          hasMore.current = false;
+        }
       } else {
         hasMore.current = false;
       }
