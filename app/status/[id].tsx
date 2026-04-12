@@ -8,35 +8,8 @@ import { abs, rel } from "@/lib/dayjs";
 import { getCdnUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import { accountAtom } from "@/models/atoms/account";
+import { clientAtom } from "@/models/atoms/credential";
 import { openUrlWithBrowser } from "@/models/browser-settings";
-
-type EpicleseWorld = {
-  name: string;
-  platformIdentifier: string;
-};
-
-type EpicleseUser = {
-  id: string;
-  screenName: string;
-  displayName: string;
-};
-
-type EpicleseAdditionalData2 = {
-  [key: string]: {
-    ref?: string;
-  };
-};
-
-type EpicleseMediaMetadata = {
-  platform: string | null;
-  world: EpicleseWorld | null;
-  users: EpicleseUser[];
-  reference: unknown[];
-  additionalData?: Record<string, string>;
-  additionalData2?: EpicleseAdditionalData2;
-};
-
-type EpicleseMetadata = Record<string, EpicleseMediaMetadata>;
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
@@ -82,6 +55,34 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
 import "@/global.css";
+
+type EpicleseWorld = {
+  name: string;
+  platformIdentifier: string;
+};
+
+type EpicleseUser = {
+  id: string;
+  screenName: string;
+  displayName: string;
+};
+
+type EpicleseAdditionalData2 = {
+  [key: string]: {
+    ref?: string;
+  };
+};
+
+type EpicleseMediaMetadata = {
+  platform: string | null;
+  world: EpicleseWorld | null;
+  users: EpicleseUser[];
+  reference: unknown[];
+  additionalData?: Record<string, string>;
+  additionalData2?: EpicleseAdditionalData2;
+};
+
+type EpicleseMetadata = Record<string, EpicleseMediaMetadata>;
 
 const UniBookmark = withUniwind(Bookmark);
 const UniBookmarkMinus = withUniwind(BookmarkMinus);
@@ -139,6 +140,7 @@ export default function StatusDetailsPage() {
   const router = useRouter();
   const theme = useColorScheme() ?? "light";
   const account = useAtomValue(accountAtom);
+  const client = useAtomValue(clientAtom);
 
   const [status, setStatus] = useState<CatalystStatus | null>(null);
   const [metadata, setMetadata] = useState<EpicleseMetadata>({});
@@ -159,29 +161,34 @@ export default function StatusDetailsPage() {
   const statusUrl = `https://catalyst.natsuneko.com/status/${id}`;
 
   useEffect(() => {
-    if (!account?.credential.client || !id) return;
+    if (!id) return;
 
     const fetchData = async () => {
       try {
-        const [statusRes, favRes, reactionsRes, metadataRes] = await Promise.all([
-          account.credential.client.catalyst.getStatus(id),
-          account.credential.client.catalyst.isFavorited(id).catch(() => false),
-          account.credential.client.catalyst.reactions(id).catch(() => ({ reactions: {} })),
+        const [statusRes, metadataRes] = await Promise.all([
+          client.catalyst.getStatus(id),
           fetch(`https://api.natsuneko.com/epiclese/v1/tag/by/status/${id}`)
             .then((r) => r.json() as Promise<EpicleseMetadata>)
             .catch(() => ({})),
         ]);
         setStatus(statusRes.status);
-        setIsFavorited(favRes as boolean);
-        setReactions(reactionsRes.reactions ?? {});
         setMetadata(metadataRes ?? {});
+
+        if (account?.credential.client) {
+          const [favRes, reactionsRes] = await Promise.all([
+            account.credential.client.catalyst.isFavorited(id).catch(() => false),
+            account.credential.client.catalyst.reactions(id).catch(() => ({ reactions: {} })),
+          ]);
+          setIsFavorited(favRes as boolean);
+          setReactions(reactionsRes.reactions ?? {});
+        }
       } catch {
         setIsNotFound(true);
       }
     };
 
     fetchData();
-  }, [id, account]);
+  }, [id, account, client]);
 
   const handleReact = useCallback(
     async (symbol: string) => {
@@ -410,13 +417,17 @@ export default function StatusDetailsPage() {
                       <Text className="text-sm font-semibold text-light-text dark:text-dark-text mb-2">メタデータ</Text>
                       {meta.platform && (
                         <View className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider">
-                          <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">撮影プラットフォーム</Text>
+                          <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">
+                            撮影プラットフォーム
+                          </Text>
                           <Text className="flex-1 text-sm text-light-text dark:text-dark-text">{meta.platform}</Text>
                         </View>
                       )}
                       {meta.world && (
                         <View className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider">
-                          <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">撮影ワールド</Text>
+                          <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">
+                            撮影ワールド
+                          </Text>
                           <Pressable
                             className="flex-1"
                             onPress={() =>
@@ -431,7 +442,9 @@ export default function StatusDetailsPage() {
                       )}
                       {meta.users.length > 0 && (
                         <View className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider">
-                          <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">写っているユーザー</Text>
+                          <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">
+                            写っているユーザー
+                          </Text>
                           <Text className="flex-1 text-sm text-light-text dark:text-dark-text">
                             {meta.users.map((u) => u.displayName).join(", ")}
                           </Text>
@@ -448,7 +461,10 @@ export default function StatusDetailsPage() {
                             : null;
 
                         return (
-                          <View key={key} className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider">
+                          <View
+                            key={key}
+                            className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider"
+                          >
                             <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">
                               {NAME_TABLE[key] ?? key}
                             </Text>
@@ -457,9 +473,7 @@ export default function StatusDetailsPage() {
                                 className="flex-1"
                                 onPress={() => router.push(`/search/${encodeURIComponent(searchQuery)}`)}
                               >
-                                <Text className="text-sm text-blue-500">
-                                  {key === "TakenAt" ? abs(value) : value}
-                                </Text>
+                                <Text className="text-sm text-blue-500">{key === "TakenAt" ? abs(value) : value}</Text>
                               </Pressable>
                             ) : (
                               <Text className="flex-1 text-sm text-light-text dark:text-dark-text">
@@ -569,20 +583,22 @@ export default function StatusDetailsPage() {
         }}
       >
         <BottomSheetView style={styles.menuContent}>
-          <View className="px-2 mb-2">
-            <MenuItem
-              icon={UniBookmark}
-              label="アルバムへ追加"
-              theme={theme}
-              onPress={() => handleMenuItemPress("アルバムへ追加")}
-            />
-            <MenuItem
-              icon={UniBookmarkMinus}
-              label="アルバムから削除"
-              theme={theme}
-              onPress={() => handleMenuItemPress("アルバムから削除")}
-            />
-          </View>
+          {isLoggedIn && (
+            <View className="px-2 mb-2">
+              <MenuItem
+                icon={UniBookmark}
+                label="アルバムへ追加"
+                theme={theme}
+                onPress={() => handleMenuItemPress("アルバムへ追加")}
+              />
+              <MenuItem
+                icon={UniBookmarkMinus}
+                label="アルバムから削除"
+                theme={theme}
+                onPress={() => handleMenuItemPress("アルバムから削除")}
+              />
+            </View>
+          )}
           {isMyself && (
             <View className="px-2 my-2">
               <MenuItem
