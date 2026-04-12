@@ -431,7 +431,7 @@ export default function StatusDetailsPage() {
                                   )
                                 }
                               >
-                                <Text className="text-sm text-light-tint dark:text-dark-tint">{meta.world.name}</Text>
+                                <Text className="text-sm text-blue-500">{meta.world.name}</Text>
                               </Pressable>
                             </View>
                           )}
@@ -463,7 +463,7 @@ export default function StatusDetailsPage() {
                                     className="flex-1"
                                     onPress={() => router.push(`/search/${encodeURIComponent(searchQuery)}`)}
                                   >
-                                    <Text className="text-sm text-light-tint dark:text-dark-tint">
+                                    <Text className="text-sm text-blue-500">
                                       {key === "TakenAt" ? abs(value) : value}
                                     </Text>
                                   </Pressable>
