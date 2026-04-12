@@ -423,7 +423,16 @@ export default function StatusDetailsPage() {
                           {meta.world && (
                             <View className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider">
                               <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">撮影ワールド</Text>
-                              <Text className="flex-1 text-sm text-light-text dark:text-dark-text">{meta.world.name}</Text>
+                              <Pressable
+                                className="flex-1"
+                                onPress={() =>
+                                  router.push(
+                                    `/search/${encodeURIComponent(`platform:${meta.platform} world:"${meta.world!.name}"`)}`,
+                                  )
+                                }
+                              >
+                                <Text className="text-sm text-light-tint dark:text-dark-tint">{meta.world.name}</Text>
+                              </Pressable>
                             </View>
                           )}
                           {meta.users.length > 0 && (
@@ -434,16 +443,38 @@ export default function StatusDetailsPage() {
                               </Text>
                             </View>
                           )}
-                          {Object.entries(meta.additionalData ?? {}).map(([key, value]) => (
-                            <View key={key} className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider">
-                              <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">
-                                {NAME_TABLE[key] ?? key}
-                              </Text>
-                              <Text className="flex-1 text-sm text-light-text dark:text-dark-text">
-                                {key === "TakenAt" ? abs(value) : value}
-                              </Text>
-                            </View>
-                          ))}
+                          {Object.entries(meta.additionalData ?? {}).map(([key, value]) => {
+                            const ref = meta.additionalData2?.[key]?.ref ?? "";
+                            const isWorldLink = key === "World" && ref.startsWith("wrld_");
+                            const isAuthorLink = ref.startsWith("usr_");
+                            const searchQuery = isWorldLink
+                              ? `platform:VRChat world:"${value}"`
+                              : isAuthorLink
+                                ? `takenBy:${ref}`
+                                : null;
+
+                            return (
+                              <View key={key} className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider">
+                                <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">
+                                  {NAME_TABLE[key] ?? key}
+                                </Text>
+                                {searchQuery ? (
+                                  <Pressable
+                                    className="flex-1"
+                                    onPress={() => router.push(`/search/${encodeURIComponent(searchQuery)}`)}
+                                  >
+                                    <Text className="text-sm text-light-tint dark:text-dark-tint">
+                                      {key === "TakenAt" ? abs(value) : value}
+                                    </Text>
+                                  </Pressable>
+                                ) : (
+                                  <Text className="flex-1 text-sm text-light-text dark:text-dark-text">
+                                    {key === "TakenAt" ? abs(value) : value}
+                                  </Text>
+                                )}
+                              </View>
+                            );
+                          })}
                         </View>
                       );
                     })}
