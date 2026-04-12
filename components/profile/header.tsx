@@ -135,7 +135,7 @@ export const ProfileHeader = ({ user, onLayout }: Props) => {
                       relationships?.isFollowing ? "text-light-text dark:text-dark-text" : "text-white dark:text-black",
                     )}
                   >
-                    {relationships === null ? "読み込み中" : relationships.isFollowed ? "フォロー中" : "フォロー"}
+                    {relationships === null ? "読み込み中" : relationships.isFollowing ? "フォロー中" : "フォロー"}
                   </Text>
                 </TouchableOpacity>
               </View>
