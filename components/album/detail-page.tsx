@@ -1,15 +1,15 @@
-import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
-import { merge } from "@/lib/merge";
 import { TimelineBase } from "@/components/timeline/base";
+import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { getCdnUrl } from "@/lib/media";
+import { merge } from "@/lib/merge";
 import { accountAtom } from "@/models/atoms/account";
 import type {
   CatalystAlbum,
   CatalystAlbumDisplayMode,
   CatalystSmartAlbum,
   CatalystStatus,
-  Media,
   EgeriaUser,
+  Media,
 } from "@natsuneko-laboratory/catalyst-sdk";
 import dayjs from "dayjs";
 import { Image } from "expo-image";
@@ -32,6 +32,7 @@ import {
 import { withUniwind } from "uniwind";
 
 import "@/global.css";
+import { clientAtom } from "@/models/atoms/credential";
 
 const UniCalendar = withUniwind(Calendar);
 const UniFileQuestion = withUniwind(FileQuestion);
@@ -104,21 +105,14 @@ const AlbumHeader = ({ info }: { info: AlbumInfo }) => {
             <View className="w-8 h-8 rounded-full bg-light-skeleton dark:bg-dark-skeleton" />
           )}
           <View className="ml-2">
-            <Text className="text-sm font-semibold text-light-text dark:text-dark-text">
-              {user.displayName}
-            </Text>
-            <Text className="text-xs text-light-text-muted dark:text-dark-text-muted">
-              @{user.screenName}
-            </Text>
+            <Text className="text-sm font-semibold text-light-text dark:text-dark-text">{user.displayName}</Text>
+            <Text className="text-xs text-light-text-muted dark:text-dark-text-muted">@{user.screenName}</Text>
           </View>
         </TouchableOpacity>
       )}
 
       {description.length > 0 && (
-        <Text
-          className="text-sm text-light-text-muted dark:text-dark-text-muted mb-1"
-          numberOfLines={3}
-        >
+        <Text className="text-sm text-light-text-muted dark:text-dark-text-muted mb-1" numberOfLines={3}>
           {description}
         </Text>
       )}
@@ -135,9 +129,7 @@ const AlbumHeader = ({ info }: { info: AlbumInfo }) => {
 
 const EmptyState = () => (
   <View className="items-center justify-center px-6 py-16">
-    <Text className="text-sm text-light-text-muted dark:text-dark-text-muted">
-      まだ投稿がありません
-    </Text>
+    <Text className="text-sm text-light-text-muted dark:text-dark-text-muted">まだ投稿がありません</Text>
   </View>
 );
 
@@ -216,10 +208,7 @@ const GalleryCell = memo(({ item, columnWidth }: { item: GalleryItem; columnWidt
 });
 GalleryCell.displayName = "GalleryCell";
 
-const distributeToColumns = (
-  items: GalleryItem[],
-  columnWidth: number,
-): [GalleryItem[], GalleryItem[]] => {
+const distributeToColumns = (items: GalleryItem[], columnWidth: number): [GalleryItem[], GalleryItem[]] => {
   const columns: [GalleryItem[], GalleryItem[]] = [[], []];
   const heights = [0, 0];
 
@@ -388,21 +377,21 @@ const AlbumVisualContent = ({
 
 export const AlbumDetailPage = ({ id, albumType }: Props) => {
   const account = useAtomValue(accountAtom);
+  const client = useAtomValue(clientAtom);
   const [albumInfo, setAlbumInfo] = useState<AlbumInfo | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
   const router = useRouter();
 
-  const canEdit =
-    albumInfo?.user && account?.user ? albumInfo.user.id === account.user.id : false;
+  const canEdit = albumInfo?.user && account?.user ? albumInfo.user.id === account.user.id : false;
 
   useEffect(() => {
-    if (!account?.credential.client || !id) return;
+    if (!id) return;
 
     const fetchInfo = async () => {
       try {
         if (albumType === "album") {
-          const album: CatalystAlbum = await account.credential.client.catalyst.getAlbum(id);
+          const album: CatalystAlbum = await client.catalyst.getAlbum(id);
           setAlbumInfo({
             title: album.name,
             description: album.description,
@@ -410,8 +399,7 @@ export const AlbumDetailPage = ({ id, albumType }: Props) => {
             mode: album.mode,
           });
         } else {
-          const album: CatalystSmartAlbum =
-            await account.credential.client.catalyst.getSmartAlbum(id);
+          const album: CatalystSmartAlbum = await client.catalyst.getSmartAlbum(id);
           setAlbumInfo({
             title: album.name,
             description: album.description,
@@ -429,24 +417,22 @@ export const AlbumDetailPage = ({ id, albumType }: Props) => {
     };
 
     fetchInfo();
-  }, [id, account, albumType]);
+  }, [client, id, albumType]);
 
   const fetcher = useCallback(
     async (since: string | null, until: string | null): Promise<CatalystStatus[]> => {
-      if (!account?.credential.client) return [];
-
       const opts: { since?: string; until?: string } = {};
       if (since) opts.since = since;
       if (until) opts.until = until;
 
       if (albumType === "album") {
-        const album = await account.credential.client.catalyst.getAlbum(id, opts);
+        const album = await client.catalyst.getAlbum(id, opts);
         return album.statuses;
       }
-      const album = await account.credential.client.catalyst.getSmartAlbum(id, opts);
+      const album = await client.catalyst.getSmartAlbum(id, opts);
       return album.statuses;
     },
-    [account, id, albumType],
+    [client, id, albumType],
   );
 
   if (isInitialLoading) {
@@ -508,7 +494,7 @@ export const AlbumDetailPage = ({ id, albumType }: Props) => {
         {albumInfo?.mode === "timeline" ? (
           <TimelineBase fetcher={fetcher} ListEmptyComponent={EmptyState} />
         ) : (
-          <AlbumVisualContent mode={albumInfo.mode} fetcher={fetcher} />
+          <AlbumVisualContent mode={albumInfo!.mode} fetcher={fetcher} />
         )}
       </View>
     </>
