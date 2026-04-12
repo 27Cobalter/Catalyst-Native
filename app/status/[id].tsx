@@ -9,6 +9,34 @@ import { getCdnUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import { accountAtom } from "@/models/atoms/account";
 import { openUrlWithBrowser } from "@/models/browser-settings";
+
+type EpicleseWorld = {
+  name: string;
+  platformIdentifier: string;
+};
+
+type EpicleseUser = {
+  id: string;
+  screenName: string;
+  displayName: string;
+};
+
+type EpicleseAdditionalData2 = {
+  [key: string]: {
+    ref?: string;
+  };
+};
+
+type EpicleseMediaMetadata = {
+  platform: string | null;
+  world: EpicleseWorld | null;
+  users: EpicleseUser[];
+  reference: unknown[];
+  additionalData?: Record<string, string>;
+  additionalData2?: EpicleseAdditionalData2;
+};
+
+type EpicleseMetadata = Record<string, EpicleseMediaMetadata>;
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
@@ -113,6 +141,7 @@ export default function StatusDetailsPage() {
   const account = useAtomValue(accountAtom);
 
   const [status, setStatus] = useState<CatalystStatus | null>(null);
+  const [metadata, setMetadata] = useState<EpicleseMetadata>({});
   const [reactions, setReactions] = useState<Record<string, CatalystReaction>>({});
   const [editingCaption, setEditingCaption] = useState("");
   const [isEditSheetVisible, setIsEditSheetVisible] = useState(false);
@@ -133,14 +162,18 @@ export default function StatusDetailsPage() {
 
     const fetchData = async () => {
       try {
-        const [statusRes, favRes, reactionsRes] = await Promise.all([
+        const [statusRes, favRes, reactionsRes, metadataRes] = await Promise.all([
           account.credential.client.catalyst.getStatus(id),
           account.credential.client.catalyst.isFavorited(id).catch(() => false),
           account.credential.client.catalyst.reactions(id).catch(() => ({ reactions: {} })),
+          fetch(`https://api.natsuneko.com/epiclese/v1/tag/by/status/${id}`)
+            .then((r) => r.json() as Promise<EpicleseMetadata>)
+            .catch(() => ({})),
         ]);
         setStatus(statusRes.status);
         setIsFavorited(favRes as boolean);
         setReactions(reactionsRes.reactions ?? {});
+        setMetadata(metadataRes ?? {});
       } catch {
         setIsNotFound(true);
       }
@@ -347,6 +380,75 @@ export default function StatusDetailsPage() {
                   onUnreact={handleUnreact}
                   onAddReaction={isLoggedIn ? () => emojiPickerRef.current?.open() : undefined}
                 />
+
+                {status.medias.some((m) => {
+                  const meta = metadata[m.id];
+                  return meta && (meta.platform || meta.world || meta.users.length > 0 || Object.keys(meta.additionalData ?? {}).length > 0);
+                }) && (
+                  <>
+                    <View className="border-t border-light-border dark:border-dark-border my-2" />
+                    <Text className="text-sm font-semibold text-light-text dark:text-dark-text mb-2">メタデータ</Text>
+                    {status.medias.map((m, idx) => {
+                      const meta = metadata[m.id];
+                      if (!meta) return null;
+                      const hasContent =
+                        meta.platform ||
+                        meta.world ||
+                        meta.users.length > 0 ||
+                        Object.keys(meta.additionalData ?? {}).length > 0;
+                      if (!hasContent) return null;
+
+                      const NAME_TABLE: Record<string, string> = {
+                        Author: "撮影者",
+                        LocationName: "撮影場所",
+                        TakenBy: "撮影者",
+                        TakenAt: "撮影日時",
+                        Platform: "撮影プラットフォーム",
+                        World: "撮影ワールド",
+                      };
+
+                      return (
+                        <View key={m.id}>
+                          {status.medias.length > 1 && (
+                            <Text className="text-xs text-light-text-muted dark:text-dark-text-muted mb-1">
+                              写真 {idx + 1}
+                            </Text>
+                          )}
+                          {meta.platform && (
+                            <View className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider">
+                              <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">撮影プラットフォーム</Text>
+                              <Text className="flex-1 text-sm text-light-text dark:text-dark-text">{meta.platform}</Text>
+                            </View>
+                          )}
+                          {meta.world && (
+                            <View className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider">
+                              <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">撮影ワールド</Text>
+                              <Text className="flex-1 text-sm text-light-text dark:text-dark-text">{meta.world.name}</Text>
+                            </View>
+                          )}
+                          {meta.users.length > 0 && (
+                            <View className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider">
+                              <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">写っているユーザー</Text>
+                              <Text className="flex-1 text-sm text-light-text dark:text-dark-text">
+                                {meta.users.map((u) => u.displayName).join(", ")}
+                              </Text>
+                            </View>
+                          )}
+                          {Object.entries(meta.additionalData ?? {}).map(([key, value]) => (
+                            <View key={key} className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider">
+                              <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">
+                                {NAME_TABLE[key] ?? key}
+                              </Text>
+                              <Text className="flex-1 text-sm text-light-text dark:text-dark-text">
+                                {key === "TakenAt" ? abs(value) : value}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      );
+                    })}
+                  </>
+                )}
               </>
             )}
           </View>
