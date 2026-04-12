@@ -2,9 +2,10 @@ import { useAsyncEffect } from "@/hooks/use-async-effect";
 import { getCdnUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import { accountAtom } from "@/models/atoms/account";
+import { clientAtom } from "@/models/atoms/credential";
+import { openUrlWithBrowser } from "@/models/browser-settings";
 import { CatalystRelationships, EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
-import { openUrlWithBrowser } from "@/models/browser-settings";
 import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { LinkIcon } from "lucide-react-native";
@@ -25,13 +26,14 @@ export const ProfileHeader = ({ user, onLayout }: Props) => {
   const { width: screenWidth } = useWindowDimensions();
   const bannerHeight = screenWidth / 3;
   const account = useAtomValue(accountAtom);
+  const client = useAtomValue(clientAtom);
   const router = useRouter();
   const isLoggedIn = !!account?.user;
   const isMyself = account?.user.screenName === user?.screenName;
   const [relationships, setRelationships] = useState<CatalystRelationships | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const handleFollow = useCallback(async () => {
-    if (account?.credential || !user || isLoading) {
+    if (!account || !user || isLoading) {
       return;
     }
 
@@ -39,18 +41,20 @@ export const ProfileHeader = ({ user, onLayout }: Props) => {
       setIsLoading(true);
 
       if (relationships?.isFollowing) {
-        await account?.credential.client.catalyst.remove({ userId: user.id });
+        await client.catalyst.remove({ userId: user.id });
       } else {
-        await account?.credential.client.catalyst.follow({ userId: user.id });
+        await client.catalyst.follow({ userId: user.id });
       }
+
+      const rel = await client.catalyst.relationships(user.screenName);
+      setRelationships(rel);
     } finally {
       setIsLoading(false);
     }
-  }, [account?.credential, isLoading, relationships?.isFollowing, user]);
+  }, [client, account, isLoading, relationships?.isFollowing, user]);
 
   useAsyncEffect(async () => {
     if (account && user) {
-      const client = account.credential.client;
       const rel = await client.catalyst.relationships(user.screenName);
 
       setRelationships(rel);
