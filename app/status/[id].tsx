@@ -142,6 +142,7 @@ export default function StatusDetailsPage() {
 
   const [status, setStatus] = useState<CatalystStatus | null>(null);
   const [metadata, setMetadata] = useState<EpicleseMetadata>({});
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [reactions, setReactions] = useState<Record<string, CatalystReaction>>({});
   const [editingCaption, setEditingCaption] = useState("");
   const [isEditSheetVisible, setIsEditSheetVisible] = useState(false);
@@ -356,7 +357,9 @@ export default function StatusDetailsPage() {
           </View>
 
           {/* Media */}
-          {status && status.medias.length > 0 && <MediaCarousel medias={status.medias} />}
+          {status && status.medias.length > 0 && (
+            <MediaCarousel medias={status.medias} onIndexChange={setCurrentMediaIndex} />
+          )}
 
           {/* Body and actions */}
           <View className="p-4">
@@ -381,105 +384,94 @@ export default function StatusDetailsPage() {
                   onAddReaction={isLoggedIn ? () => emojiPickerRef.current?.open() : undefined}
                 />
 
-                {status.medias.some((m) => {
-                  const meta = metadata[m.id];
-                  return meta && (meta.platform || meta.world || meta.users.length > 0 || Object.keys(meta.additionalData ?? {}).length > 0);
-                }) && (
-                  <>
-                    <View className="border-t border-light-border dark:border-dark-border my-2" />
-                    <Text className="text-sm font-semibold text-light-text dark:text-dark-text mb-2">メタデータ</Text>
-                    {status.medias.map((m, idx) => {
-                      const meta = metadata[m.id];
-                      if (!meta) return null;
-                      const hasContent =
-                        meta.platform ||
-                        meta.world ||
-                        meta.users.length > 0 ||
-                        Object.keys(meta.additionalData ?? {}).length > 0;
-                      if (!hasContent) return null;
+                {(() => {
+                  const currentMedia = status.medias[currentMediaIndex];
+                  const meta = currentMedia ? metadata[currentMedia.id] : undefined;
+                  if (!meta) return null;
+                  const hasContent =
+                    meta.platform ||
+                    meta.world ||
+                    meta.users.length > 0 ||
+                    Object.keys(meta.additionalData ?? {}).length > 0;
+                  if (!hasContent) return null;
 
-                      const NAME_TABLE: Record<string, string> = {
-                        Author: "撮影者",
-                        LocationName: "撮影場所",
-                        TakenBy: "撮影者",
-                        TakenAt: "撮影日時",
-                        Platform: "撮影プラットフォーム",
-                        World: "撮影ワールド",
-                      };
+                  const NAME_TABLE: Record<string, string> = {
+                    Author: "撮影者",
+                    LocationName: "撮影場所",
+                    TakenBy: "撮影者",
+                    TakenAt: "撮影日時",
+                    Platform: "撮影プラットフォーム",
+                    World: "撮影ワールド",
+                  };
 
-                      return (
-                        <View key={m.id}>
-                          {status.medias.length > 1 && (
-                            <Text className="text-xs text-light-text-muted dark:text-dark-text-muted mb-1">
-                              写真 {idx + 1}
+                  return (
+                    <>
+                      <View className="border-t border-light-border dark:border-dark-border my-2" />
+                      <Text className="text-sm font-semibold text-light-text dark:text-dark-text mb-2">メタデータ</Text>
+                      {meta.platform && (
+                        <View className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider">
+                          <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">撮影プラットフォーム</Text>
+                          <Text className="flex-1 text-sm text-light-text dark:text-dark-text">{meta.platform}</Text>
+                        </View>
+                      )}
+                      {meta.world && (
+                        <View className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider">
+                          <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">撮影ワールド</Text>
+                          <Pressable
+                            className="flex-1"
+                            onPress={() =>
+                              router.push(
+                                `/search/${encodeURIComponent(`platform:${meta.platform} world:"${meta.world!.name}"`)}`,
+                              )
+                            }
+                          >
+                            <Text className="text-sm text-blue-500">{meta.world.name}</Text>
+                          </Pressable>
+                        </View>
+                      )}
+                      {meta.users.length > 0 && (
+                        <View className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider">
+                          <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">写っているユーザー</Text>
+                          <Text className="flex-1 text-sm text-light-text dark:text-dark-text">
+                            {meta.users.map((u) => u.displayName).join(", ")}
+                          </Text>
+                        </View>
+                      )}
+                      {Object.entries(meta.additionalData ?? {}).map(([key, value]) => {
+                        const ref = meta.additionalData2?.[key]?.ref ?? "";
+                        const isWorldLink = key === "World" && ref.startsWith("wrld_");
+                        const isAuthorLink = ref.startsWith("usr_");
+                        const searchQuery = isWorldLink
+                          ? `platform:VRChat world:"${value}"`
+                          : isAuthorLink
+                            ? `takenBy:${ref}`
+                            : null;
+
+                        return (
+                          <View key={key} className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider">
+                            <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">
+                              {NAME_TABLE[key] ?? key}
                             </Text>
-                          )}
-                          {meta.platform && (
-                            <View className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider">
-                              <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">撮影プラットフォーム</Text>
-                              <Text className="flex-1 text-sm text-light-text dark:text-dark-text">{meta.platform}</Text>
-                            </View>
-                          )}
-                          {meta.world && (
-                            <View className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider">
-                              <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">撮影ワールド</Text>
+                            {searchQuery ? (
                               <Pressable
                                 className="flex-1"
-                                onPress={() =>
-                                  router.push(
-                                    `/search/${encodeURIComponent(`platform:${meta.platform} world:"${meta.world!.name}"`)}`,
-                                  )
-                                }
+                                onPress={() => router.push(`/search/${encodeURIComponent(searchQuery)}`)}
                               >
-                                <Text className="text-sm text-blue-500">{meta.world.name}</Text>
-                              </Pressable>
-                            </View>
-                          )}
-                          {meta.users.length > 0 && (
-                            <View className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider">
-                              <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">写っているユーザー</Text>
-                              <Text className="flex-1 text-sm text-light-text dark:text-dark-text">
-                                {meta.users.map((u) => u.displayName).join(", ")}
-                              </Text>
-                            </View>
-                          )}
-                          {Object.entries(meta.additionalData ?? {}).map(([key, value]) => {
-                            const ref = meta.additionalData2?.[key]?.ref ?? "";
-                            const isWorldLink = key === "World" && ref.startsWith("wrld_");
-                            const isAuthorLink = ref.startsWith("usr_");
-                            const searchQuery = isWorldLink
-                              ? `platform:VRChat world:"${value}"`
-                              : isAuthorLink
-                                ? `takenBy:${ref}`
-                                : null;
-
-                            return (
-                              <View key={key} className="flex-row py-1.5 border-b border-light-divider dark:border-dark-divider">
-                                <Text className="w-32 text-sm text-light-text-muted dark:text-dark-text-muted">
-                                  {NAME_TABLE[key] ?? key}
+                                <Text className="text-sm text-blue-500">
+                                  {key === "TakenAt" ? abs(value) : value}
                                 </Text>
-                                {searchQuery ? (
-                                  <Pressable
-                                    className="flex-1"
-                                    onPress={() => router.push(`/search/${encodeURIComponent(searchQuery)}`)}
-                                  >
-                                    <Text className="text-sm text-blue-500">
-                                      {key === "TakenAt" ? abs(value) : value}
-                                    </Text>
-                                  </Pressable>
-                                ) : (
-                                  <Text className="flex-1 text-sm text-light-text dark:text-dark-text">
-                                    {key === "TakenAt" ? abs(value) : value}
-                                  </Text>
-                                )}
-                              </View>
-                            );
-                          })}
-                        </View>
-                      );
-                    })}
-                  </>
-                )}
+                              </Pressable>
+                            ) : (
+                              <Text className="flex-1 text-sm text-light-text dark:text-dark-text">
+                                {key === "TakenAt" ? abs(value) : value}
+                              </Text>
+                            )}
+                          </View>
+                        );
+                      })}
+                    </>
+                  );
+                })()}
               </>
             )}
           </View>

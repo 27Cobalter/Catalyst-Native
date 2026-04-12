@@ -25,9 +25,10 @@ const SPRING_CONFIG = {
 
 type Props = {
   medias: Media[];
+  onIndexChange?: (index: number) => void;
 };
 
-export const MediaCarousel = memo(({ medias }: Props) => {
+export const MediaCarousel = memo(({ medias, onIndexChange }: Props) => {
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const MAX_HEIGHT = SCREEN_HEIGHT / 2;
   const [presentedMediaIndex, setPresentedMediaIndex] = useState<number | null>(null);
@@ -147,6 +148,7 @@ export const MediaCarousel = memo(({ medias }: Props) => {
       currentIndexSV.value = newIndex;
       translateX.value = withSpring(-newIndex * SCREEN_WIDTH, SPRING_CONFIG);
       runOnJS(setCurrentIndex)(newIndex);
+      if (onIndexChange) runOnJS(onIndexChange)(newIndex);
     });
 
   const tapGesture = Gesture.Tap().onEnd(() => {
@@ -164,6 +166,7 @@ export const MediaCarousel = memo(({ medias }: Props) => {
     currentIndexSV.value = index;
     translateX.value = withSpring(-index * SCREEN_WIDTH, SPRING_CONFIG);
     setCurrentIndex(index);
+    onIndexChange?.(index);
   };
 
   return (
