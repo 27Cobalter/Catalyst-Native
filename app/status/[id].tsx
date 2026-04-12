@@ -165,22 +165,20 @@ export default function StatusDetailsPage() {
 
     const fetchData = async () => {
       try {
-        const [statusRes, metadataRes] = await Promise.all([
+        const [statusRes, metadataRes, reactionsRes] = await Promise.all([
           client.catalyst.getStatus(id),
           fetch(`https://api.natsuneko.com/epiclese/v1/tag/by/status/${id}`)
             .then((r) => r.json() as Promise<EpicleseMetadata>)
             .catch(() => ({})),
+          client.catalyst.reactions(id).catch(() => ({ reactions: {} })),
         ]);
         setStatus(statusRes.status);
         setMetadata(metadataRes ?? {});
+        setReactions(reactionsRes.reactions ?? {});
 
         if (account?.credential.client) {
-          const [favRes, reactionsRes] = await Promise.all([
-            account.credential.client.catalyst.isFavorited(id).catch(() => false),
-            account.credential.client.catalyst.reactions(id).catch(() => ({ reactions: {} })),
-          ]);
+          const [favRes] = await Promise.all([account.credential.client.catalyst.isFavorited(id).catch(() => false)]);
           setIsFavorited(favRes as boolean);
-          setReactions(reactionsRes.reactions ?? {});
         }
       } catch {
         setIsNotFound(true);
