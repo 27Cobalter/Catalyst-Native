@@ -2,12 +2,16 @@
 """
 Android Adaptive Icon モノクロ変換スクリプト
 
-グレースケールの「暗さ」を Alpha 値にマッピングすることで、
+グレースケールの輝度を Alpha 値にマッピングすることで、
 Android Adaptive Icon の monochrome スタイルに対応した画像を生成します。
 
-変換ルール:
+変換ルール (デフォルト: 暗さ → Alpha):
   暗いピクセル → Alpha 高 (不透明)
   明るいピクセル → Alpha 低 (透明)
+
+変換ルール (--invert: 明るさ → Alpha):
+  明るいピクセル → Alpha 高 (不透明)
+  暗いピクセル → Alpha 低 (透明)
 
 使い方:
   python scripts/to-monochrome-alpha.py <input> <output> [options]
@@ -16,6 +20,7 @@ Android Adaptive Icon の monochrome スタイルに対応した画像を生成�
   python scripts/to-monochrome-alpha.py assets/icon.png assets/icon-monochrome.png
   python scripts/to-monochrome-alpha.py assets/icon.png out.png --color 255 255 255
   python scripts/to-monochrome-alpha.py assets/icon.png out.png --gamma 1.5
+  python scripts/to-monochrome-alpha.py assets/icon.png out.png --invert
 """
 
 import argparse
@@ -34,7 +39,7 @@ except ImportError:
     HAS_NUMPY = False
 
 
-def convert_numpy(img: "Image.Image", color: tuple[int, int, int], gamma: float) -> "Image.Image":
+def convert_numpy(img: "Image.Image", color: tuple[int, int, int], gamma: float, invert: bool) -> "Image.Image":
     rgba = np.array(img.convert("RGBA"), dtype=np.float32)
 
     # 輝度 (Rec.709) を計算
@@ -44,16 +49,16 @@ def convert_numpy(img: "Image.Image", color: tuple[int, int, int], gamma: float)
         + rgba[:, :, 2] * 0.0722
     )
 
-    # 暗さ = 1 - 輝度 (0〜255 で正規化済み)
-    darkness = 1.0 - (luminance / 255.0)
+    # invert=False: 暗さ = 1 - 輝度 / invert=True: 明るさ = 輝度
+    weight = luminance / 255.0 if invert else 1.0 - (luminance / 255.0)
 
     # ガンマ補正でコントラストを調整
     if gamma != 1.0:
-        darkness = np.power(np.clip(darkness, 0.0, 1.0), 1.0 / gamma)
+        weight = np.power(np.clip(weight, 0.0, 1.0), 1.0 / gamma)
 
     # 元の Alpha と合成
     orig_alpha = rgba[:, :, 3] / 255.0
-    final_alpha = np.clip(darkness * orig_alpha * 255.0, 0, 255).astype(np.uint8)
+    final_alpha = np.clip(weight * orig_alpha * 255.0, 0, 255).astype(np.uint8)
 
     # 出力画像を組み立て
     result = np.zeros((*img.size[::-1], 4), dtype=np.uint8)
@@ -65,7 +70,7 @@ def convert_numpy(img: "Image.Image", color: tuple[int, int, int], gamma: float)
     return Image.fromarray(result, "RGBA")
 
 
-def convert_pure_pil(img: "Image.Image", color: tuple[int, int, int], gamma: float) -> "Image.Image":
+def convert_pure_pil(img: "Image.Image", color: tuple[int, int, int], gamma: float, invert: bool) -> "Image.Image":
     rgba = img.convert("RGBA")
     grayscale = img.convert("L")
 
@@ -80,15 +85,15 @@ def convert_pure_pil(img: "Image.Image", color: tuple[int, int, int], gamma: flo
             r, g, b, a = rgba_pixels[x, y]
             gray = gray_pixels[x, y]
 
-            # 暗さ (0〜255)
-            darkness = 255 - gray
+            # invert=False: 暗さ / invert=True: 明るさ
+            weight = gray if invert else 255 - gray
 
             # ガンマ補正
             if gamma != 1.0:
-                darkness = int(((darkness / 255.0) ** (1.0 / gamma)) * 255)
+                weight = int(((weight / 255.0) ** (1.0 / gamma)) * 255)
 
             # 元 Alpha と合成
-            final_alpha = int(darkness * a / 255)
+            final_alpha = int(weight * a / 255)
             result_pixels[x, y] = (*color, final_alpha)
 
     return result
@@ -117,6 +122,11 @@ def main() -> None:
         metavar="GAMMA",
         help="ガンマ値でコントラストを調整 (>1.0 で暗部を強調, デフォルト: 1.0)",
     )
+    parser.add_argument(
+        "--invert",
+        action="store_true",
+        help="明るいピクセルを Alpha 高 (不透明) にする (デフォルトは暗いピクセルが不透明)",
+    )
 
     args = parser.parse_args()
 
@@ -140,12 +150,13 @@ def main() -> None:
     print(f"入力: {args.input} ({img.size[0]}x{img.size[1]})")
     print(f"前景色: rgb{color}")
     print(f"ガンマ: {args.gamma}")
+    print(f"モード: {'明るさ → Alpha (--invert)' if args.invert else '暗さ → Alpha'}")
     print(f"エンジン: {'numpy' if HAS_NUMPY else 'pure Pillow (numpy なし)'}")
 
     if HAS_NUMPY:
-        result = convert_numpy(img, color, args.gamma)
+        result = convert_numpy(img, color, args.gamma, args.invert)
     else:
-        result = convert_pure_pil(img, color, args.gamma)
+        result = convert_pure_pil(img, color, args.gamma, args.invert)
 
     if not args.output.lower().endswith(".png"):
         print("Warning: 出力ファイルは PNG 形式を推奨します (Alpha チャンネルを保持するため)", file=sys.stderr)
