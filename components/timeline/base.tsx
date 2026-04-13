@@ -64,8 +64,7 @@ export const TimelineBase = ({
       const newItems = await fetcher(since, null);
 
       if (newItems.length > 0) {
-        newItems.forEach((item) => sets.current.add(item.id));
-        setItems((prevItems) => [...newItems, ...prevItems]);
+        setItems((prevItems) => merge(newItems, prevItems, sets, (item) => item.id));
       }
     } finally {
       setIsRefreshing(false);
@@ -85,7 +84,7 @@ export const TimelineBase = ({
       if (newItems.length > 0) {
         const actuallyNew = newItems.filter((item) => !sets.current.has(item.id));
         if (actuallyNew.length > 0) {
-          setItems((prevItems) => merge(prevItems, newItems, sets.current, (item) => item.id));
+          setItems((prevItems) => merge(prevItems, newItems, sets, (item) => item.id));
         } else {
           hasMore.current = false;
         }
@@ -106,8 +105,7 @@ export const TimelineBase = ({
         const items = await fetcher(null, null);
 
         if (items) {
-          items.forEach((item) => sets.current.add(item.id));
-          setItems(items);
+          setItems((prev) => merge(prev, items, sets, (item) => item.id));
         }
       }
     } finally {

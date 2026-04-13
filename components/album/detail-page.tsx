@@ -257,7 +257,7 @@ const AlbumVisualContent = ({
     try {
       const result = await fetcher(null, null);
       sets.current = new Set();
-      setItems(merge([], result, sets.current, (item) => item.id));
+      setItems((prev) => merge(prev, result, sets, (item) => item.id));
     } finally {
       setIsLoading(false);
       isLoadingRef.current = false;
@@ -292,7 +292,7 @@ const AlbumVisualContent = ({
     try {
       const newItems = await fetcher(null, until);
       if (newItems.length > 0) {
-        setItems((prev) => merge(prev, newItems, sets.current, (item) => item.id));
+        setItems((prev) => merge(prev, newItems, sets, (item) => item.id));
       }
     } finally {
       setIsLoading(false);
