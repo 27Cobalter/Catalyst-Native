@@ -1,4 +1,5 @@
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
+import { merge } from "@/lib/merge";
 import { cn } from "@/lib/utils";
 import { clientAtom } from "@/models/atoms/credential";
 import { CatalystStatus } from "@natsuneko-laboratory/catalyst-sdk";
@@ -44,13 +45,14 @@ export const UserLikes = memo(
     const [isLoading, setIsLoading] = useState(false);
     const [hasFetched, setHasFetched] = useState(false);
     const isLoadingRef = useRef(false);
+    const sets = useRef(new Set<string>());
 
     const fetchItems = useCallback(async () => {
       setIsLoading(true);
       isLoadingRef.current = true;
       try {
         const result = await client.catalyst.favoriteTimeline({});
-        setItems(result.statuses);
+        setItems((prev) => merge(prev, result.statuses, sets, (item) => item.id));
       } finally {
         setIsLoading(false);
         isLoadingRef.current = false;
@@ -70,9 +72,9 @@ export const UserLikes = memo(
         const result = await client.catalyst.favoriteTimeline({
           until: lastItem.id,
         });
+
         if (result.statuses.length > 0) {
-          const filtered = result.statuses.filter((w) => !items.find((v) => v.id === w.id));
-          setItems((prev) => [...prev, ...filtered]);
+          setItems((prev) => merge(prev, result.statuses, sets, (item) => item.id));
         }
       } finally {
         setIsLoading(false);
