@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import React, { useRef, useState } from "react";
-import { Animated, FlatList, ListRenderItem, Pressable, Text, View, useWindowDimensions } from "react-native";
+import { Animated, FlatList, ListRenderItem, NativeScrollEvent, NativeSyntheticEvent, Pressable, Text, View, useWindowDimensions } from "react-native";
 
 export type Tab = {
   key: string;
@@ -19,6 +19,7 @@ export function Tabs({ tabs, renderScene, defaultIndex = 0, onTabChange }: Props
   const { width: screenWidth } = useWindowDimensions();
   const scrollX = useRef(new Animated.Value(defaultIndex * screenWidth)).current;
   const flatListRef = useRef<FlatList<Tab>>(null);
+  const isScrollingProgrammatically = useRef(false);
 
   const TAB_WIDTH = screenWidth / tabs.length;
   const INDICATOR_WIDTH = TAB_WIDTH;
@@ -30,6 +31,7 @@ export function Tabs({ tabs, renderScene, defaultIndex = 0, onTabChange }: Props
   });
 
   const handleTabPress = (index: number) => {
+    isScrollingProgrammatically.current = true;
     setActiveIndex(index);
     onTabChange?.(tabs[index]!, index);
     flatListRef.current?.scrollToIndex({ index, animated: true });
@@ -37,7 +39,25 @@ export function Tabs({ tabs, renderScene, defaultIndex = 0, onTabChange }: Props
       toValue: index * screenWidth,
       duration: 250,
       useNativeDriver: false,
-    }).start();
+    }).start(() => {
+      isScrollingProgrammatically.current = false;
+    });
+  };
+
+  const handleScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+    { useNativeDriver: false },
+  );
+
+  const handleMomentumScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (isScrollingProgrammatically.current) return;
+    const offsetX = e.nativeEvent.contentOffset.x;
+    const index = Math.round(offsetX / screenWidth);
+    const clampedIndex = Math.max(0, Math.min(index, tabs.length - 1));
+    if (clampedIndex !== activeIndex) {
+      setActiveIndex(clampedIndex);
+      onTabChange?.(tabs[clampedIndex]!, clampedIndex);
+    }
   };
 
   const renderItem: ListRenderItem<Tab> = ({ item }) => (
@@ -81,13 +101,15 @@ export function Tabs({ tabs, renderScene, defaultIndex = 0, onTabChange }: Props
         data={tabs}
         horizontal
         pagingEnabled
-        scrollEnabled={false}
+        scrollEnabled={true}
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item.key}
         renderItem={renderItem}
         getItemLayout={(_, index) => ({ length: screenWidth, offset: screenWidth * index, index })}
         initialScrollIndex={defaultIndex}
         scrollEventThrottle={16}
+        onScroll={handleScroll}
+        onMomentumScrollEnd={handleMomentumScrollEnd}
         className="flex-1"
       />
     </View>
