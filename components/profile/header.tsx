@@ -161,29 +161,6 @@ export const ProfileHeader = ({ user, onLayout }: Props) => {
 
         <StatusText status={user?.profile?.bio ?? ""} />
 
-        <View className="flex flex-row gap-x-4">
-          <TouchableOpacity
-            className="flex flex-row items-center gap-x-1"
-            onPress={() => router.push(`/user/${user?.screenName}/followings`)}
-            disabled={counts === null || counts.followings === null}
-          >
-            <Text className="font-bold text-sm text-light-text dark:text-dark-text">
-              {counts === null || counts.followings === null ? "-" : counts.followings}
-            </Text>
-            <SecondaryText className="text-sm">フォロー</SecondaryText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="flex flex-row items-center gap-x-1"
-            onPress={() => router.push(`/user/${user?.screenName}/followers`)}
-            disabled={counts === null || counts.followers === null}
-          >
-            <Text className="font-bold text-sm text-light-text dark:text-dark-text">
-              {counts === null || counts.followers === null ? "-" : counts.followers}
-            </Text>
-            <SecondaryText className="text-sm">フォロワー</SecondaryText>
-          </TouchableOpacity>
-        </View>
-
         <View className="flex flex-col gap-y-0.5">
           {user?.profile?.website ? (
             <TouchableOpacity
@@ -209,6 +186,29 @@ export const ProfileHeader = ({ user, onLayout }: Props) => {
                 </TouchableOpacity>
               );
             })}
+        </View>
+
+        <View className="flex flex-row gap-x-4">
+          <TouchableOpacity
+            className="flex flex-row items-center gap-x-1"
+            onPress={() => router.push(`/user/${user?.screenName}/followings`)}
+            disabled={counts === null || counts.followings === null}
+          >
+            <Text className="font-bold text-sm text-light-text dark:text-dark-text">
+              {counts === null || counts.followings === null ? "-" : counts.followings}
+            </Text>
+            <SecondaryText className="text-sm">フォロー</SecondaryText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="flex flex-row items-center gap-x-1"
+            onPress={() => router.push(`/user/${user?.screenName}/followers`)}
+            disabled={counts === null || counts.followers === null}
+          >
+            <Text className="font-bold text-sm text-light-text dark:text-dark-text">
+              {counts === null || counts.followers === null ? "-" : counts.followers}
+            </Text>
+            <SecondaryText className="text-sm">フォロワー</SecondaryText>
+          </TouchableOpacity>
         </View>
       </View>
     </View>
