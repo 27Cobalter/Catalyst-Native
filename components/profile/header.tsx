@@ -14,6 +14,11 @@ import { LayoutChangeEvent, Text, TouchableOpacity, View, useWindowDimensions } 
 import { withUniwind } from "uniwind";
 import { StatusText } from "../status/text";
 import { SecondaryText } from "../ui/secondary-text";
+
+type RelationshipCounts = {
+  followers: number | null;
+  followings: number | null;
+};
 const UniImage = withUniwind(Image);
 const UniLinkIcon = withUniwind(LinkIcon);
 
@@ -31,6 +36,7 @@ export const ProfileHeader = ({ user, onLayout }: Props) => {
   const isLoggedIn = !!account?.user;
   const isMyself = account?.user.screenName === user?.screenName;
   const [relationships, setRelationships] = useState<CatalystRelationships | null>(null);
+  const [counts, setCounts] = useState<RelationshipCounts | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const handleFollow = useCallback(async () => {
     if (!account || !user || isLoading) {
@@ -54,9 +60,15 @@ export const ProfileHeader = ({ user, onLayout }: Props) => {
   }, [client, account, isLoading, relationships?.isFollowing, user]);
 
   useAsyncEffect(async () => {
+    if (user) {
+      const c = await client.catalyst.relationshipCounts(user.screenName);
+      setCounts(c);
+    }
+  }, [user]);
+
+  useAsyncEffect(async () => {
     if (account && user) {
       const rel = await client.catalyst.relationships(user.screenName);
-
       setRelationships(rel);
     }
   }, [account, user]);
@@ -148,6 +160,29 @@ export const ProfileHeader = ({ user, onLayout }: Props) => {
         <SecondaryText className="text-sm">@{user?.screenName}</SecondaryText>
 
         <StatusText status={user?.profile?.bio ?? ""} />
+
+        <View className="flex flex-row gap-x-4">
+          <TouchableOpacity
+            className="flex flex-row items-center gap-x-1"
+            onPress={() => router.push(`/user/${user?.screenName}/followings`)}
+            disabled={counts === null || counts.followings === null}
+          >
+            <Text className="font-bold text-sm text-light-text dark:text-dark-text">
+              {counts === null || counts.followings === null ? "-" : counts.followings}
+            </Text>
+            <SecondaryText className="text-sm">フォロー</SecondaryText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="flex flex-row items-center gap-x-1"
+            onPress={() => router.push(`/user/${user?.screenName}/followers`)}
+            disabled={counts === null || counts.followers === null}
+          >
+            <Text className="font-bold text-sm text-light-text dark:text-dark-text">
+              {counts === null || counts.followers === null ? "-" : counts.followers}
+            </Text>
+            <SecondaryText className="text-sm">フォロワー</SecondaryText>
+          </TouchableOpacity>
+        </View>
 
         <View className="flex flex-col gap-y-0.5">
           {user?.profile?.website ? (
