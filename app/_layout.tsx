@@ -94,7 +94,15 @@ export default Sentry.wrap(function RootLayout() {
               options={{ title: "スマートアルバム編集", headerBackTitle: "戻る" }}
             />
             <Stack.Screen name="status/[id]" options={{ title: "投稿", headerBackTitle: "戻る" }} />
-            <Stack.Screen name="user/[screenName]" options={{ headerShown: false }} />
+            <Stack.Screen name="user/[screenName]/index" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="user/[screenName]/followers"
+              options={{ title: "フォロワー", headerBackTitle: "戻る" }}
+            />
+            <Stack.Screen
+              name="user/[screenName]/followings"
+              options={{ title: "フォロー", headerBackTitle: "戻る" }}
+            />
             <Stack.Screen name="authorize" options={{ headerShown: false }} />
             <Stack.Screen name="contest" options={{ title: "コンテスト", headerBackTitle: "戻る" }} />
             <Stack.Screen name="contest/[slug]" options={{ headerShown: false }} />
