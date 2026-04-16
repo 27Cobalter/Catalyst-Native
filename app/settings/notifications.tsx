@@ -171,7 +171,7 @@ export default function NotificationSettingsPage() {
               <Text className="text-sm text-light-tint dark:text-dark-tint">設定を開く</Text>
             </Pressable>
             <Text className="text-xs text-orange-500 mt-1">
-              通知がオフになっています。iOSの設定から通知を有効にしてください。
+              通知がオフになっています。端末の設定から通知を有効にしてください。
             </Text>
           </View>
         ) : footerText ? (
