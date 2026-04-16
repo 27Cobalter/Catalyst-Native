@@ -79,12 +79,12 @@ export default function PrivacySettingsPage() {
   );
 
   if (isLoading) {
-    return <View className="flex-1 bg-light-background dark:bg-dark-background" />;
+    return <View className="flex-1 bg-light-surface dark:bg-dark-background" />;
   }
 
   if (!account) {
     return (
-      <View className="flex-1 bg-light-background dark:bg-dark-background">
+      <View className="flex-1 bg-light-surface dark:bg-dark-background">
         <Text className="mt-8 mx-4 text-sm text-light-gray dark:text-dark-gray text-center">
           ログインするとプライバシー設定を変更できます。
         </Text>
@@ -93,10 +93,10 @@ export default function PrivacySettingsPage() {
   }
 
   return (
-    <View className="flex-1 bg-light-background dark:bg-dark-background">
+    <View className="flex-1 bg-light-surface dark:bg-dark-background">
       <View className="mt-4 mx-4">
         <Text className="px-4 pb-1.5 text-xs text-light-gray dark:text-dark-gray uppercase">フォロー・フォロワー</Text>
-        <View className="rounded-xl bg-white dark:bg-neutral-800 overflow-hidden">
+        <View className="rounded-xl bg-light-background dark:bg-dark-surface overflow-hidden">
           <View className="px-4 py-3 flex-row items-center justify-between border-b border-light-border dark:border-dark-border">
             <View className="flex-1 mr-3">
               <Text className="text-base text-light-text dark:text-dark-text">フォロー中の一覧を公開</Text>

@@ -4,6 +4,7 @@ import { Accessibility, Bell, ChevronRight, FileText, Lock, Palette, UserCircle 
 import { Pressable, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
 
+
 type SettingsSection = {
   route: string;
   title: string;
@@ -23,8 +24,8 @@ const UniChevronRight = withUniwind(ChevronRight);
 
 export default function SettingsPage() {
   return (
-    <View className="flex-1 bg-light-background dark:bg-dark-background">
-      <View className="mt-4 mx-4 rounded-xl bg-white dark:bg-neutral-800 overflow-hidden">
+    <View className="flex-1">
+      <View className="mt-4 mx-4 rounded-xl bg-light-surface dark:bg-dark-surface overflow-hidden">
         {sections.map((section, index) => {
           const Icon = withUniwind(section.icon);
 

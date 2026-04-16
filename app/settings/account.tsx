@@ -76,8 +76,8 @@ export default function AccountSettingsPage() {
 
   if (!isLoggedIn) {
     return (
-      <View className="flex-1 bg-light-background dark:bg-dark-background">
-        <View className="mt-4 mx-4 rounded-xl bg-white dark:bg-neutral-800 overflow-hidden">
+      <View className="flex-1">
+        <View className="mt-4 mx-4 rounded-xl bg-light-surface dark:bg-dark-surface overflow-hidden">
           <Pressable className="px-4 py-3.5" onPress={handleLogin}>
             <Text className="text-base text-light-tint dark:text-dark-tint">ログイン</Text>
           </Pressable>
@@ -87,10 +87,10 @@ export default function AccountSettingsPage() {
   }
 
   return (
-    <View className="flex-1 bg-light-background dark:bg-dark-background">
+    <View className="flex-1">
       <View className="mt-4 mx-4">
         <Text className="px-4 pb-1.5 text-xs text-light-gray dark:text-dark-gray uppercase">ユーザー名</Text>
-        <View className="rounded-xl bg-white dark:bg-neutral-800 overflow-hidden">
+        <View className="rounded-xl bg-light-background dark:bg-dark-surface overflow-hidden">
           <View className="px-4 py-3 flex-row items-center border-b border-light-border dark:border-dark-border">
             <Text className="text-base text-light-gray dark:text-dark-gray mr-2">@</Text>
             <TextInput

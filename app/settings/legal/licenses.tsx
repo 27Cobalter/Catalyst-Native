@@ -26,7 +26,7 @@ export default function LegalLicensesPage() {
     <FlashList
       data={LICENSES}
       keyExtractor={(w) => w.id}
-      className="mt-4 mx-4 rounded-xl bg-white dark:bg-neutral-800 overflow-hidden "
+      className="mt-4 mx-4 rounded-xl bg-light-background dark:bg-dark-surface overflow-hidden "
       style={{ paddingBottom: insets.bottom }}
       renderItem={({ item, index }) => {
         return (

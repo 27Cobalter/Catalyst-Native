@@ -33,16 +33,16 @@ export default function DisplaySettingsPage() {
   }, []);
 
   if (isLoading) {
-    return <View className="flex-1 bg-light-background dark:bg-dark-background" />;
+    return <View className="flex-1" />;
   }
 
   return (
-    <View className="flex-1 bg-light-background dark:bg-dark-background">
+    <View className="flex-1">
       <View className="mt-4 mx-4">
         <Text className="px-4 pb-1.5 text-xs text-light-gray dark:text-dark-gray uppercase">
           デフォルトブラウザー
         </Text>
-        <View className="rounded-xl bg-white dark:bg-neutral-800 overflow-hidden">
+        <View className="rounded-xl bg-light-surface dark:bg-dark-surface overflow-hidden">
           {browsers.map((browser, index) => (
             <Pressable
               key={browser.key}

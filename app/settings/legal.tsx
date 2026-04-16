@@ -34,8 +34,8 @@ export default function LegalSettingsPage() {
   ];
 
   return (
-    <View className="flex-1 bg-light-background dark:bg-dark-background">
-      <View className="mt-4 mx-4 rounded-xl bg-white dark:bg-neutral-800 overflow-hidden">
+    <View className="flex-1 bg-light-surface dark:bg-dark-background">
+      <View className="mt-4 mx-4 rounded-xl bg-light-background dark:bg-dark-surface overflow-hidden">
         {allItems.map((item, index) => (
           <Pressable
             key={item.title}

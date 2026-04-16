@@ -146,15 +146,15 @@ export default function NotificationSettingsPage() {
   })();
 
   if (isLoading) {
-    return <View className="flex-1 bg-light-background dark:bg-dark-background" />;
+    return <View className="flex-1" />;
   }
 
   return (
-    <View className="flex-1 bg-light-background dark:bg-dark-background">
+    <View className="flex-1">
       {/* セクション1: 全体設定 */}
       <View className="mt-4 mx-4">
         <Text className="px-4 pb-1.5 text-xs text-light-gray dark:text-dark-gray uppercase">通知設定</Text>
-        <View className="rounded-xl bg-white dark:bg-neutral-800 overflow-hidden">
+        <View className="rounded-xl bg-light-surface dark:bg-dark-surface overflow-hidden">
           <View className="px-4 py-3 flex-row items-center justify-between">
             <View className="flex-1 mr-3">
               <Text className="text-base text-light-text dark:text-dark-text">Push通知</Text>
