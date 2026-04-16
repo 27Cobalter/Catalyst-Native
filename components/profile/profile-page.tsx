@@ -10,7 +10,16 @@ import type { EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
 import { useScrollToTop } from "@react-navigation/native";
 import { useAtomValue } from "jotai";
 import React, { useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Animated, NativeScrollEvent, NativeSyntheticEvent, ScrollView, View, useWindowDimensions } from "react-native";
+import {
+  ActivityIndicator,
+  Animated,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView,
+  View,
+  useWindowDimensions,
+} from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Tab = {
@@ -51,6 +60,19 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
         .map((w) => w as unknown as Tab),
     [isMyself],
   );
+  const swipeGesture = Gesture.Pan()
+    .activeOffsetX([-15, 15])
+    .failOffsetY([-10, 10])
+    .runOnJS(true)
+    .onEnd((event) => {
+      const { translationX, velocityX } = event;
+      if (translationX < -50 || velocityX < -300) {
+        setActiveTab((prev) => Math.min(prev + 1, tabs.length - 1));
+      } else if (translationX > 50 || velocityX > 300) {
+        setActiveTab((prev) => Math.max(prev - 1, 0));
+      }
+    });
+
   const view = useRef<ScrollView>(null);
   const scroller = useRef<{ scrollToTop: () => void }>(null);
   const scrollActiveTimelineToTopHandler = useMemo(() => {
@@ -59,7 +81,7 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
         view.current?.scrollTo({ x: 0, y: 0, animated: true });
       },
     };
-   }, []);
+  }, []);
   scroller.current = scrollActiveTimelineToTopHandler;
 
   useScrollToTop(scroller);
@@ -130,9 +152,11 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
           <ProfileTabs activeIndex={activeTab} tabs={tabs} onClickTab={setActiveTab} />
         </View>
 
-        <View style={{ minHeight: 400 }}>
-          <TabContent ref={tabContentRef} tab={tabs[activeTab]} user={user} />
-        </View>
+        <GestureDetector gesture={swipeGesture}>
+          <View style={{ minHeight: 400 }}>
+            <TabContent ref={tabContentRef} tab={tabs[activeTab]} user={user} />
+          </View>
+        </GestureDetector>
       </Animated.ScrollView>
 
       <ProfileOverlay user={user} scrollY={scrollY} showBackButton={showBackButton} />
