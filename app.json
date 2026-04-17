@@ -79,7 +79,12 @@
       "@react-native-firebase/app",
       "@react-native-firebase/messaging",
       "@react-native-async-storage/expo-with-async-storage",
-      ["@luccasr73/with-rn-image-crop-picker", {}],
+      [
+        "@luccasr73/with-rn-image-crop-picker",
+        {
+          "PhotoLibraryUsageDescription": "ユーザーが端末内の写真を選択し、 Catalyst 上で投稿・共有するために写真ライブラリへアクセスします。",
+        },
+      ],
       [
         "expo-build-properties",
         {
