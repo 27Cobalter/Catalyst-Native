@@ -1,5 +1,5 @@
 
-export const merge = <T, K extends keyof T>(source1: T[], source2: T[], sets: React.RefObject<Set<T[K]>>, selector: (item: T) => T[K], into?: "first" | "last" = "last") => {
+export const merge = <T, K extends keyof T>(source1: T[], source2: T[], sets: React.RefObject<Set<T[K]>>, selector: (item: T) => T[K], into: "first" | "last" = "last") => {
   const newItems: T[] = [];
   const filtered = source2.filter((item) => !sets.current.has(selector(item)));
 
