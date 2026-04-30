@@ -1,23 +1,34 @@
-import { EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
+import { BottomSheetItem } from "@/components/bottom-sheet/item";
+import { BottomSheetModal, BottomSheetModalHandle } from "@/components/bottom-sheet/sheet";
+import { clientAtom } from "@/models/atoms/credential";
+import { CatalystRelationships, EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
 import { useRouter } from "expo-router";
-import { ArrowLeft } from "lucide-react-native";
-import { useCallback } from "react";
-import { Animated, StyleSheet, TouchableOpacity, View } from "react-native";
+import { useAtomValue } from "jotai";
+import { ArrowLeft, Ellipsis, MessageCircleOff, ShareIcon, ShieldBan } from "lucide-react-native";
+import { useCallback, useRef } from "react";
+import { Animated, Share, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
 const UniAnimatedView = withUniwind(Animated.View);
 const UniArrowLeft = withUniwind(ArrowLeft);
+const UniEllipsis = withUniwind(Ellipsis);
+const UniShare = withUniwind(ShareIcon);
+const UniMessageCircleOff = withUniwind(MessageCircleOff);
+const UniShieldBan = withUniwind(ShieldBan);
 
 type Props = {
   user: EgeriaUser | null;
+  relationships?: CatalystRelationships | null;
   scrollY: Animated.Value;
   showBackButton?: boolean;
+  onUpdateRelationships?: (relationships: CatalystRelationships) => void;
 };
 
-export const ProfileOverlay = ({ user, scrollY, showBackButton = true }: Props) => {
+export const ProfileOverlay = ({ user, relationships, scrollY, showBackButton = true }: Props) => {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const client = useAtomValue(clientAtom);
   const overlayHeight = insets.top + 44;
   const overlayOpacity = scrollY.interpolate({
     inputRange: [0, 32],
@@ -25,6 +36,28 @@ export const ProfileOverlay = ({ user, scrollY, showBackButton = true }: Props) 
     extrapolate: "clamp",
   });
   const handleBack = useCallback(() => router.back(), [router]);
+  const sheet = useRef<BottomSheetModalHandle>(null);
+  const url = `https://catalyst.natsuneko.com/@${user?.screenName}`;
+  const handleSheetOpen = useCallback(() => sheet.current?.present(), []);
+  const handleShareUser = useCallback(() => {
+    sheet.current?.dismiss();
+    Share.share({
+      message: `${user?.displayName} (@${user?.screenName})\n${url}`,
+      url: url,
+    });
+  }, [user, url]);
+  const handleToggleBlock = useCallback(async () => {
+    sheet.current?.dismiss();
+
+    if (!user || !relationships) return;
+
+    const isBlocking = relationships.isBlocking;
+    if (isBlocking) {
+      await client.catalyst.unblock({ userId: user.id });
+    } else {
+      await client.catalyst.block({ userId: user.id });
+    }
+  }, [user, relationships, client]);
 
   return (
     <View
@@ -51,7 +84,28 @@ export const ProfileOverlay = ({ user, scrollY, showBackButton = true }: Props) 
             </View>
           </TouchableOpacity>
         )}
+
+        <TouchableOpacity className="absolute right-0 p-2 m-2" onPress={handleSheetOpen}>
+          <View className="w-9 h-9 rounded-full bg-black/75 items-center justify-center">
+            <UniEllipsis size={18} className="text-white" />
+          </View>
+        </TouchableOpacity>
       </View>
+      <BottomSheetModal ref={sheet}>
+        <BottomSheetItem
+          prefixIcon={UniShare}
+          title={`@${user?.screenName}さんを共有する`}
+          onPress={handleShareUser}
+          highlight
+        />
+        <BottomSheetItem prefixIcon={UniMessageCircleOff} title={`@${user?.screenName}さんをミュート`} highlight />
+        <BottomSheetItem
+          prefixIcon={UniShieldBan}
+          title={`@${user?.screenName}さんをブロック` + (relationships?.isBlocking ? "解除" : "")}
+          onPress={handleToggleBlock}
+          destructive
+        />
+      </BottomSheetModal>
     </View>
   );
 };

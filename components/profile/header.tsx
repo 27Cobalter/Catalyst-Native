@@ -9,7 +9,7 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { LinkIcon } from "lucide-react-native";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { LayoutChangeEvent, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 import { withUniwind } from "uniwind";
 import { StatusText } from "../status/text";
@@ -24,10 +24,12 @@ const UniLinkIcon = withUniwind(LinkIcon);
 
 type Props = {
   user: EgeriaUser | null;
+  relationships: CatalystRelationships | null;
+  onUpdateRelationships?: (rel: CatalystRelationships) => void;
   onLayout: (e: LayoutChangeEvent) => void;
 };
 
-export const ProfileHeader = ({ user, onLayout }: Props) => {
+export const ProfileHeader = ({ user, relationships, onUpdateRelationships, onLayout }: Props) => {
   const { width: screenWidth } = useWindowDimensions();
   const bannerHeight = screenWidth / 3;
   const account = useAtomValue(accountAtom);
@@ -35,9 +37,15 @@ export const ProfileHeader = ({ user, onLayout }: Props) => {
   const router = useRouter();
   const isLoggedIn = !!account?.user;
   const isMyself = account?.user.screenName === user?.screenName;
-  const [relationships, setRelationships] = useState<CatalystRelationships | null>(null);
   const [counts, setCounts] = useState<RelationshipCounts | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const actionText = useMemo(() => {
+    if (relationships === null) return "読み込み中";
+
+    if (relationships.isFollowing) return "フォロー中";
+    if (relationships.isBlocking) return "ブロック解除";
+    return "フォロー";
+  }, [relationships]);
   const handleFollow = useCallback(async () => {
     if (!account || !user || isLoading) {
       return;
@@ -48,16 +56,26 @@ export const ProfileHeader = ({ user, onLayout }: Props) => {
 
       if (relationships?.isFollowing) {
         await client.catalyst.remove({ userId: user.id });
+      } else if (relationships?.isBlocking) {
+        await client.catalyst.unblock({ userId: user.id });
       } else {
         await client.catalyst.follow({ userId: user.id });
       }
 
       const rel = await client.catalyst.relationships(user.screenName);
-      setRelationships(rel);
+      onUpdateRelationships?.(rel);
     } finally {
       setIsLoading(false);
     }
-  }, [client, account, isLoading, relationships?.isFollowing, user]);
+  }, [
+    account,
+    user,
+    isLoading,
+    relationships?.isFollowing,
+    relationships?.isBlocking,
+    client.catalyst,
+    onUpdateRelationships,
+  ]);
 
   useAsyncEffect(async () => {
     if (user) {
@@ -69,9 +87,9 @@ export const ProfileHeader = ({ user, onLayout }: Props) => {
   useAsyncEffect(async () => {
     if (account && user) {
       const rel = await client.catalyst.relationships(user.screenName);
-      setRelationships(rel);
+      onUpdateRelationships?.(rel);
     }
-  }, [account, user]);
+  }, [account, user, client.catalyst, onUpdateRelationships]);
 
   return (
     <View className="bg-light-background dark:bg-dark-background" onLayout={onLayout}>
@@ -147,7 +165,7 @@ export const ProfileHeader = ({ user, onLayout }: Props) => {
                       relationships?.isFollowing ? "text-light-text dark:text-dark-text" : "text-white dark:text-black",
                     )}
                   >
-                    {relationships === null ? "読み込み中" : relationships.isFollowing ? "フォロー中" : "フォロー"}
+                    {actionText}
                   </Text>
                 </TouchableOpacity>
               </View>

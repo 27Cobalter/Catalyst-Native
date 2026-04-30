@@ -6,7 +6,7 @@ import { UserTimelineHandle } from "@/components/profile/timeline";
 import { useAsyncEffect } from "@/hooks/use-async-effect";
 import { accountAtom } from "@/models/atoms/account";
 import { clientAtom } from "@/models/atoms/credential";
-import type { EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
+import type { CatalystRelationships, EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
 import { useScrollToTop } from "@react-navigation/native";
 import { useAtomValue } from "jotai";
 import React, { useMemo, useRef, useState } from "react";
@@ -53,6 +53,7 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
   const NAV_BAR_HEIGHT = insets.top + 44;
   const isMyself = user?.id === account?.user.id;
   const tabContentRef = useRef<UserTimelineHandle>(null);
+  const [relationships, setRelationships] = useState<CatalystRelationships | null>(null);
   const tabs: Tab[] = useMemo(
     () =>
       [...DEFAULT_TABS, isMyself && { route: "likes", label: "いいね" }]
@@ -108,9 +109,17 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
     setUser(null);
 
     try {
-      const user = await client.egeria.userByUsername(screenName);
+      const [user, relationships] = await Promise.all([
+        client.egeria.userByUsername(screenName),
+        client.catalyst.relationships(screenName),
+      ]);
+
       if (user) {
         setUser(user?.user);
+      }
+
+      if (relationships) {
+        setRelationships(relationships);
       }
     } catch (e) {
       console.error(`failed to fetch user: @${screenName}, ${e}`);
@@ -143,7 +152,12 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
   return (
     <View className="flex-1 bg-light-background dark:bg-dark-background">
       <Animated.ScrollView ref={view} onScroll={handleScroll} scrollEventThrottle={16}>
-        <ProfileHeader user={user} onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)} />
+        <ProfileHeader
+          user={user}
+          relationships={relationships}
+          onUpdateRelationships={setRelationships}
+          onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
+        />
 
         <View
           className="flex-row border-b border-neutral-500 bg-light-background dark:bg-dark-background"
@@ -159,7 +173,13 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
         </GestureDetector>
       </Animated.ScrollView>
 
-      <ProfileOverlay user={user} scrollY={scrollY} showBackButton={showBackButton} />
+      <ProfileOverlay
+        user={user}
+        relationships={relationships}
+        scrollY={scrollY}
+        showBackButton={showBackButton}
+        onUpdateRelationships={setRelationships}
+      />
 
       {/* Sticky Tab Bar Overlay */}
       <Animated.View
