@@ -6,16 +6,9 @@ import { StatusText } from "@/components/status/text";
 import { MediaCarousel } from "@/components/ui/media-carousel";
 import { abs, rel } from "@/lib/dayjs";
 import { getCdnUrl } from "@/lib/media";
-import { cn } from "@/lib/utils";
 import { accountAtom } from "@/models/atoms/account";
 import { clientAtom } from "@/models/atoms/credential";
 import { openUrlWithBrowser } from "@/models/browser-settings";
-import {
-  BottomSheetBackdrop,
-  BottomSheetModal,
-  BottomSheetView,
-  type BottomSheetBackdropProps,
-} from "@gorhom/bottom-sheet";
 import type { CatalystReaction, CatalystStatus } from "@natsuneko-laboratory/catalyst-sdk";
 import * as Clipboard from "expo-clipboard";
 import { Image } from "expo-image";
@@ -54,6 +47,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
+import { BottomSheetItem } from "@/components/bottom-sheet/item";
+import { BottomSheetModal, BottomSheetModalHandle } from "@/components/bottom-sheet/sheet";
 import "@/global.css";
 
 type EpicleseWorld = {
@@ -97,44 +92,6 @@ const UniSafeAreaView = withUniwind(SafeAreaView);
 const UniSend = withUniwind(Send);
 const UniTrash2 = withUniwind(Trash2);
 
-function MenuItem({
-  label,
-  icon: Icon,
-  theme,
-  onPress,
-  destructive,
-}: {
-  label: string;
-  icon: React.ComponentType<{ size: number; className?: string }>;
-  theme: string;
-  onPress: () => void;
-  destructive?: boolean;
-}) {
-  return (
-    <Pressable
-      style={({ pressed }) => [
-        styles.menuItem,
-        pressed && { backgroundColor: theme === "dark" ? "#38383A" : "#E5E5EA" },
-      ]}
-      className="rounded-sm bg-light-surface dark:bg-dark-surface mx-2 my-1"
-      onPress={onPress}
-    >
-      <Icon
-        size={20}
-        className={cn(
-          "text-light-accent dark:text-dark-accent",
-          destructive && "text-light-error dark:text-dark-error",
-        )}
-      />
-      <Text
-        className={cn("text-light-text dark:text-dark-text", destructive && "text-light-error dark:text-dark-error")}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
 export default function StatusDetailsPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -154,7 +111,7 @@ export default function StatusDetailsPage() {
   const [isFavorited, setIsFavorited] = useState(false);
   const [isNotFound, setIsNotFound] = useState(false);
   const emojiPickerRef = useRef<EmojiPickerSheetRef>(null);
-  const menuSheetRef = useRef<BottomSheetModal>(null);
+  const menuSheetRef = useRef<BottomSheetModalHandle>(null);
 
   const isMyself = account?.user?.id === status?.user?.id;
   const isLoggedIn = account !== null;
@@ -298,11 +255,6 @@ export default function StatusDetailsPage() {
       handleMenuAction(action);
     },
     [handleMenuAction],
-  );
-
-  const renderMenuBackdrop = useCallback(
-    (props: BottomSheetBackdropProps) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />,
-    [],
   );
 
   const user = status?.user;
@@ -568,85 +520,73 @@ export default function StatusDetailsPage() {
       <EmojiPickerSheet ref={emojiPickerRef} onReact={handleReact} />
 
       {/* Action menu */}
-      <BottomSheetModal
-        ref={menuSheetRef}
-        enableDynamicSizing
-        enablePanDownToClose
-        backdropComponent={renderMenuBackdrop}
-        backgroundStyle={{
-          backgroundColor: theme === "dark" ? "#1C1C1E" : "#FFFFFF",
-        }}
-        handleIndicatorStyle={{
-          backgroundColor: theme === "dark" ? "#48484A" : "#C7C7CC",
-        }}
-      >
-        <BottomSheetView style={styles.menuContent}>
-          {isLoggedIn && (
-            <View className="px-2 mb-2">
-              <MenuItem
-                icon={UniBookmark}
-                label="アルバムへ追加"
-                theme={theme}
-                onPress={() => handleMenuItemPress("アルバムへ追加")}
-              />
-              <MenuItem
-                icon={UniBookmarkMinus}
-                label="アルバムから削除"
-                theme={theme}
-                onPress={() => handleMenuItemPress("アルバムから削除")}
-              />
-            </View>
-          )}
-          {isMyself && (
-            <View className="px-2 my-2">
-              <MenuItem
-                icon={UniPencil}
-                label="編集する"
-                theme={theme}
-                onPress={() => handleMenuItemPress("編集する")}
-              />
-              <MenuItem
-                icon={UniTrash2}
-                label="削除する"
-                theme={theme}
-                onPress={() => handleMenuItemPress("削除する")}
-                destructive
-              />
-            </View>
-          )}
-          {!isMyself && isLoggedIn && (
-            <View className="px-2 my-2">
-              <MenuItem
-                icon={UniFlag}
-                label="報告する"
-                theme={theme}
-                onPress={() => handleMenuItemPress("報告する")}
-                destructive
-              />
-            </View>
-          )}
-          <View className="px-2 mt-2">
-            <MenuItem
-              icon={UniExternalLink}
-              label="ブラウザで開く"
-              theme={theme}
-              onPress={() => handleMenuItemPress("ブラウザで開く")}
+      <BottomSheetModal ref={menuSheetRef}>
+        {isLoggedIn && (
+          <View>
+            <BottomSheetItem
+              prefixIcon={UniBookmark}
+              title="アルバムへ追加"
+              onPress={() => handleMenuItemPress("アルバムへ追加")}
+              highlight
             />
-            <MenuItem
-              icon={UniClipboardIcon}
-              label="URL をコピー"
-              theme={theme}
-              onPress={() => handleMenuItemPress("URL をコピー")}
+            <BottomSheetItem
+              prefixIcon={UniBookmarkMinus}
+              title="アルバムから削除"
+              onPress={() => handleMenuItemPress("アルバムから削除")}
+              highlight
             />
-            <MenuItem
-              icon={UniClipboardIcon}
-              label="投稿をコピー"
-              theme={theme}
-              onPress={() => handleMenuItemPress("投稿をコピー")}
-            />
-            <MenuItem icon={UniSend} label="共有" theme={theme} onPress={() => handleMenuItemPress("共有")} />
+
+            <View className="border-b my-2 border-light-divider dark:border-dark-divider" />
           </View>
-        </BottomSheetView>
+        )}
+        {isMyself && (
+          <View>
+            <BottomSheetItem prefixIcon={UniPencil} title="編集する" onPress={() => handleMenuItemPress("編集する")} />
+            <BottomSheetItem
+              prefixIcon={UniTrash2}
+              title="削除する"
+              onPress={() => handleMenuItemPress("削除する")}
+              destructive
+            />
+          </View>
+        )}
+        {!isMyself && isLoggedIn && (
+          <View>
+            <BottomSheetItem
+              prefixIcon={UniFlag}
+              title="報告する"
+              onPress={() => handleMenuItemPress("報告する")}
+              destructive
+            />
+          </View>
+        )}
+        <View>
+          {(isLoggedIn || isMyself) && <View className="border-b my-2 border-light-divider dark:border-dark-divider" />}
+          <BottomSheetItem
+            prefixIcon={UniExternalLink}
+            title="ブラウザで開く"
+            onPress={() => handleMenuItemPress("ブラウザで開く")}
+            highlight
+          />
+          <BottomSheetItem
+            prefixIcon={UniClipboardIcon}
+            title="URL をコピー"
+            onPress={() => handleMenuItemPress("URL をコピー")}
+            highlight
+          />
+          <BottomSheetItem
+            prefixIcon={UniClipboardIcon}
+            title="投稿をコピー"
+            onPress={() => handleMenuItemPress("投稿をコピー")}
+            highlight
+          />
+          <BottomSheetItem
+            prefixIcon={UniSend}
+            title="共有する"
+            onPress={() => handleMenuItemPress("共有")}
+            highlight
+          />
+        </View>
       </BottomSheetModal>
     </>
   );
@@ -718,19 +658,5 @@ const styles = StyleSheet.create({
   },
   toolbarSaveButtonDisabled: {
     backgroundColor: "#90CAF9",
-  },
-  menuContent: {
-    paddingBottom: 32,
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  menuItemText: {
-    fontSize: 17,
   },
 });
