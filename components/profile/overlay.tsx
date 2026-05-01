@@ -98,7 +98,6 @@ export const ProfileOverlay = ({ user, relationships, scrollY, showBackButton = 
           onPress={handleShareUser}
           highlight
         />
-        <BottomSheetItem prefixIcon={UniMessageCircleOff} title={`@${user?.screenName}さんをミュート`} highlight />
         <BottomSheetItem
           prefixIcon={UniShieldBan}
           title={`@${user?.screenName}さんをブロック` + (relationships?.isBlocking ? "解除" : "")}
