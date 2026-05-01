@@ -4,7 +4,7 @@ import { clientAtom } from "@/models/atoms/credential";
 import { CatalystRelationships, EgeriaUser } from "@natsuneko-laboratory/catalyst-sdk";
 import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
-import { ArrowLeft, Ellipsis, MessageCircleOff, ShareIcon, ShieldBan } from "lucide-react-native";
+import { ArrowLeft, Ellipsis, ShareIcon, ShieldBan } from "lucide-react-native";
 import { useCallback, useRef } from "react";
 import { Animated, Share, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -14,7 +14,6 @@ const UniAnimatedView = withUniwind(Animated.View);
 const UniArrowLeft = withUniwind(ArrowLeft);
 const UniEllipsis = withUniwind(Ellipsis);
 const UniShare = withUniwind(ShareIcon);
-const UniMessageCircleOff = withUniwind(MessageCircleOff);
 const UniShieldBan = withUniwind(ShieldBan);
 
 type Props = {
