@@ -143,8 +143,8 @@ importers:
         specifier: ^2.18.1
         version: 2.18.1(@babel/core@7.29.0)(@babel/template@7.28.6)(@types/react@19.2.14)(react@19.2.4)
       lucide-react-native:
-        specifier: ^0.577.0
-        version: 0.577.0(react-native-svg@15.15.3(react-native@0.83.2(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.2(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
+        specifier: ^1.11.0
+        version: 1.11.0(react-native-svg@15.15.3(react-native@0.83.2(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.2(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)
       react:
         specifier: 19.2.4
         version: 19.2.4
@@ -5335,8 +5335,8 @@ packages:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
     engines: {node: '>=10'}
 
-  lucide-react-native@0.577.0:
-    resolution: {integrity: sha512-blWv/YqBMrgkYGAgm2wgWiGP1+1GNBf4f/sUlpyfEL8mxvSzhr7H/0MTS1xQgtd1B6gPC/JIPgP3kcdFjnh8zg==}
+  lucide-react-native@1.11.0:
+    resolution: {integrity: sha512-/dEt+/noOpsvgH1dbMHHSv+f8+npB1BJSKCqK9v9yvHbssN3OJJJXrih6N1prJGG3vj0e1zKiVLtet+OKYmiXg==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-native: '*'
@@ -13451,7 +13451,7 @@ snapshots:
     dependencies:
       yallist: 4.0.0
 
-  lucide-react-native@0.577.0(react-native-svg@15.15.3(react-native@0.83.2(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.2(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4):
+  lucide-react-native@1.11.0(react-native-svg@15.15.3(react-native@0.83.2(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4))(react-native@0.83.2(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
       react-native: 0.83.2(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4)
