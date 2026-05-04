@@ -63,9 +63,41 @@ export default function AccountSettingsPage() {
     ]);
   }, [setAccount]);
 
-  const footerText = !canEditScreenName
-    ? "すでに1度ユーザー名を変更しているため、変更できません。"
-    : errorMessage;
+  const handleDeleteAccount = useCallback(() => {
+    Alert.alert("アカウントを削除しますか？", "この操作は取り消せません。", [
+      { text: "キャンセル", style: "cancel" },
+      {
+        text: "削除",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            if (account) {
+              const token = account.credential.client.accessToken;
+              const res = await fetch(`https://api.natsuneko.com/egeria/v1/me`, {
+                method: "DELETE",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+
+              if (res.ok) {
+                Alert.alert(
+                  "アカウントの削除を開始しました。投稿したデータが完全に消えるまで最大24時間かかることがあります",
+                );
+                await Credential.logout();
+                setAccount(null);
+                router.dismissAll();
+              }
+            }
+          } catch {
+            // ignored
+          }
+        },
+      },
+    ]);
+  }, [account, setAccount]);
+
+  const footerText = !canEditScreenName ? "すでに1度ユーザー名を変更しているため、変更できません。" : errorMessage;
 
   const handleLogin = useCallback(async () => {
     const { credential, isLoggedIn: loggedIn } = await Credential.login();
@@ -110,14 +142,22 @@ export default function AccountSettingsPage() {
                 <Text className="text-base text-light-tint dark:text-dark-tint">保存中...</Text>
               </View>
             ) : (
-              <Text className={isSaveDisabled ? "text-base text-light-gray dark:text-dark-gray" : "text-base text-light-tint dark:text-dark-tint"}>
+              <Text
+                className={
+                  isSaveDisabled
+                    ? "text-base text-light-gray dark:text-dark-gray"
+                    : "text-base text-light-tint dark:text-dark-tint"
+                }
+              >
                 変更を保存
               </Text>
             )}
           </Pressable>
         </View>
         {footerText && (
-          <Text className={`px-4 pt-1.5 text-xs ${errorMessage ? "text-red-500" : "text-light-gray dark:text-dark-gray"}`}>
+          <Text
+            className={`px-4 pt-1.5 text-xs ${errorMessage ? "text-red-500" : "text-light-gray dark:text-dark-gray"}`}
+          >
             {footerText}
           </Text>
         )}
@@ -126,7 +166,15 @@ export default function AccountSettingsPage() {
       <View className="mt-6 mx-4">
         <View className="rounded-xl bg-white dark:bg-neutral-800 overflow-hidden">
           <Pressable className="px-4 py-3.5" onPress={handleLogout}>
-            <Text className="text-base text-red-500">ログアウト</Text>
+            <Text className="text-base text-light-error dark:text-dark-error">ログアウト</Text>
+          </Pressable>
+        </View>
+      </View>
+
+      <View className="mt-6 mx-4">
+        <View className="rounded-xl bg-white dark:bg-neutral-800 overflow-hidden">
+          <Pressable className="px-4 py-3.5" onPress={handleDeleteAccount}>
+            <Text className="text-base text-light-error dark:text-dark-error">アカウント削除</Text>
           </Pressable>
         </View>
       </View>
