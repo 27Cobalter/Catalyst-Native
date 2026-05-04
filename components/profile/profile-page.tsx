@@ -111,7 +111,7 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
     try {
       const [user, relationships] = await Promise.all([
         client.egeria.userByUsername(screenName),
-        client.catalyst.relationships(screenName),
+        client.catalyst.relationships(screenName).catch((w) => null),
       ]);
 
       if (user) {
