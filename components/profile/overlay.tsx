@@ -97,12 +97,14 @@ export const ProfileOverlay = ({ user, relationships, scrollY, showBackButton = 
           onPress={handleShareUser}
           highlight
         />
-        <BottomSheetItem
-          prefixIcon={UniShieldBan}
-          title={`@${user?.screenName}さんをブロック` + (relationships?.isBlocking ? "解除" : "")}
-          onPress={handleToggleBlock}
-          destructive
-        />
+        {!relationships?.isMyself && (
+          <BottomSheetItem
+            prefixIcon={UniShieldBan}
+            title={`@${user?.screenName}さんをブロック` + (relationships?.isBlocking ? "解除" : "")}
+            onPress={handleToggleBlock}
+            destructive
+          />
+        )}
       </BottomSheetModal>
     </View>
   );
