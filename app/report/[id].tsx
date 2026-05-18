@@ -27,7 +27,7 @@ export default function ReportStatusPage() {
   const theme = useColorScheme() ?? "light";
   const account = useAtomValue(accountAtom);
 
-  const [reportType, setReportType] = useState<ReportRequest["type"] | null>(null);
+  const [reportType, setReportType] = useState<ReportRequest["reason"] | null>(null);
   const [reportDescription, setReportDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
