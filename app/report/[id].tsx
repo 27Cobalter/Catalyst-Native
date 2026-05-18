@@ -1,25 +1,20 @@
-import { accountAtom } from "@/models/atoms/account";
 import { cn } from "@/lib/utils";
+import { accountAtom } from "@/models/atoms/account";
 import type { ReportRequest } from "@natsuneko-laboratory/catalyst-sdk";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { Check } from "lucide-react-native";
 import React, { useCallback, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  useColorScheme,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, useColorScheme, View } from "react-native";
 
 import "@/global.css";
 
 const REPORT_OPTIONS: { value: ReportRequest["type"]; label: string; description: string }[] = [
-  { value: "nsfw", label: "性的・過激なコンテンツ", description: "センシティブまたは NSFW なコンテンツが含まれています" },
+  {
+    value: "nsfw",
+    label: "性的・過激なコンテンツ",
+    description: "センシティブまたは NSFW なコンテンツが含まれています",
+  },
   { value: "harassment", label: "嫌がらせ・いじめ", description: "特定の人物への嫌がらせや攻撃的な内容です" },
   { value: "spam", label: "スパム", description: "不審なリンクや無関係な宣伝が含まれています" },
   { value: "tos_violation", label: "利用規約違反", description: "Catalyst の利用規約に違反していると思われます" },
@@ -43,11 +38,11 @@ export default function ReportStatusPage() {
     setIsSubmitting(true);
     try {
       await account.credential.client.catalyst.reportStatus(id, {
-        type: reportType,
+        reason: reportType,
         description: reportDescription.trim() || undefined,
       });
       router.back();
-      Alert.alert("報告を送信しました", "ご報告ありがとうございます。内容を確認いたします。");
+      Alert.alert("報告を送信しました", "ご報告ありがとうございます。内容は24時間以内に確認されます。");
     } catch {
       Alert.alert("エラー", "報告の送信に失敗しました");
     } finally {
@@ -112,9 +107,7 @@ export default function ReportStatusPage() {
                     >
                       {label}
                     </Text>
-                    {reportType === value && (
-                      <Check size={16} color={theme === "dark" ? "#ef4444" : "#dc2626"} />
-                    )}
+                    {reportType === value && <Check size={16} color={theme === "dark" ? "#ef4444" : "#dc2626"} />}
                   </View>
                   <Text
                     className={cn(
