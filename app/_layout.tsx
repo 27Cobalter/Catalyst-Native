@@ -18,6 +18,7 @@ import { useSetAtom } from "jotai";
 import { useState } from "react";
 import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import "react-native-reanimated";
 import Toast from "react-native-toast-message";
 
@@ -83,56 +84,58 @@ export default Sentry.wrap(function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
-        <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-          <Stack>
-            <Stack.Screen name="(drawer)" options={{ headerShown: false, gestureEnabled: false }} />
-            <Stack.Screen name="album/[id]/index" options={{ title: "", headerBackTitle: "戻る" }} />
-            <Stack.Screen name="album/[id]/edit" options={{ title: "アルバム編集", headerBackTitle: "戻る" }} />
-            <Stack.Screen name="smart-album/[id]/index" options={{ title: "", headerBackTitle: "戻る" }} />
-            <Stack.Screen
-              name="smart-album/[id]/edit"
-              options={{ title: "スマートアルバム編集", headerBackTitle: "戻る" }}
-            />
-            <Stack.Screen name="status/[id]" options={{ title: "投稿", headerBackTitle: "戻る" }} />
-            <Stack.Screen name="user/[screenName]/index" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="user/[screenName]/followers"
-              options={{ title: "フォロワー", headerBackTitle: "戻る" }}
-            />
-            <Stack.Screen
-              name="user/[screenName]/followings"
-              options={{ title: "フォロー", headerBackTitle: "戻る" }}
-            />
-            <Stack.Screen name="authorize" options={{ headerShown: false }} />
-            <Stack.Screen name="contest" options={{ title: "コンテスト", headerBackTitle: "戻る" }} />
-            <Stack.Screen name="contest/[slug]" options={{ headerShown: false }} />
-            <Stack.Screen name="gallery" options={{ title: "ギャラリー", headerBackTitle: "戻る" }} />
-            <Stack.Screen name="settings" options={{ title: "設定とプライバシー", headerBackTitle: "戻る" }} />
-            <Stack.Screen name="settings/account" options={{ title: "アカウント", headerBackTitle: "戻る" }} />
-            <Stack.Screen name="settings/notifications" options={{ title: "通知", headerBackTitle: "戻る" }} />
-            <Stack.Screen name="settings/display" options={{ title: "表示", headerBackTitle: "戻る" }} />
-            <Stack.Screen
-              name="settings/accessibility"
-              options={{ title: "アクセシビリティ", headerBackTitle: "戻る" }}
-            />
-            <Stack.Screen name="settings/privacy" options={{ title: "プライバシー", headerBackTitle: "戻る" }} />
-            <Stack.Screen name="settings/legal" options={{ title: "法的情報", headerBackTitle: "戻る" }} />
-            <Stack.Screen
-              name="settings/legal/licenses"
-              options={{ title: "オープンソースソフトウェア", headerBackTitle: "戻る" }}
-            />
-            <Stack.Screen name="search/[query]" options={{ headerBackTitle: "戻る" }} />
-            <Stack.Screen name="compose/post" options={{ title: "新しい投稿", headerBackTitle: "キャンセル" }} />
-            <Stack.Screen name="compose/fleet" options={{ title: "Fleet", headerBackTitle: "キャンセル" }} />
-            <Stack.Screen name="report/[id]" options={{ title: "投稿を報告", headerBackTitle: "キャンセル" }} />
-            <Stack.Screen
-              name="profile/edit"
-              options={{ title: "プロフィールを編集", headerBackTitle: "キャンセル" }}
-            />
-          </Stack>
-          <StatusBar style="auto" />
-          <Toast />
-        </ThemeProvider>
+        <KeyboardProvider>
+          <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+            <Stack>
+              <Stack.Screen name="(drawer)" options={{ headerShown: false, gestureEnabled: false }} />
+              <Stack.Screen name="album/[id]/index" options={{ title: "", headerBackTitle: "戻る" }} />
+              <Stack.Screen name="album/[id]/edit" options={{ title: "アルバム編集", headerBackTitle: "戻る" }} />
+              <Stack.Screen name="smart-album/[id]/index" options={{ title: "", headerBackTitle: "戻る" }} />
+              <Stack.Screen
+                name="smart-album/[id]/edit"
+                options={{ title: "スマートアルバム編集", headerBackTitle: "戻る" }}
+              />
+              <Stack.Screen name="status/[id]" options={{ title: "投稿", headerBackTitle: "戻る" }} />
+              <Stack.Screen name="user/[screenName]/index" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="user/[screenName]/followers"
+                options={{ title: "フォロワー", headerBackTitle: "戻る" }}
+              />
+              <Stack.Screen
+                name="user/[screenName]/followings"
+                options={{ title: "フォロー", headerBackTitle: "戻る" }}
+              />
+              <Stack.Screen name="authorize" options={{ headerShown: false }} />
+              <Stack.Screen name="contest" options={{ title: "コンテスト", headerBackTitle: "戻る" }} />
+              <Stack.Screen name="contest/[slug]" options={{ headerShown: false }} />
+              <Stack.Screen name="gallery" options={{ title: "ギャラリー", headerBackTitle: "戻る" }} />
+              <Stack.Screen name="settings" options={{ title: "設定とプライバシー", headerBackTitle: "戻る" }} />
+              <Stack.Screen name="settings/account" options={{ title: "アカウント", headerBackTitle: "戻る" }} />
+              <Stack.Screen name="settings/notifications" options={{ title: "通知", headerBackTitle: "戻る" }} />
+              <Stack.Screen name="settings/display" options={{ title: "表示", headerBackTitle: "戻る" }} />
+              <Stack.Screen
+                name="settings/accessibility"
+                options={{ title: "アクセシビリティ", headerBackTitle: "戻る" }}
+              />
+              <Stack.Screen name="settings/privacy" options={{ title: "プライバシー", headerBackTitle: "戻る" }} />
+              <Stack.Screen name="settings/legal" options={{ title: "法的情報", headerBackTitle: "戻る" }} />
+              <Stack.Screen
+                name="settings/legal/licenses"
+                options={{ title: "オープンソースソフトウェア", headerBackTitle: "戻る" }}
+              />
+              <Stack.Screen name="search/[query]" options={{ headerBackTitle: "戻る" }} />
+              <Stack.Screen name="compose/post" options={{ title: "新しい投稿", headerBackTitle: "キャンセル" }} />
+              <Stack.Screen name="compose/fleet" options={{ title: "Fleet", headerBackTitle: "キャンセル" }} />
+              <Stack.Screen name="report/[id]" options={{ title: "投稿を報告", headerBackTitle: "キャンセル" }} />
+              <Stack.Screen
+                name="profile/edit"
+                options={{ title: "プロフィールを編集", headerBackTitle: "キャンセル" }}
+              />
+            </Stack>
+            <StatusBar style="auto" />
+            <Toast />
+          </ThemeProvider>
+        </KeyboardProvider>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );
