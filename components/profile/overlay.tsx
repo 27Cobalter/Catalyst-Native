@@ -6,7 +6,7 @@ import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { ArrowLeft, Ellipsis, ShareIcon, ShieldBan } from "lucide-react-native";
 import { useCallback, useRef } from "react";
-import { Animated, Share, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Animated, Share, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
@@ -93,14 +93,30 @@ export const ProfileOverlay = ({ user, relationships, scrollY, showBackButton = 
       <BottomSheetModal ref={sheet}>
         <BottomSheetItem
           prefixIcon={UniShare}
-          title={`@${user?.screenName}さんを共有する`}
+          title={
+            <View className="flex-row items-center">
+              <Text className="shrink text-light-text dark:text-dark-text" numberOfLines={1} ellipsizeMode="tail">
+                @{user?.screenName}
+              </Text>
+              <Text className="shrink-0 text-light-text dark:text-dark-text">さんを共有する</Text>
+            </View>
+          }
           onPress={handleShareUser}
           highlight
         />
         {!relationships?.isMyself && (
           <BottomSheetItem
             prefixIcon={UniShieldBan}
-            title={`@${user?.screenName}さんをブロック` + (relationships?.isBlocking ? "解除" : "")}
+            title={
+              <View className="flex-row items-center">
+                <Text className="shrink text-light-error dark:text-dark-error" numberOfLines={1} ellipsizeMode="tail">
+                  @{user?.screenName}
+                </Text>
+                <Text className="shrink-0 text-light-error dark:text-dark-error">
+                  {`さんをブロック${relationships?.isBlocking ? "解除" : ""}`}
+                </Text>
+              </View>
+            }
             onPress={handleToggleBlock}
             destructive
           />

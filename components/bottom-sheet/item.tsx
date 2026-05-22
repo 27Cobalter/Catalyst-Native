@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
-import { Pressable, Text } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 type Props = {
   onPress?: () => void;
-  title: string;
+  title: React.ReactNode;
   prefixIcon?: React.ComponentType<{ size?: number; color?: string; className?: string }>;
   suffixIcon?: React.ComponentType<{ size?: number; color?: string; className?: string }>;
   className?: string;
@@ -36,15 +36,21 @@ export const BottomSheetItem = ({
           )}
         />
       )}
-      <Text
-        className={cn(
-          "text-light-text dark:text-dark-text",
-          destructive && "text-light-error dark:text-dark-error",
-          className,
-        )}
-      >
-        {title}
-      </Text>
+      {typeof title === "string" ? (
+        <Text
+          className={cn(
+            "flex-1 text-light-text dark:text-dark-text",
+            destructive && "text-light-error dark:text-dark-error",
+            className,
+          )}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {title}
+        </Text>
+      ) : (
+        <View className="flex-1">{title}</View>
+      )}
       {SuffixIcon && (
         <SuffixIcon
           size={20}
