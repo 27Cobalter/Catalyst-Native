@@ -18,7 +18,7 @@ export const UserCard = ({ user }: Props) => {
 
   return (
     <Pressable
-      className="flex-row items-center gap-3 p-3 m-2 bg-white dark:bg-neutral-900 rounded-xl shadow-sm"
+      className="flex-row items-center gap-3 p-3 m-2 bg-light-surface dark:bg-dark-surface rounded-xl"
       onPress={() => router.push(`/user/${user.screenName}`)}
     >
       {/* アイコン画像 */}
