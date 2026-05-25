@@ -117,9 +117,11 @@ export const MediaCarousel = memo(({ medias, onIndexChange }: Props) => {
   };
 
   const panGesture = Gesture.Pan()
-    // Only activate for horizontal movement (≥10px), fail if vertical dominates
-    // tan(60°) ≈ 1.7 → same tolerance as Swift HorizontalPanGestureRecognizer
-    .activeOffsetX([-10, 10])
+    // Activate for horizontal movement (≥8px), fail if vertical dominates.
+    // 8px < iOS UIScrollView drag threshold (~10px), so this gesture wins
+    // the race against the outer tab-switching FlatList scroll recognizer.
+    // tan(~37°) ≈ 0.75 → slightly wider cone than the original 31° (10/6).
+    .activeOffsetX([-8, 8])
     .failOffsetY([-6, 6])
     .onUpdate((event) => {
       const translation = event.translationX;

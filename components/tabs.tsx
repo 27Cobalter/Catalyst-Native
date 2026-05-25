@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import React, { useRef, useState } from "react";
-import { Animated, FlatList, ListRenderItem, NativeScrollEvent, NativeSyntheticEvent, Pressable, Text, View, useWindowDimensions } from "react-native";
+import { Animated, ListRenderItem, NativeScrollEvent, NativeSyntheticEvent, Pressable, Text, View, useWindowDimensions } from "react-native";
+import { FlatList } from "react-native-gesture-handler";
 
 export type Tab = {
   key: string;
