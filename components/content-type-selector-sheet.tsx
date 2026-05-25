@@ -47,7 +47,7 @@ const CONTENT_TYPES: ContentType[] = [
     title: "Fleet",
     description: "24時間で消えるデコレーションできる写真を投稿します",
     icon: UniPenLine,
-  }
+  },
 ];
 
 export type ContentTypeSelectorSheetRef = {
@@ -105,7 +105,7 @@ export const ContentTypeSelectorSheet = ({ onSelect, ref }: Props) => {
           作成するコンテンツを選択
         </Text>
         <View className="mb-2 h-px bg-light-divider dark:bg-dark-divider" />
-        <View className="bg-light-surface-muted dark:bg-dark-surface-muted rounded-xl mx-2">
+        <View className="bg-light-surface dark:bg-dark-surface rounded-xl mx-2">
           {CONTENT_TYPES.map((contentType, i) => (
             <Pressable
               key={contentType.key}
@@ -140,4 +140,3 @@ export const ContentTypeSelectorSheet = ({ onSelect, ref }: Props) => {
     </BottomSheetModal>
   );
 };
-
