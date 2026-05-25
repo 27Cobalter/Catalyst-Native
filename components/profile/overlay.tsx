@@ -41,7 +41,7 @@ export const ProfileOverlay = ({ user, relationships, scrollY, showBackButton = 
   const handleShareUser = useCallback(() => {
     sheet.current?.dismiss();
     Share.share({
-      message: `${user?.displayName} (@${user?.screenName})\n${url}`,
+      message: `${user?.displayName} (@${user?.screenName})`,
       url: url,
     });
   }, [user, url]);

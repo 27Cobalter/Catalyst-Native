@@ -236,7 +236,7 @@ export default function StatusDetailsPage() {
           break;
         case "共有":
           Share.share({
-            message: `${status?.body ?? ""}\n\n${statusUrl}`,
+            message: `${status?.body ?? ""}`,
             url: statusUrl,
           });
           break;
