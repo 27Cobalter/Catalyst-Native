@@ -16,7 +16,9 @@ import {
 } from "lucide-react-native";
 import React, { memo, useCallback, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
+  type FlatListProps,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -50,6 +52,21 @@ const ICON_MAP: Record<
 type Props = {
   categories: EmojiCategory[];
   onEmojiSelected: (emoji: EmojiItem) => void;
+  /** ローディング中は ActivityIndicator を表示する */
+  isLoading?: boolean;
+  /** スティッキーヘッダーの先頭に追加するコンテンツ（タイトル等） */
+  listHeaderPrepend?: React.ReactNode;
+  /**
+   * 使用する FlatList コンポーネント。
+   * デフォルトは RN の FlatList。BottomSheet 内では BottomSheetFlatList を渡すこと。
+   *
+   * アーキテクチャ上の注意:
+   * - BottomSheetView でラップすると position:absolute で height が未定義になりスクロール不可
+   * - 代わりに通常の View (flex:1) をルートにし、BottomSheetFlatList を直接子にする構成を取る
+   * - こうすることで BottomSheetContent が計算した height が正しく伝播しスクロールが機能する
+   */
+  // biome-ignore lint/suspicious/noExplicitAny: FlatList と BottomSheetFlatList は互換プロップを持つが型定義が異なる
+  FlatListComponent?: React.ComponentType<FlatListProps<EmojiItem> & any>;
 };
 
 const EmojiItemCell = memo(
@@ -110,7 +127,7 @@ function CategoryButton({
   const theme = useColorScheme() ?? "light";
   const IconComponent = ICON_MAP[category.icon];
   const activeColor = theme === "dark" ? "#0A84FF" : "#007AFF";
-  const inactiveColor = theme === "dark" ? "#8E8E93" : "#8E8E93";
+  const inactiveColor = "#8E8E93";
 
   return (
     <Pressable
@@ -134,7 +151,13 @@ function CategoryButton({
   );
 }
 
-export function EmojiPickerView({ categories, onEmojiSelected }: Props) {
+export function EmojiPickerView({
+  categories,
+  onEmojiSelected,
+  isLoading = false,
+  listHeaderPrepend,
+  FlatListComponent = FlatList,
+}: Props) {
   const theme = useColorScheme() ?? "light";
   const [selectedCategoryId, setSelectedCategoryId] = useState(
     categories[0]?.id ?? "",
@@ -184,83 +207,95 @@ export function EmojiPickerView({ categories, onEmojiSelected }: Props) {
     ? searchResults
     : (selectedCategory?.emojis ?? []);
 
+  const bgColor = theme === "dark" ? "#1C1C1E" : "#FFFFFF";
+
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: theme === "dark" ? "#1C1C1E" : "#FFFFFF" },
-      ]}
-    >
-      {/* Search bar */}
-      <View
-        style={[
-          styles.searchBar,
-          { backgroundColor: theme === "dark" ? "#2C2C2E" : "#F2F2F7" },
-        ]}
-      >
-        <Search size={16} color="#8E8E93" />
-        <TextInput
+    // 通常の View (flex:1) をルートにすることで、BottomSheetContent が計算した
+    // height を正しく受け取れる。BottomSheetView は position:absolute のため不可。
+    <View style={[styles.container, { backgroundColor: bgColor }]}>
+      {/* ===== スティッキーヘッダー ===== */}
+      <View style={{ backgroundColor: bgColor }}>
+        {/* タイトル等、呼び出し元から渡されるコンテンツ */}
+        {listHeaderPrepend}
+
+        {/* 検索バー */}
+        <View
           style={[
-            styles.searchInput,
-            { color: theme === "dark" ? "#FFFFFF" : "#000000" },
+            styles.searchBar,
+            { backgroundColor: theme === "dark" ? "#2C2C2E" : "#F2F2F7" },
           ]}
-          placeholder="絵文字を検索"
-          placeholderTextColor="#8E8E93"
-          value={searchText}
-          onChangeText={setSearchText}
-          autoCapitalize="none"
-          autoCorrect={false}
+        >
+          <Search size={16} color="#8E8E93" />
+          <TextInput
+            style={[
+              styles.searchInput,
+              { color: theme === "dark" ? "#FFFFFF" : "#000000" },
+            ]}
+            placeholder="絵文字を検索"
+            placeholderTextColor="#8E8E93"
+            value={searchText}
+            onChangeText={setSearchText}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {searchText.length > 0 && (
+            <Pressable onPress={() => setSearchText("")}>
+              <X size={16} color="#8E8E93" />
+            </Pressable>
+          )}
+        </View>
+
+        {/* カテゴリタブ (水平スクロールのため通常の ScrollView で問題なし) */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoryBar}
+          contentContainerStyle={styles.categoryBarContent}
+        >
+          {categories.map((category) => (
+            <CategoryButton
+              key={category.id}
+              category={category}
+              isSelected={selectedCategoryId === category.id}
+              disabled={isSearching}
+              onPress={() => setSelectedCategoryId(category.id)}
+            />
+          ))}
+        </ScrollView>
+
+        <View
+          style={[
+            styles.divider,
+            { backgroundColor: theme === "dark" ? "#38383A" : "#E5E5EA" },
+          ]}
         />
-        {searchText.length > 0 && (
-          <Pressable onPress={() => setSearchText("")}>
-            <X size={16} color="#8E8E93" />
-          </Pressable>
-        )}
       </View>
 
-      {/* Category tabs */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoryBar}
-        contentContainerStyle={styles.categoryBarContent}
-      >
-        {categories.map((category) => (
-          <CategoryButton
-            key={category.id}
-            category={category}
-            isSelected={selectedCategoryId === category.id}
-            disabled={isSearching}
-            onPress={() => setSelectedCategoryId(category.id)}
-          />
-        ))}
-      </ScrollView>
-
-      <View
-        style={[
-          styles.divider,
-          { backgroundColor: theme === "dark" ? "#38383A" : "#E5E5EA" },
-        ]}
-      />
-
-      {/* Emoji grid */}
-      <FlatList
-        data={displayEmojis}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        numColumns={GRID_COLUMNS}
-        contentContainerStyle={styles.gridContent}
-        columnWrapperStyle={styles.gridRow}
-        getItemLayout={(_, index) => ({
-          length: EMOJI_SIZE + 8,
-          offset: (EMOJI_SIZE + 8) * Math.floor(index / GRID_COLUMNS),
-          index,
-        })}
-        initialNumToRender={40}
-        maxToRenderPerBatch={40}
-        windowSize={5}
-        removeClippedSubviews
-      />
+      {/* ===== スクロール領域 ===== */}
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator />
+        </View>
+      ) : (
+        <FlatListComponent
+          style={styles.list}
+          data={displayEmojis}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          numColumns={GRID_COLUMNS}
+          contentContainerStyle={styles.gridContent}
+          columnWrapperStyle={styles.gridRow}
+          getItemLayout={(_: unknown, index: number) => ({
+            length: EMOJI_SIZE + 8,
+            offset: (EMOJI_SIZE + 8) * Math.floor(index / GRID_COLUMNS),
+            index,
+          })}
+          initialNumToRender={40}
+          maxToRenderPerBatch={40}
+          windowSize={5}
+          removeClippedSubviews
+        />
+      )}
     </View>
   );
 }
@@ -310,8 +345,16 @@ const styles = StyleSheet.create({
   divider: {
     height: StyleSheet.hairlineWidth,
   },
+  list: {
+    flex: 1,
+  },
   gridContent: {
     padding: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   gridRow: {
     justifyContent: "flex-start",

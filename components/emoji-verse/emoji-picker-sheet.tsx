@@ -1,8 +1,8 @@
 import { accountAtom } from "@/models/atoms/account";
 import {
   BottomSheetBackdrop,
+  BottomSheetFlatList,
   BottomSheetModal,
-  BottomSheetView,
   type BottomSheetBackdropProps,
 } from "@gorhom/bottom-sheet";
 import type { CatalystCustomReaction } from "@natsuneko-laboratory/catalyst-sdk";
@@ -15,13 +15,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  View,
-  useColorScheme,
-} from "react-native";
+import { StyleSheet, Text, View, useColorScheme } from "react-native";
 import { getFilteredCategories, useDefaultCategories } from "./emoji-data";
 import { EmojiPickerView } from "./emoji-picker-view";
 import { recordUnicodeUsage, recordUrlUsage } from "./frequency-manager";
@@ -139,6 +133,28 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
       [],
     );
 
+    // BottomSheetFlatList を直接 BottomSheetModal の子にするためのヘッダー
+    // BottomSheetView でラップすると position:absolute で height が未定義になり、
+    // FlatList の高さが正しく制約されずスクロールできなくなる
+    const listHeaderPrepend = (
+      <>
+        <Text
+          style={[
+            styles.title,
+            { color: theme === "dark" ? "#FFFFFF" : "#000000" },
+          ]}
+        >
+          リアクションを追加
+        </Text>
+        <View
+          style={[
+            styles.headerDivider,
+            { backgroundColor: theme === "dark" ? "#38383A" : "#E5E5EA" },
+          ]}
+        />
+      </>
+    );
+
     return (
       <BottomSheetModal
         ref={bottomSheetRef}
@@ -154,53 +170,28 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
           backgroundColor: theme === "dark" ? "#48484A" : "#C7C7CC",
         }}
       >
-        <BottomSheetView style={styles.content}>
-          <Text
-            style={[
-              styles.title,
-              { color: theme === "dark" ? "#FFFFFF" : "#000000" },
-            ]}
-          >
-            リアクションを追加
-          </Text>
-          <View
-            style={[
-              styles.headerDivider,
-              { backgroundColor: theme === "dark" ? "#38383A" : "#E5E5EA" },
-            ]}
-          />
-          {isCategoriesLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator />
-            </View>
-          ) : (
-            <EmojiPickerView
-              categories={categories}
-              onEmojiSelected={handleEmojiSelected}
-            />
-          )}
-        </BottomSheetView>
+        {/* BottomSheetFlatList を BottomSheetModal の直接の子にすることで、
+            snapPoints が高さの上限として正しく機能しスクロールが有効になる */}
+        <EmojiPickerView
+          categories={categories}
+          onEmojiSelected={handleEmojiSelected}
+          isLoading={isCategoriesLoading}
+          listHeaderPrepend={listHeaderPrepend}
+          FlatListComponent={BottomSheetFlatList}
+        />
       </BottomSheetModal>
     );
   },
 );
 
 const styles = StyleSheet.create({
-  content: {
-    flex: 1,
-  },
   title: {
     fontSize: 17,
     fontWeight: "600",
     textAlign: "center",
-    paddingBottom: 8,
+    paddingVertical: 8,
   },
   headerDivider: {
     height: StyleSheet.hairlineWidth,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
   },
 });
