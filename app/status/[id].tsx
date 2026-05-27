@@ -50,6 +50,7 @@ import { withUniwind } from "uniwind";
 import { BottomSheetItem } from "@/components/bottom-sheet/item";
 import { BottomSheetModal, BottomSheetModalHandle } from "@/components/bottom-sheet/sheet";
 import "@/global.css";
+import { buildShareText } from "@/lib/share";
 
 type EpicleseWorld = {
   name: string;
@@ -232,11 +233,13 @@ export default function StatusDetailsPage() {
           Clipboard.setStringAsync(statusUrl);
           break;
         case "投稿をコピー":
-          Clipboard.setStringAsync(`${status?.body ?? ""}\n\n${statusUrl}`);
+          Clipboard.setStringAsync(
+            `${buildShareText(status?.body ?? "", status?.user?.displayName ?? "", "")}\n\n${statusUrl}`,
+          );
           break;
         case "共有":
           Share.share({
-            message: `${status?.body ?? ""}`,
+            message: buildShareText(status?.body ?? "", status?.user?.displayName ?? "", ""),
             url: statusUrl,
           });
           break;
