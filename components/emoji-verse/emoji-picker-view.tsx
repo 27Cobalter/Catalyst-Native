@@ -14,7 +14,7 @@ import {
   Utensils,
   X,
 } from "lucide-react-native";
-import React, { memo, useCallback, useMemo, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -163,6 +163,12 @@ export function EmojiPickerView({
     categories[0]?.id ?? "",
   );
   const [searchText, setSearchText] = useState("");
+
+  useEffect(() => {
+    if (selectedCategoryId === "" && categories.length > 0) {
+      setSelectedCategoryId(categories[0].id);
+    }
+  }, [categories, selectedCategoryId]);
   const isSearching = searchText.trim().length > 0;
 
   const searchResults = useMemo(() => {
