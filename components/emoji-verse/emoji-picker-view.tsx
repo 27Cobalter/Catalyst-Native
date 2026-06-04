@@ -28,7 +28,7 @@ import {
   useColorScheme,
 } from "react-native";
 import type { EmojiCategory, EmojiItem } from "./types";
-import { emojiToCodepoints } from "./unicode";
+import { emojiToTwemojiKey } from "./unicode";
 
 const GRID_COLUMNS = 8;
 const EMOJI_SIZE = 36;
@@ -80,7 +80,7 @@ const EmojiItemCell = memo(
     const handlePress = useCallback(() => onPress(item), [item, onPress]);
 
     if (item.type.kind === "unicode") {
-      const codepoint = emojiToCodepoints(item.type.emoji);
+      const codepoint = emojiToTwemojiKey(item.type.emoji);
       const source = emojis[codepoint as keyof typeof emojis];
       if (source) {
         return (
