@@ -84,13 +84,6 @@ export const ProfileHeader = ({ user, relationships, onUpdateRelationships, onLa
     }
   }, [user]);
 
-  useAsyncEffect(async () => {
-    if (account && user) {
-      const rel = await client.catalyst.relationships(user.screenName);
-      onUpdateRelationships?.(rel);
-    }
-  }, [account, user, client.catalyst, onUpdateRelationships]);
-
   return (
     <View className="bg-light-background dark:bg-dark-background" onLayout={onLayout}>
       <View>
