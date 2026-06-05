@@ -3,10 +3,10 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import { getCdnUrl } from "@/lib/media";
 import { accountAtom } from "@/models/atoms/account";
 import * as Credential from "@/models/credential";
-import type { DrawerContentComponentProps } from "@react-navigation/drawer";
-import { DrawerActions, useIsFocused } from "@react-navigation/native";
+import { DrawerActions, useIsFocused } from "expo-router/react-navigation";
 import { Image } from "expo-image";
 import { router, useSegments } from "expo-router";
+import type { DrawerNavigationHelpers } from "expo-router/build/react-navigation/drawer/types";
 import { Drawer } from "expo-router/drawer";
 import { useAtom } from "jotai";
 import { Cog, Images, LogIn, Menu, Trophy, User } from "lucide-react-native";
@@ -21,7 +21,7 @@ type Route = {
   icon: () => React.ReactNode;
 };
 
-const DrawerMenu = ({ route, navigation }: { route: Route; navigation: DrawerContentComponentProps["navigation"] }) => {
+const DrawerMenu = ({ route, navigation }: { route: Route; navigation: DrawerNavigationHelpers }) => {
   const onPress = useCallback(() => {
     navigation.dispatch(DrawerActions.closeDrawer());
     router.push(route.href as never);

@@ -1,7 +1,7 @@
 import { ContestList } from "@/components/explorer/contests/list";
 import { Tab, Tabs } from "@/components/tabs";
 import { TimelineHandle } from "@/components/timeline/base";
-import { useScrollToTop } from "@react-navigation/native";
+import { useScrollToTop } from "expo-router/react-navigation";
 import { Search, X } from "lucide-react-native";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { TextInput, View } from "react-native";

@@ -8,7 +8,7 @@ import { UsersPlaceholder } from "@/components/explorer/users/placeholder";
 import { Tab, Tabs } from "@/components/tabs";
 import { TimelineBase, TimelineHandle } from "@/components/timeline/base";
 import { clientAtom } from "@/models/atoms/credential";
-import { useScrollToTop } from "@react-navigation/native";
+import { useScrollToTop } from "expo-router/react-navigation";
 import { useAtomValue } from "jotai";
 import { Search, X } from "lucide-react-native";
 import React, { useCallback, useMemo, useRef, useState } from "react";

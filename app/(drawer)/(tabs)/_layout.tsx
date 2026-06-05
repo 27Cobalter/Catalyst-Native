@@ -1,7 +1,6 @@
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { cn } from "@/lib/utils";
 import { accountAtom } from "@/models/atoms/account";
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { Tabs } from "expo-router";
@@ -24,7 +23,7 @@ type TabItem = {
   authRequired?: boolean;
 };
 
-function CustomTabBar({ state, navigation }: BottomTabBarProps) {
+function CustomTabBar({ state, navigation }: any) {
   const colorScheme = useColorScheme();
   const account = useAtomValue(accountAtom);
   const insets = useSafeAreaInsets();
@@ -98,7 +97,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
               }
             }}
             onPress={() => {
-              const route = state.routes.find((route) => route.name === tab.key);
+              const route = state.routes.find((route: { name: string }) => route.name === tab.key);
               if (!route) {
                 return;
               }

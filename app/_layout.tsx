@@ -8,7 +8,7 @@ import { accountAtom } from "@/models/atoms/account";
 import * as Credential from "@/models/credential";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { getMessaging, setBackgroundMessageHandler } from "@react-native-firebase/messaging";
-import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
+import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import * as Sentry from "@sentry/react-native";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";

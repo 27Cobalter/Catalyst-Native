@@ -2,7 +2,7 @@ import { SystemNotificationList } from "@/components/notification/system";
 import { UserMessageList } from "@/components/notification/user-message";
 import { Tab, Tabs } from "@/components/tabs";
 import { TimelineHandle } from "@/components/timeline/base";
-import { useScrollToTop } from "@react-navigation/native";
+import { useScrollToTop } from "expo-router/react-navigation";
 import React, { useMemo, useRef } from "react";
 import { View } from "react-native";
 

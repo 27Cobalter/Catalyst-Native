@@ -5,7 +5,7 @@ import { FirehoseTimeline } from "@/components/timeline/firehose";
 import { FollowingTimeline } from "@/components/timeline/following";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";
 import { credentialAtom } from "@/models/atoms/credential";
-import { useScrollToTop } from "@react-navigation/native";
+import { useScrollToTop } from "expo-router/react-navigation";
 import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import React, { useCallback, useMemo, useRef } from "react";
