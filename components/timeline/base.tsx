@@ -61,7 +61,11 @@ export const TimelineBase = ({
 
     try {
       const since = items.length > 0 ? items[0].id : null;
-      const newItems = await fetcher(since, null);
+      const [newItems] = await Promise.all([
+        //
+        fetcher(since, null),
+        new Promise((resolve) => setTimeout(resolve, 800)),
+      ]);
 
       if (newItems.length > 0) {
         setItems((prevItems) => merge(prevItems, newItems, sets, (item) => item.id, "first"));
