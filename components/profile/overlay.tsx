@@ -6,7 +6,7 @@ import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { ArrowLeft, Ellipsis, ShareIcon, ShieldBan } from "lucide-react-native";
 import { useCallback, useRef } from "react";
-import { Animated, Share, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Platform, Share, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
@@ -40,10 +40,16 @@ export const ProfileOverlay = ({ user, relationships, scrollY, showBackButton = 
   const handleSheetOpen = useCallback(() => sheet.current?.present(), []);
   const handleShareUser = useCallback(() => {
     sheet.current?.dismiss();
-    Share.share({
-      message: `${user?.displayName} (@${user?.screenName})`,
-      url: url,
-    });
+    if (Platform.OS === "ios") {
+      Share.share({
+        message: `${user?.displayName} (@${user?.screenName})`,
+        url: url,
+      });
+    } else {
+      Share.share({
+        message: `${user?.displayName} (@${user?.screenName})\n${url}`,
+      });
+    }
   }, [user, url]);
   const handleToggleBlock = useCallback(async () => {
     sheet.current?.dismiss();

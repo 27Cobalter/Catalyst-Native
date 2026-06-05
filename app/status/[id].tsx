@@ -28,7 +28,7 @@ import {
   Send,
   Trash2,
 } from "lucide-react-native";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -238,10 +238,16 @@ export default function StatusDetailsPage() {
           );
           break;
         case "共有":
-          Share.share({
-            message: buildShareText(status?.body ?? "", status?.user?.displayName ?? "", ""),
-            url: statusUrl,
-          });
+          if (Platform.OS === "ios") {
+            Share.share({
+              message: buildShareText(status?.body ?? "", status?.user?.displayName ?? "", ""),
+              url: statusUrl,
+            });
+          } else {
+            Share.share({
+              message: buildShareText(status?.body ?? "", status?.user?.displayName ?? "", statusUrl),
+            });
+          }
           break;
       }
     },
