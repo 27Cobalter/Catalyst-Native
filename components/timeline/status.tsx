@@ -142,14 +142,14 @@ export const TimelineStatus = memo(({ status, renderingMode = "twtr" }: Props) =
 
       {/* Reactions */}
       {(hasReactions || isLoggedIn) && (
-        <View className="px-4 pb-1">
+        <Pressable className="px-4 pb-1" onPress={navigateToStatus}>
           <ReactionBar
             reactions={reactions}
             onReact={handleReact}
             onUnreact={handleUnreact}
             onAddReaction={isLoggedIn ? () => emojiPickerRef.current?.open() : undefined}
           />
-        </View>
+        </Pressable>
       )}
 
       <EmojiPickerSheet ref={emojiPickerRef} onReact={handleReact} />
