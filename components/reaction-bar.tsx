@@ -15,8 +15,8 @@ const isUnicodeCodepoint = (symbol: string): boolean => {
 
 type Props = {
   reactions: Record<string, CatalystReaction>;
-  onReact: (symbol: string) => void;
-  onUnreact: (symbol: string) => void;
+  onReact?: (symbol: string) => void;
+  onUnreact?: (symbol: string) => void;
   onAddReaction?: () => void;
 };
 
@@ -30,7 +30,8 @@ export const ReactionBar = ({ reactions, onReact, onUnreact, onAddReaction }: Pr
         .map((reaction) => (
           <Pressable
             key={reaction.symbol}
-            onPress={() => (reaction.hasSelfReaction ? onUnreact(reaction.symbol) : onReact(reaction.symbol))}
+            disabled={!onReact && !onUnreact}
+            onPress={() => (reaction.hasSelfReaction ? onUnreact?.(reaction.symbol) : onReact?.(reaction.symbol))}
             className={cn(
               "flex-row items-center gap-1 px-2.5 py-1 rounded-full border",
               reaction.hasSelfReaction
