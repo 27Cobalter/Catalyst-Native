@@ -1,6 +1,6 @@
 import type { CatalystAlbumDisplayMode } from "@natsuneko-laboratory/catalyst-sdk";
 import React from "react";
-import { Pressable, ScrollView, Switch, Text, TextInput, View, useColorScheme } from "react-native";
+import { Platform, Pressable, ScrollView, Switch, Text, TextInput, View, useColorScheme } from "react-native";
 
 const DISPLAY_MODE_OPTIONS: { value: CatalystAlbumDisplayMode; label: string }[] = [
   { value: "timeline", label: "タイムライン" },
@@ -44,6 +44,7 @@ export const AlbumForm = ({
           placeholder="タイトル"
           placeholderTextColor={theme === "dark" ? "#666" : "#999"}
           className="rounded-lg border border-light-border bg-light-surface p-3 text-base text-light-text dark:border-dark-border dark:bg-dark-surface dark:text-dark-text"
+          style={Platform.OS === "ios" ? { lineHeight: undefined } : undefined}
         />
         <TextInput
           value={description}

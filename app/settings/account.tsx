@@ -3,7 +3,7 @@ import * as Credential from "@/models/credential";
 import { router } from "expo-router";
 import { useAtom } from "jotai";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Platform, Pressable, Text, TextInput, View } from "react-native";
 
 export default function AccountSettingsPage() {
   const [account, setAccount] = useAtom(accountAtom);
@@ -133,6 +133,7 @@ export default function AccountSettingsPage() {
               autoCorrect={false}
               editable={canEditScreenName}
               placeholder="ユーザー名"
+              style={Platform.OS === "ios" ? { lineHeight: undefined } : undefined}
             />
           </View>
           <Pressable className="px-4 py-3.5" onPress={save} disabled={isSaveDisabled}>

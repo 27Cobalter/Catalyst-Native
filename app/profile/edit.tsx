@@ -8,7 +8,7 @@ import { Image as ExpoImage } from "expo-image";
 import { Stack, useRouter } from "expo-router";
 import { useAtom, useAtomValue } from "jotai";
 import { Camera, Plus, Trash2 } from "lucide-react-native";
-import React, { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -332,6 +332,7 @@ export default function ProfileEditScreen() {
                   placeholder="表示名"
                   placeholderTextColor={theme === "dark" ? "#666" : "#999"}
                   className="rounded-lg border border-light-border bg-light-surface px-3 py-2.5 text-base text-light-text dark:border-dark-border dark:bg-dark-surface dark:text-dark-text"
+                  style={Platform.OS === "ios" ? { lineHeight: undefined } : undefined}
                 />
                 {!displayName.trim() && (
                   <Text className="text-xs text-light-error dark:text-dark-error">表示名は必須です</Text>
@@ -368,6 +369,7 @@ export default function ProfileEditScreen() {
                   autoCorrect={false}
                   keyboardType="url"
                   className="rounded-lg border border-light-border bg-light-surface px-3 py-2.5 text-base text-light-text dark:border-dark-border dark:bg-dark-surface dark:text-dark-text"
+                  style={Platform.OS === "ios" ? { lineHeight: undefined } : undefined}
                 />
                 {website.trim() && !isValidUrl(website) && (
                   <Text className="text-xs text-light-error dark:text-dark-error">
@@ -396,6 +398,7 @@ export default function ProfileEditScreen() {
                     autoCorrect={false}
                     keyboardType="url"
                     className="rounded-lg border border-light-border bg-light-surface px-3 py-2.5 text-base text-light-text dark:border-dark-border dark:bg-dark-surface dark:text-dark-text"
+                    style={Platform.OS === "ios" ? { lineHeight: undefined } : undefined}
                   />
                   {w.trim() && !isValidUrl(w) && (
                     <Text className="text-xs text-light-error dark:text-dark-error">

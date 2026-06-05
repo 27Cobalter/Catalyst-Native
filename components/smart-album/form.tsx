@@ -236,6 +236,7 @@ export const SmartAlbumForm = ({
             placeholder="タイトル"
             placeholderTextColor={theme === "dark" ? "#666" : "#999"}
             className="rounded-lg border border-light-border bg-light-surface p-3 text-base text-light-text dark:border-dark-border dark:bg-dark-surface dark:text-dark-text"
+            style={Platform.OS === "ios" ? { lineHeight: undefined } : undefined}
           />
           <TextInput
             value={description}
@@ -480,6 +481,7 @@ export const SmartAlbumForm = ({
               placeholder={CONDITION_PLACEHOLDERS[conditionType]}
               placeholderTextColor={theme === "dark" ? "#666" : "#999"}
               className="rounded-lg border border-light-border bg-light-surface p-3 text-base text-light-text dark:border-dark-border dark:bg-dark-surface dark:text-dark-text"
+              style={Platform.OS === "ios" ? { lineHeight: undefined } : undefined}
             />
           </View>
 
