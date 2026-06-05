@@ -27,13 +27,13 @@ const EmptyState = () => (
 
 type TimelineHandle = {
   scrollToTop: () => void;
-}
+};
 
 type Props = {
   ref?: Ref<TimelineHandle>;
-}
+};
 
-export const SystemNotificationList = ({ ref } : Props) => {
+export const SystemNotificationList = ({ ref }: Props) => {
   const client = useAtomValue(clientAtom);
   const [items, setItems] = useState<Notification[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -77,17 +77,25 @@ export const SystemNotificationList = ({ ref } : Props) => {
     }
   });
 
-  useImperativeHandle(ref, () => ({
-    scrollToTop: () => {
-      list.current?.scrollToOffset({ offset: 0, animated: true });
-    }
-  }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      scrollToTop: () => {
+        list.current?.scrollToOffset({ offset: 0, animated: true });
+      },
+    }),
+    [],
+  );
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
       const since = items.length > 0 ? items[0].id : null;
-      const newItems = await fetchNotifications(since, null);
+      const [newItems] = await Promise.all([
+        //
+        fetchNotifications(since, null),
+        new Promise((resolve) => setTimeout(resolve, 800)),
+      ]);
       if (newItems.length > 0) {
         const existingIds = new Set(items.map((i) => i.id));
         const unique = newItems.filter((n) => !existingIds.has(n.id));
