@@ -103,10 +103,10 @@
     "eas-cli-local-build-plugin": "^18.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~55.0.0",
-    "npm-run-all2": "^8.0.4",
-    "oxfmt": "^0.40.0",
-    "tsx": "^4.21.0",
-    "typescript": "~5.9.2"
+    "npm-run-all2": "^9.0.1",
+    "oxfmt": "^0.53.0",
+    "tsx": "^4.22.4",
+    "typescript": "~6.0.3"
   },
   "private": true,
   "pnpm": {
