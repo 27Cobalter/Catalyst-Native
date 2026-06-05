@@ -193,12 +193,10 @@ export default function ProfileEditScreen() {
       await client.egeria.update({
         displayName: displayName.trim(),
         profile: {
-          iconUrl: user?.profile?.iconUrl ?? "",
-          bannerUrl: user?.profile?.bannerUrl ?? "",
           bio,
           website: website.trim(),
           additionalWebsites: filteredWebsites,
-        },
+        } as EgeriaUserProfile,
       });
 
       const me = await client.egeria.me();
@@ -217,7 +215,7 @@ export default function ProfileEditScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [canSave, account, user, displayName, bio, website, additionalWebsites, client, setAccount, router]);
+  }, [canSave, account, displayName, bio, website, additionalWebsites, client, setAccount, router]);
 
   const currentBannerUri = user?.profile?.bannerUrl
     ? getCdnUrl({ src: user.profile.bannerUrl, variant: "header", width: screenWidth })
