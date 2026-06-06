@@ -9,7 +9,7 @@ import type { CatalystReaction, CatalystStatus } from "@natsuneko-laboratory/cat
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
-import React, { memo, useCallback, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
 
@@ -49,6 +49,20 @@ export const TimelineStatus = memo(({ status, renderingMode = "twtr" }: Props) =
       ]),
     ),
   );
+
+  useEffect(() => {
+    const vr = (status as StatusWithReactions).visitor?.reactions ?? [];
+    setReactions(
+      Object.fromEntries(
+        Object.entries((status as StatusWithReactions).reactions ?? {}).map(([key, reaction]) => [
+          key,
+          { ...reaction, hasSelfReaction: vr.includes(reaction.symbol) },
+        ]),
+      ),
+    );
+    // status.id が変わったとき（FlashList のセル再利用時）にリセット
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status.id]);
 
   const hasReactions = Object.values(reactions).some((r) => r.count >= 1);
 
