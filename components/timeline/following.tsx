@@ -36,6 +36,10 @@ export const FollowingTimeline = ({ ref }: Props) => {
     setRingRefreshKey((k) => k + 1);
   }, []);
 
+  const handleTimelineRefresh = useCallback(() => {
+    setRingRefreshKey((k) => k + 1);
+  }, []);
+
   const handleMarkRead = useCallback((_username: string) => {
     // Ring will refresh via ringRefreshKey on viewer close
   }, []);
@@ -57,7 +61,7 @@ export const FollowingTimeline = ({ ref }: Props) => {
 
   return (
     <>
-      <TimelineBase ref={ref} fetcher={fetcher} ListHeaderComponent={Header} />
+      <TimelineBase ref={ref} fetcher={fetcher} ListHeaderComponent={Header} onRefresh={handleTimelineRefresh} />
       <FleetViewer
         username={viewerUsername}
         usernames={fleetUsernames}
