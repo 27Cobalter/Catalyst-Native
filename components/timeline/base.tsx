@@ -26,6 +26,7 @@ type Props = {
   ListHeaderComponent?: React.ComponentType;
   ListEmptyComponent?: React.ComponentType;
   ListEmptyComponentStyle?: StyleProp<ViewStyle>;
+  onRefresh?: () => void;
   ref?: React.Ref<TimelineHandle>;
 };
 
@@ -39,6 +40,7 @@ export const TimelineBase = ({
   ListHeaderComponent,
   ListEmptyComponent,
   ListEmptyComponentStyle,
+  onRefresh: onRefreshCallback,
   ref,
 }: Props) => {
   const [items, setItems] = useState<CatalystStatus[]>([]);
@@ -72,8 +74,9 @@ export const TimelineBase = ({
       }
     } finally {
       setIsRefreshing(false);
+      onRefreshCallback?.();
     }
-  }, [items, fetcher]);
+  }, [items, fetcher, onRefreshCallback]);
 
   const onLoadMore = useCallback(async () => {
     if (!hasMore.current || isLoadingRef.current) return;
