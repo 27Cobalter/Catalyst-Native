@@ -114,6 +114,14 @@
         {}
       ],
       [
+        "expo-media-library",
+        {
+          "photosPermission": "画像を保存するために写真ライブラリへアクセスします。",
+          "savePhotosPermission": "画像を写真ライブラリに保存するためにアクセスします。",
+          "isAccessMediaLocationEnabled": false
+        }
+      ],
+      [
         "expo-font",
         {}
       ],

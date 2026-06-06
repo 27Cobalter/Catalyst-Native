@@ -1,11 +1,21 @@
 import { getCdnUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import { Zoomable } from "@likashefqet/react-native-image-zoom";
+import BottomSheet, {
+  BottomSheetBackdrop,
+  BottomSheetView,
+  type BottomSheetBackdropProps,
+} from "@gorhom/bottom-sheet";
+import { BottomSheetItem } from "@/components/bottom-sheet/item";
 import type { Media } from "@natsuneko-laboratory/catalyst-sdk";
+import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
+import { File, Paths } from "expo-file-system";
+import { Asset as MediaLibraryAsset, requestPermissionsAsync as requestMediaLibraryPermissions } from "expo-media-library";
+import { Download, ImageDown, Share2 } from "lucide-react-native";
 import { EyeOff } from "lucide-react-native";
-import React, { memo, useEffect, useMemo, useRef, useState } from "react";
-import { Modal, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Alert, Modal, Platform, Pressable, ScrollView, Share, Text, View, useColorScheme, useWindowDimensions } from "react-native";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, {
   interpolate,
@@ -15,6 +25,11 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { withUniwind } from "uniwind";
+
+const UniShare2 = withUniwind(Share2);
+const UniDownload = withUniwind(Download);
+const UniImageDown = withUniwind(ImageDown);
 
 const SPRING_CONFIG = {
   mass: 0.5,
@@ -31,6 +46,7 @@ type Props = {
 export const MediaCarousel = memo(({ medias, onIndexChange }: Props) => {
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const MAX_HEIGHT = SCREEN_HEIGHT / 2;
+  const theme = useColorScheme() ?? "light";
   const [presentedMediaIndex, setPresentedMediaIndex] = useState<number | null>(null);
   const [isBlurRemoved, setIsBlurRemoved] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -39,17 +55,81 @@ export const MediaCarousel = memo(({ medias, onIndexChange }: Props) => {
   const [activeTouches, setActiveTouches] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const mediaIdentity = useMemo(() => medias.map((media) => media.id).join(":"), [medias]);
+  const modalIndexRef = useRef(0);
+  const imageActionsSheetRef = useRef<BottomSheet>(null);
+  const actionTargetMediaRef = useRef<Media | null>(null);
 
   const len = medias.length;
   const translateX = useSharedValue(0);
-  // Settled integer index, readable from worklet
   const currentIndexSV = useSharedValue(0);
 
-  // Modal dismiss gesture
   const modalTranslateY = useSharedValue(0);
   const zoomScale = useSharedValue(1);
 
   const dismissModal = () => setPresentedMediaIndex(null);
+
+  const doShareImage = useCallback(async () => {
+    const media = actionTargetMediaRef.current;
+    if (!media) return;
+
+    imageActionsSheetRef.current?.close();
+
+    try {
+      const url = getCdnUrl({
+        src: media.url,
+        variant: "medium",
+        width: SCREEN_WIDTH,
+        aspect: { w: media.metadata?.width ?? 1, h: media.metadata?.height ?? 1 },
+      });
+      const file = await File.downloadFileAsync(url, Paths.cache, { idempotent: true });
+      await Share.share(Platform.OS === "ios" ? { url: file.uri } : { message: url });
+    } catch (e) {
+      Alert.alert("エラー", `画像の共有に失敗しました。\n${e instanceof Error ? e.message : String(e)}`);
+    }
+  }, [SCREEN_WIDTH]);
+
+  const doSaveImage = useCallback(
+    async (quality: "current" | "original") => {
+      const media = actionTargetMediaRef.current;
+      if (!media) return;
+
+      imageActionsSheetRef.current?.close();
+
+      try {
+        const { status } = await requestMediaLibraryPermissions();
+        if (status !== "granted") {
+          Alert.alert("権限エラー", "写真を保存するには写真ライブラリへのアクセス許可が必要です。");
+          return;
+        }
+
+        const url =
+          quality === "original"
+            ? getCdnUrl({ src: media.url, variant: "original", width: 9999 })
+            : getCdnUrl({
+                src: media.url,
+                variant: "medium",
+                width: SCREEN_WIDTH,
+                aspect: { w: media.metadata?.width ?? 1, h: media.metadata?.height ?? 1 },
+              });
+
+        const file = await File.downloadFileAsync(url, Paths.cache, { idempotent: true });
+        await MediaLibraryAsset.create(file.uri);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch (e) {
+        Alert.alert("エラー", `画像の保存に失敗しました。\n${e instanceof Error ? e.message : String(e)}`);
+      }
+    },
+    [SCREEN_WIDTH],
+  );
+
+  const handleImageLongPress = useCallback(() => {
+    const media = medias[modalIndexRef.current];
+    if (!media) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    actionTargetMediaRef.current = media;
+    imageActionsSheetRef.current?.snapToIndex(0);
+  }, [medias]);
 
   useEffect(() => {
     // FlashList can recycle timeline cells, so reset carousel state when a different post's media set is mounted.
@@ -59,6 +139,7 @@ export const MediaCarousel = memo(({ medias, onIndexChange }: Props) => {
     setIsZoomed(false);
     setModalIndex(0);
     setActiveTouches(0);
+    modalIndexRef.current = 0;
     translateX.value = 0;
     currentIndexSV.value = 0;
     modalTranslateY.value = 0;
@@ -89,6 +170,14 @@ export const MediaCarousel = memo(({ medias, onIndexChange }: Props) => {
       }
     });
 
+  const longPressGesture = Gesture.LongPress()
+    .minDuration(600)
+    .onStart(() => {
+      runOnJS(handleImageLongPress)();
+    });
+
+  const modalGesture = Gesture.Simultaneous(dismissPanGesture, longPressGesture);
+
   const modalContentStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: modalTranslateY.value }],
   }));
@@ -114,6 +203,7 @@ export const MediaCarousel = memo(({ medias, onIndexChange }: Props) => {
     modalTranslateY.value = 0;
     setPresentedMediaIndex(index);
     setModalIndex(index);
+    modalIndexRef.current = index;
   };
 
   const panGesture = Gesture.Pan()
@@ -170,6 +260,11 @@ export const MediaCarousel = memo(({ medias, onIndexChange }: Props) => {
     setCurrentIndex(index);
     onIndexChange?.(index);
   };
+
+  const renderBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />,
+    [],
+  );
 
   return (
     <>
@@ -267,75 +362,69 @@ export const MediaCarousel = memo(({ medias, onIndexChange }: Props) => {
         onRequestClose={() => setPresentedMediaIndex(null)}
       >
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <Animated.View style={[{ flex: 1 }, modalBgStyle]}>
-            <Pressable
-              onPress={() => setPresentedMediaIndex(null)}
-              style={{ position: "absolute", top: 48, right: 16, zIndex: 10, padding: 8 }}
-            >
-              <Text style={{ color: "white", fontSize: 20 }}>✕</Text>
-            </Pressable>
-            <GestureDetector gesture={dismissPanGesture}>
-              <Animated.View style={[{ flex: 1 }, modalContentStyle]}>
-                {presentedMediaIndex !== null && (
-                  <ScrollView
-                    ref={scrollViewRef}
-                    horizontal
-                    pagingEnabled
-                    scrollEnabled={!isZoomed && activeTouches < 2}
-                    showsHorizontalScrollIndicator={false}
-                    contentOffset={{ x: (presentedMediaIndex ?? 0) * SCREEN_WIDTH, y: 0 }}
-                    onMomentumScrollEnd={(e) => {
-                      const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-                      setModalIndex(index);
-                    }}
-                    onTouchStart={(e) => setActiveTouches(e.nativeEvent.touches.length)}
-                    onTouchMove={(e) => setActiveTouches(e.nativeEvent.touches.length)}
-                    onTouchEnd={() => setActiveTouches(0)}
-                  >
-                    {medias.map((media, index) => (
-                      <View
-                        key={media.id}
-                        style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT, justifyContent: "center" }}
-                      >
-                        {index === modalIndex ? (
-                          <Zoomable
-                            minScale={1}
-                            maxScale={5}
-                            scale={zoomScale}
-                            doubleTapScale={3}
-                            isDoubleTapEnabled
-                            isPinchEnabled
-                            isPanEnabled={isZoomed}
-                            onResetAnimationEnd={() => setIsZoomed(false)}
-                            onPinchEnd={(event) => {
-                              if (event.scale > 1) {
-                                setIsZoomed(true);
-                              } else {
-                                setIsZoomed(false);
-                              }
-                            }}
-                            style={{
-                              width: SCREEN_WIDTH,
-                              height: SCREEN_HEIGHT,
-                              justifyContent: "center",
-                              alignItems: "center",
-                            }}
-                          >
-                            <Image
-                              recyclingKey={`${mediaIdentity}:${media.id}:modal`}
-                              source={{
-                                uri: getCdnUrl({
-                                  src: media.url,
-                                  variant: "medium",
-                                  width: SCREEN_WIDTH,
-                                  aspect: { w: media.metadata?.width ?? 1, h: media.metadata?.height ?? 1 },
-                                }),
-                              }}
-                              style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
-                              contentFit="contain"
-                            />
-                          </Zoomable>
-                        ) : (
+          {/* Background color animation */}
+          <Animated.View
+            style={[{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }, modalBgStyle]}
+            pointerEvents="none"
+          />
+
+          {/* Close button */}
+          <Pressable
+            onPress={() => setPresentedMediaIndex(null)}
+            style={{ position: "absolute", top: 48, right: 16, zIndex: 10, padding: 8 }}
+          >
+            <Text style={{ color: "white", fontSize: 20 }}>✕</Text>
+          </Pressable>
+
+          {/* Image content with dismiss/long-press gesture */}
+          <GestureDetector gesture={modalGesture}>
+            <Animated.View style={[{ flex: 1 }, modalContentStyle]}>
+              {presentedMediaIndex !== null && (
+                <ScrollView
+                  ref={scrollViewRef}
+                  horizontal
+                  pagingEnabled
+                  scrollEnabled={!isZoomed && activeTouches < 2}
+                  showsHorizontalScrollIndicator={false}
+                  contentOffset={{ x: (presentedMediaIndex ?? 0) * SCREEN_WIDTH, y: 0 }}
+                  onMomentumScrollEnd={(e) => {
+                    const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+                    setModalIndex(index);
+                    modalIndexRef.current = index;
+                  }}
+                  onTouchStart={(e) => setActiveTouches(e.nativeEvent.touches.length)}
+                  onTouchMove={(e) => setActiveTouches(e.nativeEvent.touches.length)}
+                  onTouchEnd={() => setActiveTouches(0)}
+                >
+                  {medias.map((media, index) => (
+                    <View
+                      key={media.id}
+                      style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT, justifyContent: "center" }}
+                    >
+                      {index === modalIndex ? (
+                        <Zoomable
+                          minScale={1}
+                          maxScale={5}
+                          scale={zoomScale}
+                          doubleTapScale={3}
+                          isDoubleTapEnabled
+                          isPinchEnabled
+                          isPanEnabled={isZoomed}
+                          onResetAnimationEnd={() => setIsZoomed(false)}
+                          onPinchEnd={(event) => {
+                            if (event.scale > 1) {
+                              setIsZoomed(true);
+                            } else {
+                              setIsZoomed(false);
+                            }
+                          }}
+                          style={{
+                            width: SCREEN_WIDTH,
+                            height: SCREEN_HEIGHT,
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
                           <Image
                             recyclingKey={`${mediaIdentity}:${media.id}:modal`}
                             source={{
@@ -349,14 +438,49 @@ export const MediaCarousel = memo(({ medias, onIndexChange }: Props) => {
                             style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
                             contentFit="contain"
                           />
-                        )}
-                      </View>
-                    ))}
-                  </ScrollView>
-                )}
-              </Animated.View>
-            </GestureDetector>
-          </Animated.View>
+                        </Zoomable>
+                      ) : (
+                        <Image
+                          recyclingKey={`${mediaIdentity}:${media.id}:modal`}
+                          source={{
+                            uri: getCdnUrl({
+                              src: media.url,
+                              variant: "medium",
+                              width: SCREEN_WIDTH,
+                              aspect: { w: media.metadata?.width ?? 1, h: media.metadata?.height ?? 1 },
+                            }),
+                          }}
+                          style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
+                          contentFit="contain"
+                        />
+                      )}
+                    </View>
+                  ))}
+                </ScrollView>
+              )}
+            </Animated.View>
+          </GestureDetector>
+
+          {/* Image action bottom sheet - rendered directly (no portal) so it works inside Modal */}
+          <BottomSheet
+            ref={imageActionsSheetRef}
+            index={-1}
+            enableDynamicSizing
+            enablePanDownToClose
+            backdropComponent={renderBackdrop}
+            backgroundStyle={{
+              backgroundColor: theme === "dark" ? "#1C1C1E" : "#FFFFFF",
+            }}
+            handleIndicatorStyle={{
+              backgroundColor: theme === "dark" ? "#48484A" : "#C7C7CC",
+            }}
+          >
+            <BottomSheetView style={{ paddingBottom: 32, gap: 8 }}>
+              <BottomSheetItem title="画像を共有" prefixIcon={UniShare2} onPress={doShareImage} />
+              <BottomSheetItem title="現在の画質で保存" prefixIcon={UniDownload} onPress={() => doSaveImage("current")} />
+              <BottomSheetItem title="最大画質で保存" prefixIcon={UniImageDown} onPress={() => doSaveImage("original")} />
+            </BottomSheetView>
+          </BottomSheet>
         </GestureHandlerRootView>
       </Modal>
     </>
