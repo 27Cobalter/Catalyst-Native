@@ -49,6 +49,9 @@ importers:
       '@react-native-community/datetimepicker':
         specifier: 9.1.0
         version: 9.1.0(expo@56.0.8)(react-native@0.85.3(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3)
+      '@react-native-community/netinfo':
+        specifier: 12.0.1
+        version: 12.0.1(react-native@0.85.3(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3)
       '@react-native-community/push-notification-ios':
         specifier: ^1.12.0
         version: 1.12.0(react-native@0.85.3(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3)
@@ -2067,6 +2070,12 @@ packages:
         optional: true
       react-native-windows:
         optional: true
+
+  '@react-native-community/netinfo@12.0.1':
+    resolution: {integrity: sha512-P/3caXIvfYSJG8AWJVefukg+ZGRPs+M4Lp3pNJtgcTYoJxCjWrKQGNnCkj/Cz//zWa/avGed0i/wzm0T8vV2IQ==}
+    peerDependencies:
+      react: '*'
+      react-native: '>=0.59'
 
   '@react-native-community/push-notification-ios@1.12.0':
     resolution: {integrity: sha512-nu6ctimVlK4E3id3QHs9yZJ4vCP5UG3lRaBvSboJZ2IWU0XROcIJnNVIXsSH7C3hTlb84lNwPWir3y/TxRj0oA==}
@@ -9400,6 +9409,11 @@ snapshots:
       react-native: 0.85.3(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.14)(react@19.2.3)
     optionalDependencies:
       expo: 56.0.8(@babel/core@7.29.7)(@expo/dom-webview@56.0.5)(@expo/metro-runtime@6.1.2)(expo-router@56.2.8)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native-worklets@0.9.1(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(react-native@0.85.3(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3))(react-native@0.85.3(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
+
+  '@react-native-community/netinfo@12.0.1(react-native@0.85.3(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3)':
+    dependencies:
+      react: 19.2.3
+      react-native: 0.85.3(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.14)(react@19.2.3)
 
   '@react-native-community/push-notification-ios@1.12.0(react-native@0.85.3(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3)':
     dependencies:

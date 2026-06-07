@@ -14,7 +14,8 @@
         "usesNonExemptEncryption": false
       },
       "entitlements": {
-        "aps-environment": "production"
+        "aps-environment": "production",
+        "com.apple.developer.networking.wifi-info": true
       },
       "infoPlist": {
         "UIBackgroundModes": [

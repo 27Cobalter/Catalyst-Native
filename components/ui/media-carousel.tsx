@@ -1,5 +1,8 @@
 import { getCdnUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
+import { timelineImageQualityAtom, timelineWifiUpgradeAtom } from "@/models/atoms/image-quality";
+import NetInfo from "@react-native-community/netinfo";
+import { useAtomValue } from "jotai";
 import { Zoomable } from "@likashefqet/react-native-image-zoom";
 import BottomSheet, {
   BottomSheetBackdrop,
@@ -58,6 +61,22 @@ export const MediaCarousel = memo(({ medias, onIndexChange }: Props) => {
   const modalIndexRef = useRef(0);
   const imageActionsSheetRef = useRef<BottomSheet>(null);
   const actionTargetMediaRef = useRef<Media | null>(null);
+
+  const imageQuality = useAtomValue(timelineImageQualityAtom);
+  const wifiUpgrade = useAtomValue(timelineWifiUpgradeAtom);
+  const [isWifi, setIsWifi] = useState(false);
+
+  useEffect(() => {
+    NetInfo.fetch().then((state) => setIsWifi(state.type === "wifi"));
+    return NetInfo.addEventListener((state) => setIsWifi(state.type === "wifi"));
+  }, []);
+
+  const timelineVariant = useMemo(() => {
+    if (wifiUpgrade && isWifi) {
+      return imageQuality === "low" ? "small" : "medium";
+    }
+    return imageQuality === "low" ? "timeline" : "small";
+  }, [imageQuality, wifiUpgrade, isWifi]);
 
   const len = medias.length;
   const translateX = useSharedValue(0);
@@ -295,7 +314,7 @@ export const MediaCarousel = memo(({ medias, onIndexChange }: Props) => {
                     uri: getCdnUrl({
                       src: media.url,
                       width: SCREEN_WIDTH,
-                      variant: "timeline",
+                      variant: timelineVariant,
                       aspect: { w: media.metadata?.width ?? 1, h: media.metadata?.height ?? 1 },
                     }),
                   }}

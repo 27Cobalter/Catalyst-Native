@@ -5,7 +5,9 @@ import "react-native-get-random-values";
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { accountAtom } from "@/models/atoms/account";
+import { timelineImageQualityAtom, timelineWifiUpgradeAtom } from "@/models/atoms/image-quality";
 import * as Credential from "@/models/credential";
+import { loadTimelineImageQuality, loadWifiUpgrade } from "@/models/image-quality-settings";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { getMessaging, setBackgroundMessageHandler } from "@react-native-firebase/messaging";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
@@ -15,7 +17,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useSetAtom } from "jotai";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
@@ -56,11 +58,20 @@ export default Sentry.wrap(function RootLayout() {
   const colorScheme = useColorScheme();
   const [isLoaded, setIsLoaded] = useState(false);
   const setAccount = useSetAtom(accountAtom);
+  const setTimelineImageQuality = useSetAtom(timelineImageQualityAtom);
+  const setTimelineWifiUpgrade = useSetAtom(timelineWifiUpgradeAtom);
   const [loaded, error] = useFonts({
     "Noto Sans JP Regular": require("@/assets/fonts/NotoSansJP-Regular.ttf"),
     "Noto Sans JP Bold": require("@/assets/fonts/NotoSansJP-Bold.ttf"),
     "HunyaJi-Re": require("@/assets/fonts/HonyaJi-Re.ttf"),
   });
+
+  useEffect(() => {
+    Promise.all([loadTimelineImageQuality(), loadWifiUpgrade()]).then(([quality, wifiUpgrade]) => {
+      setTimelineImageQuality(quality);
+      setTimelineWifiUpgrade(wifiUpgrade);
+    });
+  }, []);
 
   useAsyncOneTimeEffect(async () => {
     try {
