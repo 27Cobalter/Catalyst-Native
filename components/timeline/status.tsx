@@ -5,11 +5,12 @@ import { MediaCarousel } from "@/components/ui/media-carousel";
 import { rel } from "@/lib/dayjs";
 import { getCdnUrl } from "@/lib/media";
 import { accountAtom } from "@/models/atoms/account";
+import { reactionCacheAtomFamily } from "@/models/atoms/reactions";
 import type { CatalystReaction, CatalystStatus } from "@natsuneko-laboratory/catalyst-sdk";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useAtomValue } from "jotai";
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import { useAtom, useAtomValue } from "jotai";
+import React, { memo, useCallback, useMemo, useRef } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
 
@@ -39,30 +40,20 @@ export const TimelineStatus = memo(({ status, renderingMode = "twtr" }: Props) =
   const medias = status.medias;
   const isLoggedIn = account !== null;
 
-  const statusRuntime = status as StatusWithReactions;
-  const visitorReactions = statusRuntime.visitor?.reactions ?? [];
-  const [reactions, setReactions] = useState<Record<string, CatalystReaction>>(() =>
-    Object.fromEntries(
-      Object.entries(statusRuntime.reactions ?? {}).map(([key, reaction]) => [
-        key,
-        { ...reaction, hasSelfReaction: visitorReactions.includes(reaction.symbol) },
-      ]),
-    ),
-  );
+  const [cachedReactions, setCachedReactions] = useAtom(reactionCacheAtomFamily(status.id));
 
-  useEffect(() => {
-    const vr = (status as StatusWithReactions).visitor?.reactions ?? [];
-    setReactions(
-      Object.fromEntries(
-        Object.entries((status as StatusWithReactions).reactions ?? {}).map(([key, reaction]) => [
-          key,
-          { ...reaction, hasSelfReaction: vr.includes(reaction.symbol) },
-        ]),
-      ),
+  const baseReactions = useMemo(() => {
+    const s = status as StatusWithReactions;
+    const vr = s.visitor?.reactions ?? [];
+    return Object.fromEntries(
+      Object.entries(s.reactions ?? {}).map(([key, reaction]) => [
+        key,
+        { ...reaction, hasSelfReaction: vr.includes(reaction.symbol) },
+      ]),
     );
-    // status.id が変わったとき（FlashList のセル再利用時）にリセット
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status.id]);
+  }, [status]);
+
+  const reactions = cachedReactions ?? baseReactions;
 
   const hasReactions = Object.values(reactions).some((r) => r.count >= 1);
 
@@ -72,33 +63,39 @@ export const TimelineStatus = memo(({ status, renderingMode = "twtr" }: Props) =
   const handleReact = useCallback(
     async (symbol: string) => {
       if (!account?.credential.client) return;
+      const snapshot = cachedReactions ?? baseReactions;
+      const updated = {
+        ...snapshot,
+        [symbol]: { ...snapshot[symbol], symbol, count: (snapshot[symbol]?.count ?? 0) + 1, hasSelfReaction: true },
+      };
+      setCachedReactions(updated);
       try {
         await account.credential.client.catalyst.react(status.id, symbol);
-        setReactions((prev) => ({
-          ...prev,
-          [symbol]: { ...prev[symbol], symbol, count: (prev[symbol]?.count ?? 0) + 1, hasSelfReaction: true },
-        }));
       } catch {
+        setCachedReactions(snapshot);
         Alert.alert("エラー", "リアクションに失敗しました");
       }
     },
-    [account, status.id],
+    [account, status.id, cachedReactions, baseReactions, setCachedReactions],
   );
 
   const handleUnreact = useCallback(
     async (symbol: string) => {
       if (!account?.credential.client) return;
+      const snapshot = cachedReactions ?? baseReactions;
+      const updated = {
+        ...snapshot,
+        [symbol]: { ...snapshot[symbol], count: (snapshot[symbol]?.count ?? 0) - 1, hasSelfReaction: false },
+      };
+      setCachedReactions(updated);
       try {
         await account.credential.client.catalyst.unreact(status.id, symbol);
-        setReactions((prev) => ({
-          ...prev,
-          [symbol]: { ...prev[symbol], count: (prev[symbol]?.count ?? 0) - 1, hasSelfReaction: false },
-        }));
       } catch {
+        setCachedReactions(snapshot);
         Alert.alert("エラー", "リアクションの取り消しに失敗しました");
       }
     },
-    [account, status.id],
+    [account, status.id, cachedReactions, baseReactions, setCachedReactions],
   );
 
   return (
