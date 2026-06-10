@@ -1,7 +1,6 @@
 import { useAsyncEffect } from "@/hooks/use-async-effect";
-import { clientAtom } from "@/models/atoms/credential";
 import { getCdnUrl } from "@/lib/media";
-import type { CatalystContest } from "@natsuneko-laboratory/catalyst-sdk";
+import { clientAtom } from "@/models/atoms/credential";
 import {
   BottomSheetBackdrop,
   BottomSheetFlatList,
@@ -9,10 +8,11 @@ import {
   BottomSheetTextInput,
   type BottomSheetBackdropProps,
 } from "@gorhom/bottom-sheet";
-import { Image } from "expo-image";
+import type { CatalystContest } from "@natsuneko-laboratory/catalyst-sdk";
 import dayjs from "dayjs";
-import { Trophy } from "lucide-react-native";
+import { Image } from "expo-image";
 import { useAtomValue } from "jotai";
+import { Trophy } from "lucide-react-native";
 import React, { useCallback, useImperativeHandle, useRef, useState } from "react";
 import { Pressable, Text, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -97,9 +97,7 @@ export const ContestSelectorSheet = ({ onSelect, ref }: Props) => {
               テーマ: {item.theme}
             </Text>
           ) : null}
-          <Text className="text-xs text-light-text-subtle dark:text-dark-text-subtle">
-            受付終了: {fmt(item.application.until)}
-          </Text>
+          <Text className="text-xs text-light-text-subtle dark:text-dark-text-subtle">受付終了: {fmt(item.until)}</Text>
         </View>
       </Pressable>
     ),

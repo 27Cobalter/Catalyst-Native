@@ -29,14 +29,14 @@ const fmt = (d: string) => dayjs(d).format("YYYY/MM/DD");
 const getPeriodText = (contest: CatalystContest): string => {
   switch (contest.state) {
     case "opening":
-      return `受付終了: ${fmt(contest.application.until)}`;
+      return `受付終了: ${fmt(contest.until)}`;
     case "voting":
       return `投票終了: ${fmt(contest.voting.until)}`;
     case "closing":
     case "electing":
       return `結果発表予定: ${fmt(contest.winnersOpenAt)}`;
     case "published":
-      return `開始予定: ${fmt(contest.application.since)}`;
+      return `開始予定: ${fmt(contest.since)}`;
     case "closed":
       return `終了: ${fmt(contest.winnersOpenAt)}`;
     default:
@@ -107,9 +107,7 @@ export const ContestCard = ({ contest }: Props) => {
         )}
 
         {/* 期間 */}
-        <Text className="text-xs text-light-text-subtle dark:text-dark-text-subtle">
-          {getPeriodText(contest)}
-        </Text>
+        <Text className="text-xs text-light-text-subtle dark:text-dark-text-subtle">{getPeriodText(contest)}</Text>
       </View>
     </Pressable>
   );
