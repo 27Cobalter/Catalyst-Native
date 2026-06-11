@@ -39,8 +39,8 @@ jobs:
 
       - name: Build package
         run: |
-          EXPO_NO_CAPABILITY_SYNC=1 pnpm run build:ios:production --non-interactive --output=./dist/app.aab
+          EXPO_NO_CAPABILITY_SYNC=1 pnpm run build:ios:production --non-interactive --output=./dist/app.ipa
 
       - name: Publish to EAS
         run: |
-          pnpm run submit:ios:production --non-interactive --path ./dist/app.aab
+          pnpm run submit:ios:production --non-interactive --path ./dist/app.ipa
