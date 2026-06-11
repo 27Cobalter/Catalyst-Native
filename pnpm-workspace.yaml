@@ -1,3 +1,5 @@
+packages:
+  - catalyst-native
 minimumReleaseAge: 4320
 minimumReleaseAgeExclude:
   - "@natsuneko-laboratory/catalyst-sdk"
