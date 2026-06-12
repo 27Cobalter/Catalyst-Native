@@ -1,9 +1,9 @@
 name: Publish iOS IPA
 
 on:
-  push:
-    tags:
-      - "v*"
+  # push:
+  #   tags:
+  #     - "v*"
   workflow_dispatch:
 
 permissions:
