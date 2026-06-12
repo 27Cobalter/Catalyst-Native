@@ -10,7 +10,7 @@ import { withUniwind } from "uniwind";
 const UniPlus = withUniwind(Plus);
 
 const isUnicodeCodepoint = (symbol: string): boolean => {
-  return /^[0-9a-f]+$/i.test(symbol);
+  return /^[0-9a-f]+$/i.test(symbol) && symbol in emojis;
 };
 
 type Props = {
