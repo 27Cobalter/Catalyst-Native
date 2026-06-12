@@ -56,6 +56,7 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
       if (!isPresented || isEmojiDataLoading) return;
 
       setIsCategoriesLoading(true);
+      let cancelled = false;
 
       const load = async () => {
         try {
@@ -64,6 +65,8 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
                 .customReactions()
                 .catch(() => [] as CatalystCustomReaction[])
             : [];
+
+          if (cancelled) return;
 
           const builtCategories: EmojiCategory[] = [];
 
@@ -88,6 +91,7 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
 
           setCategories(builtCategories);
         } catch (e) {
+          if (cancelled) return;
           console.error("Failed to load emoji data:", e);
           setCategories(
             getFilteredCategories(
@@ -96,11 +100,17 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
             ),
           );
         } finally {
-          setIsCategoriesLoading(false);
+          if (!cancelled) {
+            setIsCategoriesLoading(false);
+          }
         }
       };
 
       load();
+
+      return () => {
+        cancelled = true;
+      };
     }, [isPresented, account, isEmojiDataLoading, defaultCategories]);
 
     const handleDismiss = useCallback(() => {

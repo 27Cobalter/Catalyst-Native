@@ -165,7 +165,9 @@ export function EmojiPickerView({
   const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
-    if (selectedCategoryId === "" && categories.length > 0) {
+    if (categories.length === 0) return;
+    const isValid = categories.some((c) => c.id === selectedCategoryId);
+    if (!isValid) {
       setSelectedCategoryId(categories[0].id);
     }
   }, [categories, selectedCategoryId]);
@@ -208,7 +210,8 @@ export function EmojiPickerView({
     [],
   );
 
-  const selectedCategory = categories.find((c) => c.id === selectedCategoryId);
+  const selectedCategory =
+    categories.find((c) => c.id === selectedCategoryId) ?? categories[0];
   const displayEmojis = isSearching
     ? searchResults
     : (selectedCategory?.emojis ?? []);
