@@ -21,3 +21,7 @@ export async function dismissContestSpotlight(id: string): Promise<Set<string>> 
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([...ids]));
   return ids;
 }
+
+export async function resetDismissedContestSpotlightIds(): Promise<void> {
+  await AsyncStorage.removeItem(STORAGE_KEY);
+}

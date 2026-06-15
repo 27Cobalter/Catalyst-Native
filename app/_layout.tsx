@@ -129,6 +129,9 @@ export default Sentry.wrap(function RootLayout() {
                 options={{ title: "アクセシビリティ", headerBackTitle: "戻る" }}
               />
               <Stack.Screen name="settings/privacy" options={{ title: "プライバシー", headerBackTitle: "戻る" }} />
+              {__DEV__ ? (
+                <Stack.Screen name="settings/debug" options={{ title: "デバッグ", headerBackTitle: "戻る" }} />
+              ) : null}
               <Stack.Screen name="settings/legal" options={{ title: "法的情報", headerBackTitle: "戻る" }} />
               <Stack.Screen
                 name="settings/legal/licenses"
