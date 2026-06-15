@@ -1,3 +1,4 @@
+import { CurrentContestSpotlight } from "@/components/contest/spotlight";
 import { clientAtom } from "@/models/atoms/credential";
 import { useAtomValue } from "jotai";
 import { Ref, useCallback } from "react";
@@ -22,5 +23,5 @@ export const FirehoseTimeline = ({ ref }: Props) => {
     [client],
   );
 
-  return <TimelineBase ref={ref} fetcher={fetcher} />;
+  return <TimelineBase ref={ref} fetcher={fetcher} ListHeaderComponent={CurrentContestSpotlight} />;
 };

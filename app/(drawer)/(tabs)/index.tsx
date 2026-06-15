@@ -8,7 +8,7 @@ import { credentialAtom } from "@/models/atoms/credential";
 import { useScrollToTop } from "expo-router/react-navigation";
 import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { View } from "react-native";
 
 const TABS: Tab[] = [
@@ -64,9 +64,11 @@ export default function HomeScreen() {
     }
   }, [activeTab]);
 
-  scrollable.current = scrollActiveTimelineToTopHandler;
+  useEffect(() => {
+    scrollable.current = scrollActiveTimelineToTopHandler;
+  }, [scrollActiveTimelineToTopHandler]);
 
-  useScrollToTop(scrollable)
+  useScrollToTop(scrollable);
 
   if (activeTab === undefined) {
     const defaultTab = credential.accessToken ? "following" : "firehose";

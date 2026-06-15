@@ -3,10 +3,10 @@ import { ContestSelectorSheet, type ContestSelectorSheetRef } from "@/components
 import type { CatalystContest } from "@natsuneko-laboratory/catalyst-sdk";
 import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { Image as ImageIcon, Trophy, X } from "lucide-react-native";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -47,6 +47,7 @@ const PRIVACY_OPTIONS: { value: Privacy; label: string; description: string }[] 
 export default function PostComposerScreen() {
   const theme = useColorScheme() ?? "light";
   const router = useRouter();
+  const params = useLocalSearchParams<{ contest?: string | string[] }>();
   const account = useAtomValue(accountAtom);
 
   const [images, setImages] = useState<SelectedImage[]>([]);
@@ -59,6 +60,7 @@ export default function PostComposerScreen() {
   const [selectedContest, setSelectedContest] = useState<CatalystContest | null>(null);
 
   const contestSelectorRef = useRef<ContestSelectorSheetRef>(null);
+  const contestSlug = Array.isArray(params.contest) ? params.contest[0] : params.contest;
 
   const characterCount = text.length;
   const isOverLimit = characterCount > MAX_CHARACTER_COUNT;
@@ -69,6 +71,27 @@ export default function PostComposerScreen() {
     if (images.length > 0) return true;
     return text.trim().length > 0;
   }, [isSubmitting, isOverLimit, images.length, text]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const restoreContest = async () => {
+      if (!account || !contestSlug || selectedContest?.slug === contestSlug) return;
+
+      const result = await account.credential.client.catalyst.getContestBySlug(contestSlug);
+      if (!ignore) {
+        setSelectedContest(result.contest);
+      }
+    };
+
+    restoreContest().catch((error) => {
+      console.error("Failed to restore selected contest:", error);
+    });
+
+    return () => {
+      ignore = true;
+    };
+  }, [account, contestSlug, selectedContest?.slug]);
 
   const handlePickImages = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({

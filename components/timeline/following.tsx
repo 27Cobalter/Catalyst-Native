@@ -1,8 +1,10 @@
+import { CurrentContestSpotlight } from "@/components/contest/spotlight";
 import { FleetRing } from "@/components/fleet/ring";
 import { FleetViewer } from "@/components/fleet/viewer";
 import { clientAtom } from "@/models/atoms/credential";
 import { useAtomValue } from "jotai";
 import { Ref, useCallback, useState } from "react";
+import { View } from "react-native";
 import { TimelineBase, TimelineHandle } from "./base";
 
 type Props = {
@@ -50,11 +52,14 @@ export const FollowingTimeline = ({ ref }: Props) => {
 
   const Header = useCallback(
     () => (
-      <FleetRing
-        onRingPress={handleRingPress}
-        onUsernamesChange={handleUsernamesChange}
-        refreshKey={ringRefreshKey}
-      />
+      <View>
+        <FleetRing
+          onRingPress={handleRingPress}
+          onUsernamesChange={handleUsernamesChange}
+          refreshKey={ringRefreshKey}
+        />
+        <CurrentContestSpotlight />
+      </View>
     ),
     [handleRingPress, handleUsernamesChange, ringRefreshKey],
   );

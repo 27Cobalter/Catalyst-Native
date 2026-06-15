@@ -1,6 +1,6 @@
 import { AlbumList } from "@/components/explorer/albums/list";
 import { AlbumsPlaceholder } from "@/components/explorer/albums/placeholder";
-import { ContestsPlaceholder } from "@/components/explorer/contests/placeholder";
+import { ContestList } from "@/components/explorer/contests/list";
 import { StatusesEmptyResult } from "@/components/explorer/statuses/empty-result";
 import { StatusesPlaceholder } from "@/components/explorer/statuses/placeholder";
 import { UserList } from "@/components/explorer/users/list";
@@ -11,7 +11,7 @@ import { clientAtom } from "@/models/atoms/credential";
 import { useScrollToTop } from "expo-router/react-navigation";
 import { useAtomValue } from "jotai";
 import { Search, X } from "lucide-react-native";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TextInput, View } from "react-native";
 import { withUniwind } from "uniwind";
 import { v4 } from "uuid";
@@ -25,6 +25,8 @@ const TABS: Tab[] = [
   { key: "users", label: "ユーザー" },
   { key: "contests", label: "コンテスト" },
 ];
+
+const CURRENT_CONTEST_STATES = ["opening", "voting", "closing", "electing"];
 
 export default function HomeScreen() {
   const [state, setState] = useState<string>("");
@@ -75,7 +77,9 @@ export default function HomeScreen() {
     };
   }, [activeTab]);
 
-  scroller.current = scrollActiveTimelineToTopHandler;
+  useEffect(() => {
+    scroller.current = scrollActiveTimelineToTopHandler;
+  }, [scrollActiveTimelineToTopHandler]);
 
   useScrollToTop(scroller);
 
@@ -143,10 +147,14 @@ export default function HomeScreen() {
               }
 
               case "contests": {
-                if (query) {
-                }
-
-                return <ContestsPlaceholder />;
+                return (
+                  <ContestList
+                    ref={contestsRef}
+                    key={stateKey}
+                    states={CURRENT_CONTEST_STATES}
+                    query={query || undefined}
+                  />
+                );
               }
             }
           }}
