@@ -1,8 +1,12 @@
+import { BottomSheetItem } from "@/components/bottom-sheet/item";
+import { BottomSheetModal, type BottomSheetModalHandle } from "@/components/bottom-sheet/sheet";
 import { TimelineBase } from "@/components/timeline/base";
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { getCdnUrl } from "@/lib/media";
 import { merge } from "@/lib/merge";
+import { buildShareText } from "@/lib/share";
 import { accountAtom } from "@/models/atoms/account";
+import { openUrlWithBrowser } from "@/models/browser-settings";
 import type {
   CatalystAlbum,
   CatalystAlbumDisplayMode,
@@ -12,18 +16,21 @@ import type {
   Media,
 } from "@natsuneko-laboratory/catalyst-sdk";
 import dayjs from "dayjs";
+import * as Clipboard from "expo-clipboard";
 import { Image } from "expo-image";
 import { Stack, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
-import { Calendar, FileQuestion, MessageSquare, Pencil } from "lucide-react-native";
+import { Calendar, Copy, ExternalLink, FileQuestion, MessageSquare, MoreHorizontal, Pencil, Send } from "lucide-react-native";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
+  Share,
   Text,
   TouchableOpacity,
   View,
@@ -35,10 +42,14 @@ import "@/global.css";
 import { clientAtom } from "@/models/atoms/credential";
 
 const UniCalendar = withUniwind(Calendar);
+const UniCopy = withUniwind(Copy);
+const UniExternalLink = withUniwind(ExternalLink);
 const UniFileQuestion = withUniwind(FileQuestion);
 const UniImage = withUniwind(Image);
 const UniMessageSquare = withUniwind(MessageSquare);
+const UniMoreHorizontal = withUniwind(MoreHorizontal);
 const UniPencil = withUniwind(Pencil);
+const UniSend = withUniwind(Send);
 
 const GRID_COLUMNS = 3;
 const GRID_GAP = 1;
@@ -386,8 +397,38 @@ export const AlbumDetailPage = ({ id, albumType }: Props) => {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
   const router = useRouter();
+  const menuSheetRef = useRef<BottomSheetModalHandle>(null);
 
   const canEdit = albumInfo?.user && account?.user ? albumInfo.user.id === account.user.id : false;
+
+  const albumUrl =
+    albumType === "album"
+      ? `https://catalyst.natsuneko.com/album/${id}`
+      : `https://catalyst.natsuneko.com/smart-album/${id}`;
+
+  const showMenu = useCallback(() => {
+    menuSheetRef.current?.present();
+  }, []);
+
+  const handleShare = useCallback(() => {
+    menuSheetRef.current?.dismiss();
+    const text = buildShareText(albumInfo?.title ?? "", albumInfo?.user?.displayName ?? "", "");
+    if (Platform.OS === "ios") {
+      Share.share({ message: text, url: albumUrl });
+    } else {
+      Share.share({ message: `${text}\n${albumUrl}` });
+    }
+  }, [albumInfo, albumUrl]);
+
+  const handleCopyUrl = useCallback(() => {
+    menuSheetRef.current?.dismiss();
+    Clipboard.setStringAsync(albumUrl);
+  }, [albumUrl]);
+
+  const handleOpenBrowser = useCallback(() => {
+    menuSheetRef.current?.dismiss();
+    openUrlWithBrowser(albumUrl);
+  }, [albumUrl]);
 
   useEffect(() => {
     if (!id) return;
@@ -473,8 +514,9 @@ export const AlbumDetailPage = ({ id, albumType }: Props) => {
         options={{
           title: albumInfo?.title ?? "",
           headerBackTitle: "戻る",
-          headerRight: canEdit
-            ? () => (
+          headerRight: () => (
+            <View className="flex-row items-center">
+              {canEdit && (
                 <TouchableOpacity
                   style={{ padding: 8 }}
                   onPress={() => {
@@ -487,8 +529,12 @@ export const AlbumDetailPage = ({ id, albumType }: Props) => {
                 >
                   <UniPencil size={20} className="text-light-tint dark:text-dark-tint" />
                 </TouchableOpacity>
-              )
-            : undefined,
+              )}
+              <TouchableOpacity style={{ padding: 8 }} onPress={showMenu}>
+                <UniMoreHorizontal size={20} className="text-light-tint dark:text-dark-tint" />
+              </TouchableOpacity>
+            </View>
+          ),
         }}
       />
 
@@ -501,6 +547,11 @@ export const AlbumDetailPage = ({ id, albumType }: Props) => {
           <AlbumVisualContent mode={albumInfo!.mode} fetcher={fetcher} />
         )}
       </View>
+      <BottomSheetModal ref={menuSheetRef}>
+        <BottomSheetItem prefixIcon={UniSend} title="共有する" onPress={handleShare} highlight />
+        <BottomSheetItem prefixIcon={UniCopy} title="URL をコピー" onPress={handleCopyUrl} />
+        <BottomSheetItem prefixIcon={UniExternalLink} title="ブラウザで開く" onPress={handleOpenBrowser} />
+      </BottomSheetModal>
     </>
   );
 };
