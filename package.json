@@ -111,12 +111,12 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@callstack/licenses": "^0.3.1",
+    "@callstack/licenses": "^0.3.2",
     "@oxfmt/binding-darwin-arm64": "^0.60.0",
     "@oxfmt/binding-win32-x64-msvc": "^0.60.0",
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "^29.5.14",
-    "@types/node": "26.1.0",
+    "@types/node": "26.1.1",
     "@types/react": "latest",
     "@types/twitter-text": "^3.1.10",
     "babel-preset-expo": "^57.0.2",
@@ -130,7 +130,7 @@
     "jest-expo": "^57.0.2",
     "npm-run-all2": "^9.0.2",
     "oxfmt": "^0.60.0",
-    "tsx": "^4.23.0",
+    "tsx": "^4.23.1",
     "typescript": "~6.0.3"
   },
   "private": true
