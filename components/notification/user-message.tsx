@@ -8,12 +8,16 @@ import type { Notification, NotificationGroup } from "@/models/sdk-types";
 import { FlashList, FlashListRef } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
+import { Mail } from "lucide-react-native";
 import { Ref, memo, useCallback, useImperativeHandle, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, Text, View } from "react-native";
+import { withUniwind } from "uniwind";
 import { UserMessagePlaceholder } from "./placeholder";
 
 const MESSAGE_TITLE = "natsuneko-laboratory:kiana:message";
 const ISSUER_CATALYST_USER_MESSAGE = "natsuneko-laboratory:catalyst-message";
+
+const UniMail = withUniwind(Mail);
 
 type NotificationGroupWithDate = NotificationGroup & { createdAt?: string };
 
@@ -68,7 +72,7 @@ const ItemSeparator = () => <View className="h-px bg-light-divider dark:bg-dark-
 
 const EmptyState = () => (
   <View className="flex-1 items-center justify-center py-16 gap-4">
-    <Text className="text-5xl">💌</Text>
+    <UniMail size={48} colorClassName="accent-light-icon dark:accent-dark-icon" />
     <Text className="text-base font-bold text-light-icon dark:text-dark-icon">メッセージがありません</Text>
   </View>
 );

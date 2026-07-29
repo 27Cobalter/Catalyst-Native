@@ -43,6 +43,24 @@ const UserMessageRowPlaceholder = memo(() => {
 });
 UserMessageRowPlaceholder.displayName = "UserMessageRowPlaceholder";
 
+const AnnouncementRowPlaceholder = memo(() => {
+  return (
+    <View className="gap-3 px-4 py-4">
+      <View className="flex-row items-center gap-2">
+        <CatalystSkeleton className="size-9 rounded-full" />
+        <CatalystSkeleton className="h-5 w-20 rounded-full" />
+      </View>
+      <CatalystSkeleton className="h-4 w-3/5 rounded-full" />
+      <View className="gap-1.5">
+        <CatalystSkeleton className="h-3 w-full rounded-full" />
+        <CatalystSkeleton className="h-3 w-11/12 rounded-full" />
+        <CatalystSkeleton className="h-3 w-2/5 rounded-full" />
+      </View>
+    </View>
+  );
+});
+AnnouncementRowPlaceholder.displayName = "AnnouncementRowPlaceholder";
+
 type ListPlaceholderProps = {
   count?: number;
 };
@@ -82,3 +100,21 @@ export const UserMessagePlaceholder = memo(({ count = 5 }: ListPlaceholderProps)
   );
 });
 UserMessagePlaceholder.displayName = "UserMessagePlaceholder";
+
+export const AnnouncementPlaceholder = memo(({ count = 4 }: ListPlaceholderProps) => {
+  return (
+    <View
+      accessibilityLabel="お知らせを読み込み中"
+      accessibilityRole="progressbar"
+      className="flex-1"
+    >
+      {Array.from({ length: count }, (_, index) => (
+        <View key={index}>
+          {index > 0 ? <ItemSeparator /> : null}
+          <AnnouncementRowPlaceholder />
+        </View>
+      ))}
+    </View>
+  );
+});
+AnnouncementPlaceholder.displayName = "AnnouncementPlaceholder";

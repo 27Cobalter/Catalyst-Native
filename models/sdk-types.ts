@@ -25,6 +25,8 @@ export type CatalystAlbumDisplayMode = CatalystAlbum["mode"];
 
 export type CatalystContest = ApiData<Client["catalyst"]["v1"]["contest"]["by"]["slug"]["slug"]["get"]>["contest"];
 
+export type CatalystAnnouncement = ApiData<Client["catalyst"]["v1"]["announcements"]["get"]>["announcements"][number];
+
 export type CatalystCustomReactionList = ApiData<Client["catalyst"]["v1"]["customReactions"]["get"]>;
 export type CatalystUserCustomReaction = CatalystCustomReactionList["items"][number];
 // GET /catalyst/v1/reactions — Catalyst 標準搭載のオリジナルリアクション一覧 (ユーザーがアップロードしたカスタムリアクションとは別物)

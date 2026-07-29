@@ -5,8 +5,10 @@ import type { Notification } from "@/models/sdk-types";
 import PushNotificationIOS from "@react-native-community/push-notification-ios";
 import { FlashList, FlashListRef } from "@shopify/flash-list";
 import { useAtomValue } from "jotai";
+import { BellOff } from "lucide-react-native";
 import React, { Ref, useCallback, useImperativeHandle, useRef, useState } from "react";
 import { ActivityIndicator, Platform, RefreshControl, Text, View, useColorScheme } from "react-native";
+import { withUniwind } from "uniwind";
 import { FleetReactionNotification } from "./fleet-reaction";
 import { FollowNotification } from "./follow";
 import { SystemNotificationPlaceholder } from "./placeholder";
@@ -17,6 +19,8 @@ const FLEET_REACTION_TITLE = "natsuneko-laboratory:fleet:reaction:increment";
 const FOLLOW_TITLE = "natsuneko-laboratory:follow:increment";
 const ISSUER_CATALYST_SYSTEM_MESSAGE = "natsuneko-laboratory:catalyst";
 
+const UniBellOff = withUniwind(BellOff);
+
 const ItemSeparator = () => {
   const theme = useColorScheme();
   return <View className={cn("h-px", theme === "dark" ? "bg-gray-700" : "bg-gray-300")} />;
@@ -24,7 +28,7 @@ const ItemSeparator = () => {
 
 const EmptyState = () => (
   <View className="flex-1 items-center justify-center py-16 gap-4">
-    <Text className="text-5xl">🔕</Text>
+    <UniBellOff size={48} colorClassName="accent-light-icon dark:accent-dark-icon" />
     <Text className="text-base font-bold text-light-icon dark:text-dark-icon">通知がありません</Text>
   </View>
 );

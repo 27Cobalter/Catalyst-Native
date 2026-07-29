@@ -1,3 +1,4 @@
+import { AnnouncementList } from "@/components/notification/announcement";
 import { SystemNotificationList } from "@/components/notification/system";
 import { UserMessageList } from "@/components/notification/user-message";
 import { Tab, Tabs } from "@/components/tabs";
@@ -9,6 +10,7 @@ import { View } from "react-native";
 const TABS: Tab[] = [
   { key: "system", label: "システム通知" },
   { key: "message", label: "メッセージ" },
+  { key: "announcement", label: "お知らせ" },
 ];
 
 export default function NotificationsScreen() {
@@ -17,12 +19,15 @@ export default function NotificationsScreen() {
   // 厳密には型はあってないけど、 TimelineHandle というインターフェースそのものは同じなので問題ないはず
   const messageTabRef = useRef<TimelineHandle>(null);
   const systemTabRef = useRef<TimelineHandle>(null);
+  const announcementTabRef = useRef<TimelineHandle>(null);
 
   const scroller = useRef<{ scrollToTop: () => void }>(null);
   const scrollActiveTimelineToTopHandler = useMemo(() => {
     return {
       scrollToTop: () => {
-        if (activeTab === "message") {
+        if (activeTab === "announcement") {
+          announcementTabRef.current?.scrollToTop();
+        } else if (activeTab === "message") {
           messageTabRef.current?.scrollToTop();
         } else if (activeTab === "system") {
           systemTabRef.current?.scrollToTop();
@@ -42,6 +47,7 @@ export default function NotificationsScreen() {
         onTabChange={(w) => setActiveTab(w.key)}
         tabs={TABS}
         renderScene={(tab) => {
+          if (tab.key === "announcement") return <AnnouncementList ref={announcementTabRef} />;
           if (tab.key === "message")
             return <UserMessageList ref={messageTabRef} />;
           return <SystemNotificationList ref={systemTabRef} />;
