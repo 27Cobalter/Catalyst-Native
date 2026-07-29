@@ -17,7 +17,7 @@ import { clientAtom, credentialAtom } from "@/models/atoms/credential";
 import { openUrlWithBrowser } from "@/models/browser-settings";
 import type { CatalystWeeklyTheme } from "@/models/sdk-types";
 import { Image } from "expo-image";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Link, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { CalendarDays, Camera, ExternalLink, FileQuestion, Users } from "lucide-react-native";
 import { useCallback, useState } from "react";
@@ -30,6 +30,7 @@ const UniCamera = withUniwind(Camera);
 const UniExternalLink = withUniwind(ExternalLink);
 const UniFileQuestion = withUniwind(FileQuestion);
 const UniUsers = withUniwind(Users);
+const UniLink = withUniwind(Link);
 
 const ThemeHeader = ({ theme }: { theme: CatalystWeeklyTheme }) => {
   const credential = useAtomValue(credentialAtom);
@@ -66,7 +67,12 @@ const ThemeHeader = ({ theme }: { theme: CatalystWeeklyTheme }) => {
         <CatalystText variant="title">{theme.title}</CatalystText>
         <Markdown body={theme.description} />
         {theme.hashtag ? (
-          <CatalystText className="font-semibold text-light-link dark:text-dark-link">#{theme.hashtag}</CatalystText>
+          <CatalystText>
+            推奨ハッシュタグ:{" "}
+            <UniLink href={`/search/%23${encodeURIComponent(theme.hashtag)}`} className="text-light-link dark:text-dark-link">
+              #{theme.hashtag}
+            </UniLink>
+          </CatalystText>
         ) : null}
         <View className="flex-row flex-wrap gap-x-4 gap-y-2">
           <View className="flex-row items-center gap-1.5">
