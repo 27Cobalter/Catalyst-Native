@@ -31,7 +31,7 @@ import {
   type EpicleseMetadata,
   type EpicleseReference,
 } from "@/models/epiclese";
-import type { CatalystContest, CatalystReaction, CatalystStatusV1_1 } from "@/models/sdk-types";
+import type { CatalystContest, CatalystReaction, CatalystStatusV1_1, CatalystWeeklyTheme } from "@/models/sdk-types";
 import {
   applyReactionStreamingEvent,
   registerLocalReactionMutation,
@@ -72,6 +72,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { withUniwind } from "uniwind";
 
 import { ContestBanner } from "@/components/contest/banner";
+import { WeeklyThemeBanner } from "@/components/theme/banner";
 import "@/global.css";
 import { buildShareText } from "@/lib/share";
 import {
@@ -116,6 +117,20 @@ const getContestSlug = (contest: unknown): string | null => {
   return null;
 };
 
+const getWeeklyTheme = (weeklyTheme: unknown): Pick<CatalystWeeklyTheme, "slug" | "title" | "weekKey" | "sponsor"> | null => {
+  if (!weeklyTheme || typeof weeklyTheme !== "object") return null;
+  const candidate = weeklyTheme as { slug?: unknown; title?: unknown; weekKey?: unknown; sponsor?: unknown };
+  if (typeof candidate.slug !== "string" || typeof candidate.title !== "string" || typeof candidate.weekKey !== "string") {
+    return null;
+  }
+  return {
+    slug: candidate.slug,
+    title: candidate.title,
+    weekKey: candidate.weekKey,
+    sponsor: candidate.sponsor as CatalystWeeklyTheme["sponsor"],
+  };
+};
+
 const METADATA_LABELS: Record<string, string> = {
   Author: "撮影者",
   LocationName: "撮影場所",
@@ -134,6 +149,7 @@ export default function StatusDetailsPage() {
 
   const [status, setStatus] = useState<CatalystStatusV1_1 | null>(null);
   const [contest, setContest] = useState<Pick<CatalystContest, "slug" | "title" | "headerUrl"> | null>(null);
+  const [weeklyTheme, setWeeklyTheme] = useState<Pick<CatalystWeeklyTheme, "slug" | "title" | "weekKey" | "sponsor"> | null>(null);
   const [metadata, setMetadata] = useState<EpicleseMetadata>({});
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [reactions, setReactions] = useState<Record<string, CatalystReaction>>({});
@@ -187,6 +203,7 @@ export default function StatusDetailsPage() {
         } else {
           setContest(null);
         }
+        setWeeklyTheme(getWeeklyTheme(statusRes.weeklyTheme));
 
         if (account?.credential.client) {
           const [favRes] = await Promise.all([
@@ -496,6 +513,11 @@ export default function StatusDetailsPage() {
               {contest ? (
                 <View className="pt-3 py-2">
                   <ContestBanner contest={contest} />
+                </View>
+              ) : null}
+              {weeklyTheme ? (
+                <View className="pt-3 py-2">
+                  <WeeklyThemeBanner theme={weeklyTheme} />
                 </View>
               ) : null}
             </View>

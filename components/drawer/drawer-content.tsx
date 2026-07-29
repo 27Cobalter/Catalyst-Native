@@ -19,7 +19,7 @@ import { DrawerActions } from "expo-router/react-navigation";
 import type { DrawerNavigationHelpers } from "expo-router/build/react-navigation/drawer/types";
 import { router } from "expo-router";
 import { useAtom, useAtomValue } from "jotai";
-import { ChevronRight, Cog, Images, LogIn, Trophy, User } from "lucide-react-native";
+import { CalendarDays, ChevronRight, Cog, Images, LogIn, Trophy, User } from "lucide-react-native";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -38,6 +38,7 @@ type DrawerRoute = {
 
 const UniUser = withUniwind(User);
 const UniTrophy = withUniwind(Trophy);
+const UniCalendarDays = withUniwind(CalendarDays);
 const UniImages = withUniwind(Images);
 const UniCog = withUniwind(Cog);
 const UniLogIn = withUniwind(LogIn);
@@ -196,6 +197,11 @@ export const DrawerContent = ({ navigation }: Props) => {
           name: "コンテスト",
           href: "/contest",
           icon: UniTrophy,
+        },
+        {
+          name: "お題",
+          href: "/theme",
+          icon: UniCalendarDays,
         },
         {
           name: "ギャラリー",

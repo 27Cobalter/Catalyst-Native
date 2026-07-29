@@ -10,12 +10,13 @@ import {
 } from "@/components/design-system";
 import { accountAtom } from "@/models/atoms/account";
 import { ContestSelectorSheet, type ContestSelectorSheetRef } from "@/components/contest-selector-sheet";
-import type { CatalystContest } from "@/models/sdk-types";
+import { WeeklyThemeSelectorSheet, type WeeklyThemeSelectorSheetRef } from "@/components/theme/selector-sheet";
+import type { CatalystContest, CatalystWeeklyTheme } from "@/models/sdk-types";
 import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
-import { Image as ImageIcon, Trophy, X } from "lucide-react-native";
+import { CalendarDays, Image as ImageIcon, Trophy, X } from "lucide-react-native";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -29,6 +30,7 @@ import { withUniwind } from "uniwind";
 
 const UniImageIcon = withUniwind(ImageIcon);
 const UniTrophy = withUniwind(Trophy);
+const UniCalendarDays = withUniwind(CalendarDays);
 const UniX = withUniwind(X);
 
 const MAX_CHARACTER_COUNT = 1000;
@@ -52,7 +54,7 @@ const PRIVACY_OPTIONS: { value: Privacy; label: string; description: string }[] 
 
 export default function PostComposerScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ contest?: string | string[] }>();
+  const params = useLocalSearchParams<{ contest?: string | string[]; theme?: string | string[] }>();
   const account = useAtomValue(accountAtom);
 
   const [images, setImages] = useState<SelectedImage[]>([]);
@@ -63,9 +65,12 @@ export default function PostComposerScreen() {
   const [isPrivateMetadata, setIsPrivateMetadata] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedContest, setSelectedContest] = useState<CatalystContest | null>(null);
+  const [selectedWeeklyTheme, setSelectedWeeklyTheme] = useState<CatalystWeeklyTheme | null>(null);
 
   const contestSelectorRef = useRef<ContestSelectorSheetRef>(null);
+  const weeklyThemeSelectorRef = useRef<WeeklyThemeSelectorSheetRef>(null);
   const contestSlug = Array.isArray(params.contest) ? params.contest[0] : params.contest;
+  const themeSlug = Array.isArray(params.theme) ? params.theme[0] : params.theme;
 
   const characterCount = text.length;
   const isOverLimit = characterCount > MAX_CHARACTER_COUNT;
@@ -100,6 +105,32 @@ export default function PostComposerScreen() {
       ignore = true;
     };
   }, [account, contestSlug, selectedContest?.slug]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const restoreWeeklyTheme = async () => {
+      if (!account || !themeSlug || selectedWeeklyTheme?.slug === themeSlug) return;
+      const weeklyThemes = account.credential.client.catalyst.v1.weeklyThemes;
+      if (!weeklyThemes) return;
+
+      const { data } = await weeklyThemes.by.slug.slug.get({
+        path: { slug: themeSlug },
+        throwOnError: true,
+      });
+      if (!ignore && data.theme.state === "open") {
+        setSelectedWeeklyTheme(data.theme);
+      }
+    };
+
+    restoreWeeklyTheme().catch((error) => {
+      console.error("Failed to restore weekly theme:", error);
+    });
+
+    return () => {
+      ignore = true;
+    };
+  }, [account, themeSlug, selectedWeeklyTheme?.slug]);
 
   const handlePickImages = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -159,11 +190,13 @@ export default function PostComposerScreen() {
           isNsfw,
           isSpoiler,
           isSubmitToContest: selectedContest !== null,
+          isSubmitToWeeklyTheme: selectedWeeklyTheme !== null,
           isHidingLikeAndViewCount: false,
           isPrivateMetadata,
           isAllowComments: true,
           privacy,
           contestId: selectedContest?.slug,
+          weeklyThemeId: selectedWeeklyTheme?.slug,
           media: mediaList,
         },
         throwOnError: true,
@@ -177,10 +210,14 @@ export default function PostComposerScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [canPost, account, images, text, isNsfw, isSpoiler, isPrivateMetadata, privacy, selectedContest, router]);
+  }, [canPost, account, images, text, isNsfw, isSpoiler, isPrivateMetadata, privacy, selectedContest, selectedWeeklyTheme, router]);
 
   const handleContestSelect = useCallback((contest: CatalystContest) => {
     setSelectedContest(contest);
+  }, []);
+
+  const handleWeeklyThemeSelect = useCallback((theme: CatalystWeeklyTheme) => {
+    setSelectedWeeklyTheme(theme);
   }, []);
 
   const selectedPrivacy = PRIVACY_OPTIONS.find((o) => o.value === privacy)!;
@@ -188,6 +225,7 @@ export default function PostComposerScreen() {
   return (
     <>
       <ContestSelectorSheet ref={contestSelectorRef} onSelect={handleContestSelect} />
+      <WeeklyThemeSelectorSheet ref={weeklyThemeSelectorRef} onSelect={handleWeeklyThemeSelect} />
       <Stack.Screen
         options={{
           title: "新しい投稿",
@@ -347,6 +385,44 @@ export default function PostComposerScreen() {
             )}
             <CatalystText variant="caption" tone="subtle" className="px-5 pt-2 leading-4">
               コンテストに参加すると、この投稿がコンテストの応募作品として登録されます。
+            </CatalystText>
+          </View>
+
+          {/* お題セクション */}
+          <View className="mt-6">
+            <CatalystText variant="caption" tone="subtle" className="px-5 pb-2">
+              今週のお題
+            </CatalystText>
+            {selectedWeeklyTheme ? (
+              <View className="flex-row items-center gap-3 bg-light-background px-5 py-3 dark:bg-dark-surface">
+                <UniCalendarDays size={18} className="text-light-toggle-icon dark:text-dark-toggle-icon" />
+                <View className="flex-1 gap-0.5">
+                  <CatalystText variant="subtitle" className="text-[15px] font-semibold" numberOfLines={1}>
+                    {selectedWeeklyTheme.title}
+                  </CatalystText>
+                  <CatalystText variant="caption" tone="muted" numberOfLines={1}>
+                    この投稿で参加すると {selectedWeeklyTheme.points} ポイント獲得できます
+                  </CatalystText>
+                </View>
+                <Pressable
+                  onPress={() => setSelectedWeeklyTheme(null)}
+                  className="h-6 w-6 items-center justify-center rounded-full bg-black/10 dark:bg-white/10"
+                >
+                  <UniX size={14} className="text-light-toggle-foreground dark:text-dark-toggle-foreground" />
+                </Pressable>
+              </View>
+            ) : (
+              <View className="bg-light-background px-5 py-3 dark:bg-dark-surface">
+                <CatalystButton tone="secondary" onPress={() => weeklyThemeSelectorRef.current?.open()}>
+                  <CatalystButtonIcon>
+                    <UniCalendarDays />
+                  </CatalystButtonIcon>
+                  <CatalystButtonText>お題に参加する</CatalystButtonText>
+                </CatalystButton>
+              </View>
+            )}
+            <CatalystText variant="caption" tone="subtle" className="px-5 pt-2 leading-4">
+              お題への参加は週につき一度だけポイントが付与されます。
             </CatalystText>
           </View>
 

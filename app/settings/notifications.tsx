@@ -29,6 +29,12 @@ import { useAtom, useAtomValue } from "jotai";
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
+type WeeklyThemeSubscription = {
+  notifyOnOpen: boolean;
+  notifyOnStreak: boolean;
+  notifyBeforeClose: boolean;
+};
+
 export default function NotificationSettingsPage() {
   const account = useAtomValue(accountAtom);
   const isLoggedIn = !!account;
@@ -38,6 +44,8 @@ export default function NotificationSettingsPage() {
   const [enabledTypes, setEnabledTypes] = useState<Set<string>>(new Set());
   const [fcmToken, setFcmToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [weeklyThemeSubscription, setWeeklyThemeSubscription] = useState<WeeklyThemeSubscription | null>(null);
+  const [isWeeklyThemeSubscriptionUpdating, setIsWeeklyThemeSubscriptionUpdating] = useState(false);
   const [isStreamingEnabled, setIsStreamingEnabled] =
     useAtom(streamingEnabledAtom);
 
@@ -78,6 +86,28 @@ export default function NotificationSettingsPage() {
       unsubscribe?.();
     };
   }, [isPushEnabled, account]);
+
+  useEffect(() => {
+    let ignore = false;
+    if (!account) {
+      return;
+    }
+    const weeklyThemes = account.credential.client.catalyst.v1.weeklyThemes;
+    if (!weeklyThemes) return;
+
+    weeklyThemes.subscription
+      .get({ throwOnError: true })
+      .then(({ data }) => {
+        if (!ignore) setWeeklyThemeSubscription(data);
+      })
+      .catch(() => {
+        if (!ignore) setWeeklyThemeSubscription(null);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [account]);
 
   const isEffectivelyEnabled =
     isPushEnabled &&
@@ -162,6 +192,31 @@ export default function NotificationSettingsPage() {
       await saveStreamingEnabled(newValue);
     },
     [isLoggedIn, setIsStreamingEnabled],
+  );
+
+  const handleWeeklyThemeSubscriptionToggle = useCallback(
+    async (key: keyof WeeklyThemeSubscription, value: boolean) => {
+      if (!account || !weeklyThemeSubscription || isWeeklyThemeSubscriptionUpdating) return;
+      const weeklyThemes = account.credential.client.catalyst.v1.weeklyThemes;
+      if (!weeklyThemes) return;
+
+      const previous = weeklyThemeSubscription;
+      const next = { ...previous, [key]: value };
+      setWeeklyThemeSubscription(next);
+      setIsWeeklyThemeSubscriptionUpdating(true);
+      try {
+        const { data } = await weeklyThemes.subscription.patch({
+          body: next,
+          throwOnError: true,
+        });
+        setWeeklyThemeSubscription(data);
+      } catch {
+        setWeeklyThemeSubscription(previous);
+      } finally {
+        setIsWeeklyThemeSubscriptionUpdating(false);
+      }
+    },
+    [account, isWeeklyThemeSubscriptionUpdating, weeklyThemeSubscription],
   );
 
   const footerText = (() => {
@@ -282,6 +337,52 @@ export default function NotificationSettingsPage() {
           </CatalystText>
         </View>
       }
+
+      <View className="mt-6">
+        <CatalystText variant="caption" tone="subtle" className="px-5 pb-2">
+          お題
+        </CatalystText>
+        <View className="bg-light-background dark:bg-dark-surface">
+          <View className="min-h-16 flex-row items-center px-5 py-3">
+            <CatalystListItemContent className="mr-3">
+              <CatalystText variant="subtitle" className="text-[15px] font-semibold">新しいお題</CatalystText>
+              <CatalystText variant="caption" tone="muted">毎週月曜日に開催されるお題をお知らせします</CatalystText>
+            </CatalystListItemContent>
+            <CatalystSwitch
+              value={weeklyThemeSubscription?.notifyOnOpen ?? false}
+              onValueChange={(value) => handleWeeklyThemeSubscriptionToggle("notifyOnOpen", value)}
+              disabled={!isLoggedIn || !weeklyThemeSubscription || isWeeklyThemeSubscriptionUpdating}
+            />
+          </View>
+          <CatalystDivider className="ml-5 w-auto" />
+          <View className="min-h-16 flex-row items-center px-5 py-3">
+            <CatalystListItemContent className="mr-3">
+              <CatalystText variant="subtitle" className="text-[15px] font-semibold">連続参加ボーナス</CatalystText>
+              <CatalystText variant="caption" tone="muted">連続参加のボーナス獲得時にお知らせします</CatalystText>
+            </CatalystListItemContent>
+            <CatalystSwitch
+              value={weeklyThemeSubscription?.notifyOnStreak ?? false}
+              onValueChange={(value) => handleWeeklyThemeSubscriptionToggle("notifyOnStreak", value)}
+              disabled={!isLoggedIn || !weeklyThemeSubscription || isWeeklyThemeSubscriptionUpdating}
+            />
+          </View>
+          <CatalystDivider className="ml-5 w-auto" />
+          <View className="min-h-16 flex-row items-center px-5 py-3">
+            <CatalystListItemContent className="mr-3">
+              <CatalystText variant="subtitle" className="text-[15px] font-semibold">終了前のお知らせ</CatalystText>
+              <CatalystText variant="caption" tone="muted">お題の終了前にお知らせします</CatalystText>
+            </CatalystListItemContent>
+            <CatalystSwitch
+              value={weeklyThemeSubscription?.notifyBeforeClose ?? false}
+              onValueChange={(value) => handleWeeklyThemeSubscriptionToggle("notifyBeforeClose", value)}
+              disabled={!isLoggedIn || !weeklyThemeSubscription || isWeeklyThemeSubscriptionUpdating}
+            />
+          </View>
+        </View>
+        <CatalystText variant="caption" tone="subtle" className="px-5 pt-2 leading-4">
+          お題の通知は、初期設定ではオフです。
+        </CatalystText>
+      </View>
 
       <View className="mt-6">
         <CatalystText variant="caption" tone="subtle" className="px-5 pb-2">

@@ -25,6 +25,10 @@ export type CatalystAlbumDisplayMode = CatalystAlbum["mode"];
 
 export type CatalystContest = ApiData<Client["catalyst"]["v1"]["contest"]["by"]["slug"]["slug"]["get"]>["contest"];
 
+export type CatalystWeeklyTheme = NonNullable<
+  ApiData<Client["catalyst"]["v1"]["weeklyThemes"]["current"]["get"]>["theme"]
+>;
+
 export type CatalystAnnouncement = ApiData<Client["catalyst"]["v1"]["announcements"]["get"]>["announcements"][number];
 
 export type CatalystCustomReactionList = ApiData<Client["catalyst"]["v1"]["customReactions"]["get"]>;
