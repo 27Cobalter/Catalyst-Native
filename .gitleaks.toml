@@ -1,0 +1,7 @@
+[extend]
+useDefault = true
+
+[[rules]]
+id = "catalyst-for-android-ios-client-id-secret"
+description = "Client ID and Secret for Catalyst for Android and iOS"
+regex = '''CATALYST_FOR_(ANDROID|IOS)_CLIENT_(ID|SECRET)'''
