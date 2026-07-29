@@ -17,7 +17,7 @@ export const CatalystListItem = ({
   return (
     <Pressable
       className={cn(
-        "flex-row items-center gap-3 px-4 py-3",
+        "flex-row items-center gap-3 px-4 py-3 active:bg-light-surface-muted",
         divided && "border-b border-light-divider dark:border-dark-divider",
         isDarkMode && "active:bg-dark-surface-muted",
         className,
