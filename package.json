@@ -8,6 +8,8 @@
     "prebuilt": "run-s -c bin:*",
     "bin:emoji-gen": "tsx ./bin/emoji-gen.ts",
     "bin:license-list": "tsx ./bin/license-list.ts",
+    "clean:nix": "rm -rf node_modules && rm -fr $TMPDIR/haste-map-* && rm -fr $TMPDIR/metro-cache",
+    "clean:win": "rmdir /s /q node_modules && del %LOCALAPPDATA%/Temp/haste-map-* && del %LOCALAPPDATA%/Temp/metro-cache",
     "run:android": "pnpm run prebuilt && pnpm with-env expo run:android",
     "run:ios": "pnpm run prebuilt && pnpm with-env expo run:ios",
     "run:ios:op": "pnpm run prebuilt && pnpm with-op expo run:ios",
