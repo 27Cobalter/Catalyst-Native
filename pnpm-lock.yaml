@@ -29,8 +29,8 @@ importers:
         specifier: ^0.1.5
         version: 0.1.5(expo@57.0.2)
       '@natsuneko-laboratory/catalyst-sdk':
-        specifier: 1.0.0-alpha.12
-        version: 1.0.0-alpha.12
+        specifier: 1.0.0-alpha.13
+        version: 1.0.0-alpha.13
       '@natsuneko-laboratory/fleet-renderer-core':
         specifier: ^0.2.0
         version: 0.2.0
@@ -1762,8 +1762,8 @@ packages:
       '@emnapi/core': ^1.7.1
       '@emnapi/runtime': ^1.7.1
 
-  '@natsuneko-laboratory/catalyst-sdk@1.0.0-alpha.12':
-    resolution: {integrity: sha512-CiDfeW34z5EF4WZtJjEorqBPu+53UKgFH4N8aMUK5f32vwll66Ifgl/FEazw8e+sjYO3dEsVsBI7gSUV14iFiw==}
+  '@natsuneko-laboratory/catalyst-sdk@1.0.0-alpha.13':
+    resolution: {integrity: sha512-VXB36DhjWNcpen7cY0R4NXHOeBR8c9z0i0uUFga1fwGYhCcfE/H/kH8Ghqh5wId2VoEyP6ClC4lHDvzFYjgFqw==}
 
   '@natsuneko-laboratory/fleet-renderer-core@0.1.0':
     resolution: {integrity: sha512-Ee3oWN8tb0UC6yS+XI3U//2wr3Eev/fTg4pxI0kp/PjxntSqO8vb94vAG2BIBxjM7S2n9v26zy7pnbGEyanbWw==}
@@ -9985,7 +9985,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.3
     optional: true
 
-  '@natsuneko-laboratory/catalyst-sdk@1.0.0-alpha.12':
+  '@natsuneko-laboratory/catalyst-sdk@1.0.0-alpha.13':
     dependencies:
       js-sha256: 0.11.1
 

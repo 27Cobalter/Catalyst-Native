@@ -28,6 +28,7 @@ jest.mock("@shopify/flash-list", () => {
 });
 
 jest.mock("./status", () => ({ TimelineStatus: () => null }));
+jest.mock("./advertisement", () => ({ TimelineAdvertisement: () => null }));
 jest.mock("./placeholder", () => ({ TimelinePlaceholder: () => null }));
 
 const item = (id: string) => ({ id }) as unknown as TimelineStatusItem;

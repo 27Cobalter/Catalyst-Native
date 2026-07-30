@@ -23,7 +23,7 @@ export const FollowingTimeline = ({ ref }: Props) => {
     async (since: string | null, until: string | null) => {
       return (
         (
-          await client?.catalyst.v11.timeline.home.get({
+          await client?.catalyst.v12.timeline.home.get({
             query: {
               since: since ?? undefined,
               until: until ?? undefined,

@@ -1,10 +1,11 @@
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { merge } from "@/lib/merge";
-import type { CatalystStatus, CatalystStatusV1_1 } from "@/models/sdk-types";
+import type { CatalystStatus, CatalystStatusV1_1, CatalystStatusV1_2 } from "@/models/sdk-types";
 import { FlashList, FlashListRef, ListRenderItem } from "@shopify/flash-list";
 import React, { useCallback, useImperativeHandle, useRef, useState } from "react";
 import { ActivityIndicator, RefreshControl, StyleProp, View, ViewStyle } from "react-native";
 import { TimelinePlaceholder } from "./placeholder";
+import { TimelineAdvertisement } from "./advertisement";
 import { TimelineStatus } from "./status";
 
 const ItemSeparator = () => {
@@ -29,7 +30,7 @@ type Props = {
   ref?: React.Ref<TimelineHandle>;
 };
 
-export type TimelineStatusItem = CatalystStatus | CatalystStatusV1_1;
+export type TimelineStatusItem = CatalystStatus | CatalystStatusV1_1 | CatalystStatusV1_2;
 
 export type TimelineHandle = {
   scrollToTop: () => void;
@@ -54,8 +55,17 @@ export const TimelineBase = ({
   const isLoadingRef = useRef(false);
 
   const defaultRender = useCallback<ListRenderItem<TimelineStatusItem>>(({ item }) => {
+    if ("advertisement" in item && item.advertisement) {
+      return <TimelineAdvertisement status={item} />;
+    }
+
     return <TimelineStatus status={item} />;
   }, []);
+
+  const getItemType = useCallback(
+    (item: TimelineStatusItem) => ("advertisement" in item && item.advertisement ? "advertisement" : "status"),
+    [],
+  );
 
   const onRender = renderItem ?? defaultRender;
 
@@ -144,6 +154,7 @@ export const TimelineBase = ({
       keyExtractor={(w) => w.id}
       data={items}
       renderItem={onRender}
+      getItemType={getItemType}
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
       onEndReached={onLoadMore}
       onEndReachedThreshold={0.75}

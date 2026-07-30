@@ -14,7 +14,7 @@ export const FirehoseTimeline = ({ ref }: Props) => {
     async (since: string | null, until: string | null) => {
       return (
         (
-          await client?.catalyst.v11.timeline.firehose.get({
+          await client?.catalyst.v12.timeline.firehose.get({
             query: { since: since ?? undefined, until: until ?? undefined },
             throwOnError: true,
           })

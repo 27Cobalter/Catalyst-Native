@@ -15,6 +15,7 @@ type ApiData<Fn extends (...args: any[]) => any> = Awaited<ReturnType<Fn>> exten
 
 export type CatalystStatusV1_1 = ApiData<Client["catalyst"]["v11"]["status"]["id"]["get"]>["status"];
 export type CatalystStatus = ApiData<Client["catalyst"]["v1"]["timeline"]["home"]["get"]>["statuses"][number];
+export type CatalystStatusV1_2 = ApiData<Client["catalyst"]["v12"]["timeline"]["home"]["get"]>[number];
 export type CatalystStatusPrivacy = NonNullable<CatalystStatusV1_1["privacy"]>;
 export type Media = CatalystStatusV1_1["medias"][number];
 
