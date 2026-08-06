@@ -7,9 +7,8 @@ import type { CatalystTS } from "@natsuneko-laboratory/catalyst-sdk";
  */
 type Client = InstanceType<typeof CatalystTS>;
 // biome-ignore lint: needs to accept any client method signature to infer its response type
-type ApiData<Fn extends (...args: any[]) => any> = Awaited<ReturnType<Fn>> extends { data?: infer D }
-  ? NonNullable<D>
-  : never;
+type ApiData<Fn extends (...args: any[]) => any> =
+  Awaited<ReturnType<Fn>> extends { data?: infer D } ? NonNullable<D> : never;
 
 // --- catalyst ---
 
@@ -43,8 +42,14 @@ export type CatalystReaction = ApiData<
 
 export type CatalystRelationships = ApiData<Client["catalyst"]["v1"]["relationships"]["id"]["get"]>;
 
+export type CatalystActivityPubSettings = ApiData<Client["catalyst"]["v1"]["activitypub"]["settings"]["get"]>;
+
 export type CatalystFollowListItem = ApiData<
   Client["catalyst"]["v1"]["relationships"]["by"]["username"]["username"]["followers"]["get"]
+>["items"][number];
+
+export type CatalystRemoteFollower = ApiData<
+  Client["catalyst"]["v1"]["relationships"]["by"]["username"]["username"]["followers"]["remote"]["get"]
 >["items"][number];
 
 export type CatalystFleet = ApiData<Client["catalyst"]["v1"]["fleet"]["id"]["get"]>;
@@ -53,7 +58,9 @@ export type CatalystFleetRing = ApiData<Client["catalyst"]["v1"]["fleet"]["ring"
 export type CatalystFleetReaction = ApiData<Client["catalyst"]["v1"]["fleet"]["id"]["reactions"]["get"]>[number];
 
 export type ProfileTag = ApiData<Client["catalyst"]["v1"]["profileTags"]["by"]["user"]["id"]["get"]>["tags"][number];
-export type ProfileTagSuggestion = ApiData<Client["catalyst"]["v1"]["profileTags"]["suggestions"]["get"]>["tags"][number];
+export type ProfileTagSuggestion = ApiData<
+  Client["catalyst"]["v1"]["profileTags"]["suggestions"]["get"]
+>["tags"][number];
 
 export type ReportRequest = NonNullable<
   Parameters<Client["catalyst"]["v1"]["status"]["id"]["report"]["create"]>[0]["body"]
@@ -73,3 +80,5 @@ export type ProfileEmojiRequest = NonNullable<
 
 export type Notification = ApiData<Client["steambird"]["v1"]["notifications"]["get"]>["notifications"][number];
 export type NotificationGroup = Notification["entities"][number];
+export type NotificationActor = NotificationGroup["occurredBy"];
+export type ActivityPubRemoteActor = Extract<NotificationActor, { type: "activitypub-remote-actor" }>;

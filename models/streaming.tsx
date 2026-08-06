@@ -19,6 +19,9 @@ type ReactionVerbArgs = {
     type: "standard" | "custom";
     format?: string;
     customReactionId?: string;
+    url?: string;
+    emoji?: string;
+    isRemoteOnly?: boolean;
   };
 };
 
@@ -82,6 +85,10 @@ function warnStreaming(message: string, context?: unknown): void {
 }
 
 function getReactionUrl(reaction: ReactionVerbArgs["reaction"]): string {
+  if (reaction.url !== undefined) {
+    return reaction.url;
+  }
+
   if (reaction.type === "custom") {
     const shortcode = reaction.symbol.slice(1, -1);
     return `https://images.natsuneko.com/${reaction.by}/reactions/${shortcode}.${reaction.format ?? "png"}`;
@@ -233,9 +240,11 @@ export function applyReactionStreamingEvent(
         symbol: reaction.symbol,
         count: (existing?.count ?? 0) + 1,
         url: existing?.url ?? getReactionUrl(reaction),
-        name: existing?.name ?? reaction.symbol,
+        name: existing?.name ?? reaction.emoji ?? reaction.symbol,
         hasSelfReaction: existing?.hasSelfReaction ?? false,
         customReactionId: reaction.customReactionId ?? existing?.customReactionId,
+        emoji: reaction.emoji ?? existing?.emoji,
+        isRemoteOnly: reaction.isRemoteOnly ?? existing?.isRemoteOnly,
       },
     };
   }

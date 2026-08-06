@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import React, { memo } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
+import { NotificationActorAvatar } from "./actor-avatar";
 
 const UniImage = withUniwind(Image);
 
@@ -23,10 +24,6 @@ export const FleetReactionNotification = memo(({ notification }: Props) => {
   const router = useRouter();
   const { entities } = notification;
   const belongsTo = notification.belongsTo as unknown as CatalystFleet | null;
-
-  const navigateToUser = (screenName: string) => {
-    router.push(`/user/${screenName}`);
-  };
 
   const navigateToReactions = () => {
     if (belongsTo?.id) {
@@ -64,30 +61,14 @@ export const FleetReactionNotification = memo(({ notification }: Props) => {
             {entities.map((entity) => {
               const user = entity.occurredBy;
               return (
-                <Pressable key={entity.id} onPress={() => navigateToUser(user.screenName)}>
-                  <View className="relative">
-                    {user.profile?.iconUrl ? (
-                      <UniImage
-                        source={{
-                          uri: getCdnUrl({
-                            src: user.profile.iconUrl,
-                            variant: "icon",
-                            width: 64,
-                          }),
-                        }}
-                        className="w-8 h-8 rounded-full"
-                        contentFit="cover"
-                      />
-                    ) : (
-                      <View className="w-8 h-8 rounded-full bg-[#888] opacity-25" />
-                    )}
-                    <UniImage
-                      source={{ uri: getReactionImageUrl(entity) }}
-                      className="w-4 h-4 absolute -bottom-0.5 -right-0.5"
-                      contentFit="contain"
-                    />
-                  </View>
-                </Pressable>
+                <View key={entity.id} className="relative">
+                  <NotificationActorAvatar actor={user} size="sm" />
+                  <UniImage
+                    source={{ uri: getReactionImageUrl(entity) }}
+                    className="w-4 h-4 absolute -bottom-0.5 -right-0.5"
+                    contentFit="contain"
+                  />
+                </View>
               );
             })}
           </View>

@@ -1,9 +1,22 @@
 import { CatalystDivider, CatalystListItem, CatalystListItemContent, CatalystText } from "@/components/design-system";
+import { accountAtom } from "@/models/atoms/account";
 import { router } from "expo-router";
-import { Accessibility, Bell, Bug, ChevronRight, FileText, Lock, Palette, Smile, UserCircle } from "lucide-react-native";
+import { useAtomValue } from "jotai";
+import {
+  Accessibility,
+  Bell,
+  Bug,
+  ChevronRight,
+  FileText,
+  Globe2,
+  Lock,
+  Palette,
+  Smile,
+  UserCircle,
+} from "lucide-react-native";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { withUniwind } from "uniwind";
-
 
 type SettingsSection = {
   route: string;
@@ -16,12 +29,13 @@ const UniBell = withUniwind(Bell);
 const UniBug = withUniwind(Bug);
 const UniChevronRight = withUniwind(ChevronRight);
 const UniFileText = withUniwind(FileText);
+const UniGlobe2 = withUniwind(Globe2);
 const UniLock = withUniwind(Lock);
 const UniPalette = withUniwind(Palette);
 const UniSmile = withUniwind(Smile);
 const UniUserCircle = withUniwind(UserCircle);
 
-const sections: SettingsSection[] = [
+const baseSections: SettingsSection[] = [
   { route: "/settings/account", title: "アカウント", icon: UniUserCircle },
   { route: "/settings/notifications", title: "通知", icon: UniBell },
   { route: "/settings/privacy", title: "プライバシー", icon: UniLock },
@@ -33,6 +47,42 @@ const sections: SettingsSection[] = [
 ];
 
 export default function SettingsPage() {
+  const account = useAtomValue(accountAtom);
+  const [activityPubSettingsUserId, setActivityPubSettingsUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!account) {
+      return;
+    }
+
+    let active = true;
+    account.credential.client.catalyst.v1.activitypub.settings
+      .get({ throwOnError: true })
+      .then(({ data }) => {
+        if (active) {
+          setActivityPubSettingsUserId(
+            data.rolloutEligible || data.state === "active" || data.state === "retired" ? account.user.id : null,
+          );
+        }
+      })
+      .catch(() => {
+        if (active) setActivityPubSettingsUserId(null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [account]);
+
+  const sections =
+    account?.user.id === activityPubSettingsUserId
+      ? [
+          ...baseSections.slice(0, 3),
+          { route: "/settings/activitypub", title: "ActivityPub 連合", icon: UniGlobe2 },
+          ...baseSections.slice(3),
+        ]
+      : baseSections;
+
   return (
     <View className="flex-1 bg-light-surface-muted dark:bg-dark-background">
       <View className="bg-light-background dark:bg-dark-surface">

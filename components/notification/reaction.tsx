@@ -1,14 +1,11 @@
-import { getCdnUrl } from "@/lib/media";
-import type {
-  CatalystStatus,
-  Notification,
-  NotificationGroup,
-} from "@/models/sdk-types";
+import { isActivityPubRemoteActor } from "@/lib/notification-actor";
+import type { CatalystStatus, Notification, NotificationGroup } from "@/models/sdk-types";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { memo } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
+import { NotificationActorAvatar } from "./actor-avatar";
 
 const UniImage = withUniwind(Image);
 
@@ -19,6 +16,11 @@ function getReactionImageUrl(entity: NotificationGroup): string {
   return `https://static.natsuneko.com/images/reactions/${entity.body}.png`;
 }
 
+const isRemoteUnicodeReaction = (entity: NotificationGroup): boolean =>
+  isActivityPubRemoteActor(entity.occurredBy) &&
+  entity.additionalContexts?.type !== "custom-reaction" &&
+  !/^[0-9a-f]+(?:-[0-9a-f]+)*$/i.test(entity.body);
+
 type Props = {
   notification: Notification;
 };
@@ -28,10 +30,6 @@ export const ReactionNotification = memo(({ notification }: Props) => {
   const { isGrouped, entities } = notification;
   const occurredBy = entities[0]?.occurredBy;
   const belongsTo = notification.belongsTo as unknown as CatalystStatus | null;
-
-  const navigateToUser = (screenName: string) => {
-    router.push(`/user/${screenName}`);
-  };
 
   const navigateToStatus = () => {
     if (belongsTo?.id) {
@@ -45,20 +43,8 @@ export const ReactionNotification = memo(({ notification }: Props) => {
         <View className="w-12 h-12 rounded-full bg-light-surface dark:bg-dark-surface items-center justify-center">
           <Text className="text-2xl text-light-text dark:text-dark-text">+</Text>
         </View>
-      ) : occurredBy?.profile?.iconUrl ? (
-        <Pressable onPress={() => navigateToUser(occurredBy.screenName)}>
-          <UniImage
-            source={{
-              uri: getCdnUrl({
-                src: occurredBy.profile.iconUrl,
-                variant: "icon",
-                width: 96,
-              }),
-            }}
-            className="w-12 h-12 rounded-full"
-            contentFit="cover"
-          />
-        </Pressable>
+      ) : occurredBy ? (
+        <NotificationActorAvatar actor={occurredBy} />
       ) : (
         <View className="w-12 h-12 rounded-full bg-[#888] opacity-25" />
       )}
@@ -80,35 +66,29 @@ export const ReactionNotification = memo(({ notification }: Props) => {
           {entities.length > 1 ? `${entities.length}回リアクションされました` : "リアクションされました"}
         </Text>
 
+        {occurredBy && isActivityPubRemoteActor(occurredBy) && entities.length === 1 ? (
+          <Text className="text-xs font-mono text-light-text-muted dark:text-dark-text-muted" numberOfLines={1}>
+            {occurredBy.handle}
+          </Text>
+        ) : null}
+
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View className="flex-row gap-2 h-8">
             {entities.map((entity) => {
               const user = entity.occurredBy;
               return (
-                <Pressable key={entity.id} onPress={() => navigateToUser(user.screenName)}>
-                  <View className="relative">
-                    {user.profile?.iconUrl ? (
-                      <UniImage
-                        source={{
-                          uri: getCdnUrl({
-                            src: user.profile.iconUrl,
-                            variant: "icon",
-                            width: 64,
-                          }),
-                        }}
-                        className="w-8 h-8 rounded-full"
-                        contentFit="cover"
-                      />
-                    ) : (
-                      <View className="w-8 h-8 rounded-full bg-[#888] opacity-25" />
-                    )}
+                <View key={entity.id} className="relative">
+                  <NotificationActorAvatar actor={user} size="sm" />
+                  {isRemoteUnicodeReaction(entity) ? (
+                    <Text className="absolute -bottom-1 -right-1 text-base leading-none">{entity.body}</Text>
+                  ) : (
                     <UniImage
                       source={{ uri: getReactionImageUrl(entity) }}
                       className="w-4 h-4 absolute -bottom-0.5 -right-0.5"
                       contentFit="contain"
                     />
-                  </View>
-                </Pressable>
+                  )}
+                </View>
               );
             })}
           </View>

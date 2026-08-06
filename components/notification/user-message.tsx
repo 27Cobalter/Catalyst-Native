@@ -1,6 +1,7 @@
 import { catalystLinkClassName } from "@/components/design-system";
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { rel } from "@/lib/dayjs";
+import { isActivityPubRemoteActor } from "@/lib/notification-actor";
 import { cn } from "@/lib/utils";
 import { clientAtom } from "@/models/atoms/credential";
 import { Markdown } from "@/components/ui/markdown";
@@ -13,6 +14,7 @@ import { Ref, memo, useCallback, useImperativeHandle, useRef, useState } from "r
 import { ActivityIndicator, Pressable, RefreshControl, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
 import { UserMessagePlaceholder } from "./placeholder";
+import { openUrlWithBrowser } from "@/models/browser-settings";
 
 const MESSAGE_TITLE = "natsuneko-laboratory:kiana:message";
 const ISSUER_CATALYST_USER_MESSAGE = "natsuneko-laboratory:catalyst-message";
@@ -39,6 +41,15 @@ const UserMessageItem = memo(({ notification }: ItemProps) => {
   const sender = message?.occurredBy;
   const isUnread = !notification.read;
 
+  const openSender = () => {
+    if (!sender) return;
+    if (isActivityPubRemoteActor(sender)) {
+      openUrlWithBrowser(sender.profileUri);
+      return;
+    }
+    router.push(`/user/${sender.screenName}`);
+  };
+
   return (
     <View className={`px-4 py-3 gap-2 ${isUnread ? "bg-light-info-background dark:bg-dark-info-background" : ""}`}>
       <View className="flex-row items-center gap-2">
@@ -51,7 +62,7 @@ const UserMessageItem = memo(({ notification }: ItemProps) => {
           )}
         </View>
         {sender && (
-          <Pressable onPress={() => router.push(`/user/${sender.screenName}`)}>
+          <Pressable onPress={openSender}>
             <Text className={cn("text-sm", catalystLinkClassName)}>{sender.displayName}</Text>
           </Pressable>
         )}

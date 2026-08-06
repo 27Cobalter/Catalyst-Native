@@ -282,6 +282,10 @@ export default Sentry.wrap(function RootLayout() {
                   name="settings/privacy"
                   options={{ title: "プライバシー", headerBackTitle: "戻る" }}
                 />
+                <Stack.Screen
+                  name="settings/activitypub"
+                  options={{ title: "ActivityPub 連合", headerBackTitle: "戻る" }}
+                />
                 {__DEV__ ? (
                   <Stack.Screen
                     name="settings/debug"

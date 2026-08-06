@@ -30,13 +30,16 @@ export const ReactionBar = ({ reactions, onReact, onUnreact, onAddReaction }: Pr
         .filter(([, reaction]) => reaction.count >= 1)
         .map(([key, reaction]) => {
           const customReactionId = getCustomReactionId(key, reaction);
-          const canToggle = Boolean(onReact || onUnreact);
+          const canToggle = !reaction.isRemoteOnly && Boolean(onReact || onUnreact);
 
           return (
             <Pressable
               key={key}
               accessibilityRole="button"
               accessibilityLabel={`${reaction.symbol} ${reaction.count}件のリアクション`}
+              accessibilityHint={
+                reaction.isRemoteOnly ? "外部サービス由来のため、このリアクションは操作できません" : undefined
+              }
               disabled={!canToggle}
               onPress={() =>
                 reaction.hasSelfReaction
@@ -50,18 +53,16 @@ export const ReactionBar = ({ reactions, onReact, onUnreact, onAddReaction }: Pr
                   : "border-light-divider bg-light-surface dark:border-dark-divider dark:bg-dark-surface-muted",
               )}
             >
-              {isUnicodeCodepoint(reaction.symbol) ? (
+              {reaction.emoji ? (
+                <Text className="text-lg leading-none">{reaction.emoji}</Text>
+              ) : isUnicodeCodepoint(reaction.symbol) ? (
                 <UniImage
                   source={emojis[reaction.symbol as keyof typeof emojis]}
                   className="size-5"
                   contentFit="contain"
                 />
               ) : (
-                <UniImage
-                  source={{ uri: reaction.url }}
-                  className="size-5"
-                  contentFit="contain"
-                />
+                <UniImage source={{ uri: reaction.url }} className="size-5" contentFit="contain" />
               )}
               <Text
                 className={cn(
