@@ -16,7 +16,7 @@
     "run:ios:op:local": "pnpm run prebuilt && EXPO_PUBLIC_DEV=local pnpm with-op expo run:ios",
     "run:android:op": "pnpm run prebuilt && pnpm with-op expo run:android",
     "run:android:op:local": "pnpm run prebuilt && EXPO_PUBLIC_DEV=local pnpm with-op expo run:android",
-    "build:production": "pnpm with-env run-s -c build:*:production",
+    "build:production": "pnpm with-op run-s -c build:*:production",
     "build:android:development": "pnpm run prebuilt && eas build --platform android --profile development --local",
     "build:android:preview": "pnpm run prebuilt && eas build --platform android --profile preview --local",
     "build:android:production": "pnpm run prebuilt && eas build --platform android --profile production --local",
