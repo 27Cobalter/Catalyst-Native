@@ -5,6 +5,7 @@ import {
   CatalystText,
 } from "@/components/design-system";
 import { accountAtom } from "@/models/atoms/account";
+import { clientAtom } from "@/models/atoms/credential";
 import { streamingEnabledAtom } from "@/models/atoms/streaming";
 import {
   PUSH_NOTIFICATION_TYPES,
@@ -36,6 +37,7 @@ type WeeklyThemeSubscription = {
 };
 
 export default function NotificationSettingsPage() {
+  const client = useAtomValue(clientAtom);
   const account = useAtomValue(accountAtom);
   const isLoggedIn = !!account;
 
@@ -71,11 +73,11 @@ export default function NotificationSettingsPage() {
       }
 
       let synchronizedPushEnabled = pushEnabled;
-      if (account && token) {
+      if (account && token && client.accessToken) {
         try {
           synchronizedPushEnabled = await checkTokenRegistration(
             token,
-            account.credential.accessToken,
+            client.accessToken,
           );
           await savePushEnabled(synchronizedPushEnabled);
         } catch (error) {
@@ -103,7 +105,7 @@ export default function NotificationSettingsPage() {
     return () => {
       ignore = true;
     };
-  }, [account]);
+  }, [account, client]);
 
   // FCMトークンのリフレッシュを監視
   useEffect(() => {
@@ -112,8 +114,8 @@ export default function NotificationSettingsPage() {
     onTokenRefresh(async (token) => {
       setFcmToken(token);
       await saveFcmToken(token);
-      if (isPushEnabled && account) {
-        await registerTokenToBackend(token, account.credential.accessToken);
+      if (isPushEnabled && account && client?.accessToken) {
+        await registerTokenToBackend(token, client.accessToken);
       }
     }).then((unsub) => {
       unsubscribe = unsub;
@@ -122,14 +124,14 @@ export default function NotificationSettingsPage() {
     return () => {
       unsubscribe?.();
     };
-  }, [isPushEnabled, account]);
+  }, [isPushEnabled, account, client]);
 
   useEffect(() => {
     let ignore = false;
     if (!account) {
       return;
     }
-    const weeklyThemes = account.credential.client.catalyst.v1.weeklyThemes;
+    const weeklyThemes = client.catalyst.v1.weeklyThemes;
     if (!weeklyThemes) return;
 
     weeklyThemes.subscription
@@ -144,7 +146,7 @@ export default function NotificationSettingsPage() {
     return () => {
       ignore = true;
     };
-  }, [account]);
+  }, [account, client]);
 
   const isEffectivelyEnabled =
     isPushEnabled &&
@@ -162,10 +164,10 @@ export default function NotificationSettingsPage() {
           setIsPushEnabled(true);
           await savePushEnabled(true);
           const token = await getFcmToken();
-          if (token && account) {
+          if (token && account && client.accessToken) {
             setFcmToken(token);
             await saveFcmToken(token);
-            await registerTokenToBackend(token, account.credential.accessToken);
+            await registerTokenToBackend(token, client.accessToken);
           }
         } else if (authStatus === "denied") {
           // 拒否済み → 設定画面へ誘導
@@ -180,12 +182,12 @@ export default function NotificationSettingsPage() {
             setIsPushEnabled(true);
             await savePushEnabled(true);
             const token = await getFcmToken();
-            if (token && account) {
+            if (token && account && client.accessToken) {
               setFcmToken(token);
               await saveFcmToken(token);
               await registerTokenToBackend(
                 token,
-                account.credential.accessToken,
+                client.accessToken,
               );
             }
           }
@@ -195,15 +197,15 @@ export default function NotificationSettingsPage() {
         setIsPushEnabled(false);
         await savePushEnabled(false);
         const savedToken = await loadSavedFcmToken();
-        if (savedToken && account) {
+        if (savedToken && account && client.accessToken) {
           await unregisterTokenFromBackend(
             savedToken,
-            account.credential.accessToken,
+            client.accessToken,
           );
         }
       }
     },
-    [isLoggedIn, authStatus, account],
+    [isLoggedIn, authStatus, account, client],
   );
 
   // 通知タイプのトグル
@@ -234,7 +236,7 @@ export default function NotificationSettingsPage() {
   const handleWeeklyThemeSubscriptionToggle = useCallback(
     async (key: keyof WeeklyThemeSubscription, value: boolean) => {
       if (!account || !weeklyThemeSubscription || isWeeklyThemeSubscriptionUpdating) return;
-      const weeklyThemes = account.credential.client.catalyst.v1.weeklyThemes;
+      const weeklyThemes = client.catalyst.v1.weeklyThemes;
       if (!weeklyThemes) return;
 
       const previous = weeklyThemeSubscription;
@@ -253,7 +255,7 @@ export default function NotificationSettingsPage() {
         setIsWeeklyThemeSubscriptionUpdating(false);
       }
     },
-    [account, isWeeklyThemeSubscriptionUpdating, weeklyThemeSubscription],
+    [account, client, isWeeklyThemeSubscriptionUpdating, weeklyThemeSubscription],
   );
 
   const footerText = (() => {
