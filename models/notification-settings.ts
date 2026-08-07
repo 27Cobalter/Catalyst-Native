@@ -56,6 +56,8 @@ const STORAGE_KEYS = {
   fcmToken: "notification_fcm_token",
 } as const;
 
+const FCM_ENDPOINT = "https://api.natsuneko.com/steambird/v1/fcm";
+
 export type { AuthorizationStatus };
 
 type AppAuthorizationStatus = "notDetermined" | "denied" | "authorized" | "provisional";
@@ -144,14 +146,47 @@ export async function clearFcmToken(): Promise<void> {
 }
 
 // バックエンドAPI
-export async function registerTokenToBackend(token: string, accessToken: string): Promise<void> {
+export async function checkTokenRegistration(
+  token: string,
+  accessToken: string,
+): Promise<boolean> {
+  const response = await fetch(`${FCM_ENDPOINT}/check`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ token }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`FCM registration check failed: ${response.status}`);
+  }
+
+  const data: unknown = await response.json();
+  if (
+    !data ||
+    typeof data !== "object" ||
+    !("isSubscribed" in data) ||
+    typeof data.isSubscribed !== "boolean"
+  ) {
+    throw new Error("FCM registration check returned an invalid response");
+  }
+
+  return data.isSubscribed;
+}
+
+export async function registerTokenToBackend(
+  token: string,
+  accessToken: string,
+): Promise<void> {
   const requestBody = {
     token,
     platform: Platform.OS,
     deviceId: "",
   };
 
-  const response = await fetch("https://api.natsuneko.com/steambird/v1/fcm", {
+  const response = await fetch(FCM_ENDPOINT, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -166,7 +201,7 @@ export async function registerTokenToBackend(token: string, accessToken: string)
 }
 
 export async function unregisterTokenFromBackend(token: string, accessToken: string): Promise<void> {
-  const response = await fetch("https://api.natsuneko.com/steambird/v1/fcm", {
+  const response = await fetch(FCM_ENDPOINT, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${accessToken}`,

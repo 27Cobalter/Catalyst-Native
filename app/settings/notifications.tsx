@@ -4,11 +4,11 @@ import {
   CatalystSwitch,
   CatalystText,
 } from "@/components/design-system";
-import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { accountAtom } from "@/models/atoms/account";
 import { streamingEnabledAtom } from "@/models/atoms/streaming";
 import {
   PUSH_NOTIFICATION_TYPES,
+  checkTokenRegistration,
   getAuthorizationStatus,
   getFcmToken,
   loadEnabledTypes,
@@ -49,9 +49,11 @@ export default function NotificationSettingsPage() {
   const [isStreamingEnabled, setIsStreamingEnabled] =
     useAtom(streamingEnabledAtom);
 
-  // 初期化
-  useAsyncOneTimeEffect(async () => {
-    try {
+  // 初期化時にサーバーの購読状態を正としてローカル設定を同期する
+  useEffect(() => {
+    let ignore = false;
+
+    const initialize = async () => {
       const [pushEnabled, types, status, savedToken] = await Promise.all([
         loadPushEnabled(),
         loadEnabledTypes(),
@@ -59,14 +61,49 @@ export default function NotificationSettingsPage() {
         loadSavedFcmToken(),
       ]);
 
-      setIsPushEnabled(pushEnabled);
+      if (ignore) return;
+      setIsLoading(true);
+
+      const currentToken = account ? await getFcmToken() : null;
+      const token = currentToken ?? savedToken;
+      if (currentToken && currentToken !== savedToken) {
+        await saveFcmToken(currentToken);
+      }
+
+      let synchronizedPushEnabled = pushEnabled;
+      if (account && token) {
+        try {
+          synchronizedPushEnabled = await checkTokenRegistration(
+            token,
+            account.credential.accessToken,
+          );
+          await savePushEnabled(synchronizedPushEnabled);
+        } catch (error) {
+          if (__DEV__) {
+            console.warn("FCM registration sync failed", error);
+          }
+        }
+      }
+
+      if (ignore) return;
+      setIsPushEnabled(synchronizedPushEnabled);
       setEnabledTypes(types);
       setAuthStatus(status);
-      setFcmToken(savedToken);
-    } finally {
+      setFcmToken(token);
       setIsLoading(false);
-    }
-  });
+    };
+
+    initialize().catch((error) => {
+      if (__DEV__) {
+        console.warn("Notification settings initialization failed", error);
+      }
+      if (!ignore) setIsLoading(false);
+    });
+
+    return () => {
+      ignore = true;
+    };
+  }, [account]);
 
   // FCMトークンのリフレッシュを監視
   useEffect(() => {
