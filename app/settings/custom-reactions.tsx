@@ -71,7 +71,7 @@ export default function CustomReactionsSettingsPage() {
     account.credential.client.catalyst.v1.customReactions
       .get({ throwOnError: true })
       .then(({ data }) => setReactionList(data))
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => {
         if (isActive) {
           setIsLoading(false);
@@ -124,14 +124,19 @@ export default function CustomReactionsSettingsPage() {
 
     setIsSubmitting(true);
     try {
+      // The SDK's multipart serializer only treats an actual Blob as a file.
+      // ImagePicker returns a local URI, so passing a URI-shaped object (even
+      // when cast to Blob) serializes it as JSON instead of uploading bytes.
+      const imageResponse = await fetch(selectedImage.uri);
+      if (!imageResponse.ok) {
+        throw new Error(`Failed to read selected image: ${imageResponse.status}`);
+      }
+      const image = await imageResponse.blob();
+
       const { data: created } =
         await account.credential.client.catalyst.v1.customReactions.create({
           body: {
-            image: {
-              uri: selectedImage.uri,
-              name: selectedImage.fileName,
-              type: selectedImage.mimeType,
-            } as unknown as Blob,
+            image,
             shortcode: shortcode.trim(),
             displayName: displayName.trim(),
             visibility: "public",
@@ -173,10 +178,10 @@ export default function CustomReactionsSettingsPage() {
                 setReactionList((prev) =>
                   prev
                     ? {
-                        ...prev,
-                        used: prev.used - 1,
-                        items: prev.items.filter((r) => r.id !== item.id),
-                      }
+                      ...prev,
+                      used: prev.used - 1,
+                      items: prev.items.filter((r) => r.id !== item.id),
+                    }
                     : prev,
                 );
               } catch {
@@ -388,7 +393,7 @@ export default function CustomReactionsSettingsPage() {
                     tone="tint"
                     className="text-[15px] font-semibold"
                   >
-                    画像を選択（PNG / JPEG、最大 1MB）
+                    画像を選択（PNG / JPEG / GIF、最大 1MB）
                   </CatalystText>
                 )}
               </CatalystListItem>
