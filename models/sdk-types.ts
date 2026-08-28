@@ -42,6 +42,8 @@ export type CatalystReaction = ApiData<
 
 export type CatalystRelationships = ApiData<Client["catalyst"]["v1"]["relationships"]["id"]["get"]>;
 
+export type CatalystUserWatchMode = ApiData<Client["catalyst"]["v1"]["user"]["id"]["watch"]["get"]>["mode"];
+
 export type CatalystActivityPubSettings = ApiData<Client["catalyst"]["v1"]["activitypub"]["settings"]["get"]>;
 
 export type CatalystFollowListItem = ApiData<

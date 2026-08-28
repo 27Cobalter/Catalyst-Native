@@ -11,6 +11,7 @@ import { accountAtom } from "@/models/atoms/account";
 import { clientAtom } from "@/models/atoms/credential";
 import { openUrlWithBrowser } from "@/models/browser-settings";
 import { ProfileEmoji } from "@/components/user/profile-emoji";
+import { ProfileWatchButton } from "@/components/profile/watch-button";
 import { CatalystRelationships, EgeriaUser, ProfileTag } from "@/models/sdk-types";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -158,6 +159,7 @@ export const ProfileHeader = ({ user, relationships, tags, onUpdateRelationships
                     <CatalystBadgeText>フォローされています</CatalystBadgeText>
                   </CatalystBadge>
                 )}
+                {user && <ProfileWatchButton userId={user.id} />}
                 <CatalystButton
                   size="sm"
                   tone={relationships?.isFollowing ? "secondary" : "primary"}
