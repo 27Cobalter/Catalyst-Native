@@ -36,6 +36,14 @@ export type TimelineHandle = {
   scrollToTop: () => void;
 };
 
+const getPaginationCursor = (item: TimelineStatusItem): string => {
+  if ("cursor" in item && typeof item.cursor === "string" && item.cursor.length > 0) {
+    return item.cursor;
+  }
+
+  return item.id;
+};
+
 export const TimelineBase = ({
   fetcher,
   renderItem,
@@ -74,7 +82,7 @@ export const TimelineBase = ({
     hasMore.current = true;
 
     try {
-      const since = items.length > 0 ? items[0].id : null;
+      const since = items.length > 0 ? getPaginationCursor(items[0]) : null;
       const [newItems] = await Promise.all([
         //
         fetcher(since, null),
@@ -97,7 +105,7 @@ export const TimelineBase = ({
     isLoadingRef.current = true;
 
     try {
-      const until = items.length > 0 ? items.slice(-1)[0].id : null;
+      const until = items.length > 0 ? getPaginationCursor(items.slice(-1)[0]) : null;
       const newItems = await fetcher(null, until);
 
       if (newItems.length > 0) {
@@ -144,9 +152,7 @@ export const TimelineBase = ({
     [],
   );
 
-  const EmptyComponent = isInitialLoading
-    ? TimelinePlaceholder
-    : ListEmptyComponent;
+  const EmptyComponent = isInitialLoading ? TimelinePlaceholder : ListEmptyComponent;
 
   return (
     <FlashList

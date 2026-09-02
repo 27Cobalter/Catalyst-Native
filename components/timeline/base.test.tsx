@@ -31,7 +31,7 @@ jest.mock("./status", () => ({ TimelineStatus: () => null }));
 jest.mock("./advertisement", () => ({ TimelineAdvertisement: () => null }));
 jest.mock("./placeholder", () => ({ TimelinePlaceholder: () => null }));
 
-const item = (id: string) => ({ id }) as unknown as TimelineStatusItem;
+const item = (id: string, cursor = id) => ({ id, cursor }) as unknown as TimelineStatusItem;
 
 describe("TimelineBase", () => {
   beforeEach(() => {
@@ -100,6 +100,27 @@ describe("TimelineBase", () => {
       expect(mockCaptured?.data).toEqual([item("2"), item("1"), item("0")]);
     });
     expect(fetcher).toHaveBeenLastCalledWith(null, "1");
+  });
+
+  it("refresh と追加読込でステータスの cursor を使う", async () => {
+    const fetcher = jest
+      .fn()
+      .mockResolvedValueOnce([item("2", "newer-cursor"), item("1", "older-cursor")])
+      .mockResolvedValueOnce([item("3")])
+      .mockResolvedValueOnce([item("0")]);
+
+    await render(<TimelineBase fetcher={fetcher} />);
+    await waitFor(() => expect(mockCaptured?.data).toHaveLength(2));
+
+    await act(async () => {
+      await mockCaptured?.refreshControl.props.onRefresh();
+    });
+    expect(fetcher).toHaveBeenLastCalledWith("newer-cursor", null);
+
+    await act(async () => {
+      await mockCaptured?.onEndReached();
+    });
+    expect(fetcher).toHaveBeenLastCalledWith(null, "older-cursor");
   });
 
   it("fetcher が空配列を返したら以降の onEndReached を無視する (hasMore=false)", async () => {

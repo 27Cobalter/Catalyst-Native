@@ -159,6 +159,7 @@ export default function StatusDetailsPage() {
   const [albumSelectionMode, setAlbumSelectionMode] = useState<"add" | "remove">("add");
   const [isEditingSaving, setIsEditingSaving] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [isReposted, setIsReposted] = useState(false);
   const [isNotFound, setIsNotFound] = useState(false);
   const emojiPickerRef = useRef<EmojiPickerSheetRef>(null);
   const menuSheetRef = useRef<BottomSheetModal>(null);
@@ -206,13 +207,18 @@ export default function StatusDetailsPage() {
         setWeeklyTheme(getWeeklyTheme(statusRes.weeklyTheme));
 
         if (account?.credential.client) {
-          const [favRes] = await Promise.all([
+          const [favRes, repostRes] = await Promise.all([
             account.credential.client.catalyst.v1.status.id.favorite
+              .get({ path: { id }, throwOnError: true })
+              .then(({ data }) => data)
+              .catch(() => false),
+            account.credential.client.catalyst.v1.status.id.repost
               .get({ path: { id }, throwOnError: true })
               .then(({ data }) => data)
               .catch(() => false),
           ]);
           setIsFavorited(favRes as boolean);
+          setIsReposted(repostRes as boolean);
         }
       } catch {
         setIsNotFound(true);
@@ -499,7 +505,11 @@ export default function StatusDetailsPage() {
 
               <View className="my-3 h-px bg-light-divider dark:bg-dark-divider" />
 
-              <ActionBar isDefaultFavorited={isFavorited} status={status} />
+              <ActionBar
+                isDefaultFavorited={isFavorited}
+                isDefaultReposted={isReposted}
+                status={status}
+              />
 
               <View className="my-3 h-px bg-light-divider dark:bg-dark-divider" />
 
