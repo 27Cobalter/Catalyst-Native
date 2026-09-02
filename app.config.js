@@ -138,7 +138,14 @@ module.exports = ({ config }) => {
           assets: ["assets/images/emoji", "assets/images/emoji-test.txt"],
         },
       ],
-      "@react-native-firebase/app",
+      [
+        "@react-native-firebase/app",
+        {
+          ios: {
+            disableSPM: true,
+          },
+        },
+      ],
       "@react-native-firebase/messaging",
       "@react-native-async-storage/expo-with-async-storage",
       [
