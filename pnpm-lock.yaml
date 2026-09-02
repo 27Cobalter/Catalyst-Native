@@ -30,8 +30,8 @@ importers:
         specifier: ^0.1.5
         version: 0.1.5(expo@57.0.15)
       '@natsuneko-laboratory/catalyst-sdk':
-        specifier: 1.0.0-alpha.15
-        version: 1.0.0-alpha.15
+        specifier: 1.0.0-alpha.16
+        version: 1.0.0-alpha.16
       '@natsuneko-laboratory/fleet-renderer-core':
         specifier: ^0.2.0
         version: 0.2.0
@@ -281,7 +281,7 @@ importers:
         version: 23.0.0(@types/node@26.1.2)(supports-color@8.1.1)(typescript@7.0.2)
       eas-cli-local-build-plugin:
         specifier: ^23.0.0
-        version: 23.0.0(graphql@16.8.1)(typescript@7.0.2)
+        version: 23.0.0(graphql@16.8.1)(supports-color@8.1.1)(typescript@7.0.2)
       eslint:
         specifier: ^10.8.0
         version: 10.8.0(jiti@2.7.0)(supports-color@8.1.1)
@@ -1790,8 +1790,8 @@ packages:
       '@emnapi/core': ^1.7.1 || ^2.0.0-alpha.3
       '@emnapi/runtime': ^1.7.1 || ^2.0.0-alpha.3
 
-  '@natsuneko-laboratory/catalyst-sdk@1.0.0-alpha.15':
-    resolution: {integrity: sha512-yq55MSFFn5q1eP9Joxn4iIEiqBB0LsWo5GCZ3XOWcP6255p0ag1W4xt9rTa+oMoEv9r6Q+N1v1Lvuh+ARR2rXQ==}
+  '@natsuneko-laboratory/catalyst-sdk@1.0.0-alpha.16':
+    resolution: {integrity: sha512-KC+XrTvSmhppEzr5fsK2JPmAfKAaKOcDpqkgew+TW1Q7hZHlBHfsCV/8oUdOeC22PdnYT8aygojpwZbDzi5KpQ==}
 
   '@natsuneko-laboratory/fleet-renderer-core@0.1.0':
     resolution: {integrity: sha512-Ee3oWN8tb0UC6yS+XI3U//2wr3Eev/fTg4pxI0kp/PjxntSqO8vb94vAG2BIBxjM7S2n9v26zy7pnbGEyanbWw==}
@@ -8789,13 +8789,13 @@ snapshots:
 
   '@expo/apple-utils@2.1.22': {}
 
-  '@expo/build-tools@23.0.0(graphql@16.8.1)(typescript@7.0.2)':
+  '@expo/build-tools@23.0.0(graphql@16.8.1)(supports-color@8.1.1)(typescript@7.0.2)':
     dependencies:
       '@expo/config': 55.0.10(typescript@7.0.2)
       '@expo/config-plugins': 55.0.7
       '@expo/downloader': 23.0.0
       '@expo/eas-build-job': 23.0.0
-      '@expo/env': 0.4.2
+      '@expo/env': 0.4.2(supports-color@8.1.1)
       '@expo/logger': 23.0.0
       '@expo/package-manager': 1.9.10
       '@expo/plist': 0.3.5
@@ -9091,7 +9091,7 @@ snapshots:
       terminal-link: 2.1.1
       tslib: 2.4.1
 
-  '@expo/env@0.4.2':
+  '@expo/env@0.4.2(supports-color@8.1.1)':
     dependencies:
       chalk: 4.1.2
       debug: 4.4.3(supports-color@8.1.1)
@@ -10176,7 +10176,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.3
     optional: true
 
-  '@natsuneko-laboratory/catalyst-sdk@1.0.0-alpha.15':
+  '@natsuneko-laboratory/catalyst-sdk@1.0.0-alpha.16':
     dependencies:
       js-sha256: 0.11.1
 
@@ -12458,9 +12458,9 @@ snapshots:
       es-errors: 1.3.0
       gopd: 1.2.0
 
-  eas-cli-local-build-plugin@23.0.0(graphql@16.8.1)(typescript@7.0.2):
+  eas-cli-local-build-plugin@23.0.0(graphql@16.8.1)(supports-color@8.1.1)(typescript@7.0.2):
     dependencies:
-      '@expo/build-tools': 23.0.0(graphql@16.8.1)(typescript@7.0.2)
+      '@expo/build-tools': 23.0.0(graphql@16.8.1)(supports-color@8.1.1)(typescript@7.0.2)
       '@expo/eas-build-job': 23.0.0
       '@expo/logger': 23.0.0
       '@expo/spawn-async': 1.8.0
