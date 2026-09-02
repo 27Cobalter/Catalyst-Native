@@ -44,3 +44,7 @@ app-example
 *.apk
 *.aab
 *.ipa
+
+# store assets
+assets/appstore-connect/
+assets/store-banner/
