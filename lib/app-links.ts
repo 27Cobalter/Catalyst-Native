@@ -1,0 +1,24 @@
+const CATALYST_HOST = "catalyst.natsuneko.com";
+const LOCALE_PREFIX_PATTERN = /^\/(?:ja|en)(?=\/)/;
+
+export const getAppPathFromUrl = (path: string): string => {
+  try {
+    const url = new URL(path);
+
+    if ((url.protocol !== "https:" && url.protocol !== "http:") || url.hostname !== CATALYST_HOST) {
+      return path;
+    }
+
+    let pathname = url.pathname.replace(LOCALE_PREFIX_PATTERN, "");
+
+    if (pathname.startsWith("/themes/")) {
+      pathname = pathname.replace("/themes/", "/theme/");
+    } else if (pathname.startsWith("/@")) {
+      pathname = `/user/${pathname.slice(2)}`;
+    }
+
+    return `${pathname}${url.search}${url.hash}`;
+  } catch {
+    return path;
+  }
+};
