@@ -18,9 +18,8 @@ import { openUrlWithBrowser } from "@/models/browser-settings";
 import type {
   CatalystAlbum,
   CatalystAlbumDisplayMode,
-  CatalystSmartAlbum,
-  CatalystStatus,
-  Media,
+  CatalystStatusV1_1,
+  Media
 } from "@/models/sdk-types";
 import dayjs from "dayjs";
 import * as Clipboard from "expo-clipboard";
@@ -28,7 +27,7 @@ import { Image } from "expo-image";
 import { Stack, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { Calendar, Copy, ExternalLink, FileQuestion, Flag, MessageSquare, MoreHorizontal, Pencil, Send } from "lucide-react-native";
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   NativeScrollEvent,
@@ -38,22 +37,22 @@ import {
   RefreshControl,
   ScrollView,
   Share,
-  type TextLayoutEventData,
   View,
   useColorScheme,
   useWindowDimensions,
+  type TextLayoutEventData,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
+import "@/global.css";
+import { clientAtom } from "@/models/atoms/credential";
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetView,
   type BottomSheetBackdropProps,
 } from "@gorhom/bottom-sheet";
-import "@/global.css";
-import { clientAtom } from "@/models/atoms/credential";
 
 const UniCalendar = withUniwind(Calendar);
 const UniCopy = withUniwind(Copy);
@@ -214,7 +213,7 @@ const EmptyState = () => (
   />
 );
 
-const GridCell = memo(({ status, cellSize }: { status: CatalystStatus; cellSize: number }) => {
+const GridCell = memo(({ status, cellSize }: { status: CatalystStatusV1_1; cellSize: number }) => {
   const router = useRouter();
   const media = status.medias[0];
   const [isImageLoading, setIsImageLoading] = useState(Boolean(media));
@@ -308,7 +307,7 @@ const distributeToColumns = (items: GalleryItem[], columnWidth: number): [Galler
   return columns;
 };
 
-const expandGalleryItems = (statuses: CatalystStatus[]): GalleryItem[] => {
+const expandGalleryItems = (statuses: CatalystStatusV1_1[]): GalleryItem[] => {
   return statuses.flatMap((status) =>
     status.medias.map((media) => ({
       key: `${status.id}:${media.id}`,
@@ -323,10 +322,10 @@ const AlbumVisualContent = ({
   fetcher,
 }: {
   mode: Extract<CatalystAlbumDisplayMode, "grid" | "gallery">;
-  fetcher: (since: string | null, until: string | null) => Promise<CatalystStatus[]>;
+  fetcher: (since: string | null, until: string | null) => Promise<CatalystStatusV1_1[]>;
 }) => {
   const { width: screenWidth } = useWindowDimensions();
-  const [items, setItems] = useState<CatalystStatus[]>([]);
+  const [items, setItems] = useState<CatalystStatusV1_1[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const isLoadingRef = useRef(false);
@@ -398,7 +397,7 @@ const AlbumVisualContent = ({
 
   if (mode === "grid") {
     const cellSize = (screenWidth - GRID_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS;
-    const rows: CatalystStatus[][] = [];
+    const rows: CatalystStatusV1_1[][] = [];
     for (let i = 0; i < items.length; i += GRID_COLUMNS) {
       rows.push(items.slice(i, i + GRID_COLUMNS));
     }
@@ -569,25 +568,26 @@ export const AlbumDetailPage = ({ id, albumType }: Props) => {
   }, [client, id, albumType]);
 
   const fetcher = useCallback(
-    async (since: string | null, until: string | null): Promise<CatalystStatus[]> => {
+    async (since: string | null, until: string | null): Promise<CatalystStatusV1_1[]> => {
       const opts: { since?: string; until?: string } = {};
       if (since) opts.since = since;
       if (until) opts.until = until;
 
       if (albumType === "album") {
-        const { data: album } = await client.catalyst.v1.album.by.id.id.get({
+        const { data: album } = await client.catalyst.v11.timeline.album.id.get({
           path: { id },
           query: opts,
           throwOnError: true,
         });
-        return album.statuses;
+        return album;
       }
-      const { data: album } = await client.catalyst.v1.smartAlbum.by.id.id.get({
+
+      const { data: album } = await client.catalyst.v11.timeline.smartAlbum.id.get({
         path: { id },
         query: opts,
         throwOnError: true,
       });
-      return album.statuses;
+      return album;
     },
     [client, id, albumType],
   );
