@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Noto Sans JP";
+  src: url("../../fonts/NotoSansJP-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Noto Sans JP";
+  src: url("../../fonts/NotoSansJP-Bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@theme {
+  --font-sans: "Noto Sans JP", "Hiragino Sans", sans-serif;
+  --font-utility: "Avenir Next", "Helvetica Neue", sans-serif;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    margin: 0;
+  }
+}
+
+@layer components {
+  .store-canvas {
+    width: calc(var(--canvas-width) * 1px);
+    height: calc(var(--canvas-height) * 1px);
+    transform: scale(var(--scale));
+    transform-origin: top left;
+  }
+
+  .canvas-slot {
+    width: calc(var(--canvas-width) * var(--scale) * 1px);
+    height: calc(var(--canvas-height) * var(--scale) * 1px);
+  }
+
+  .capture-mode,
+  .capture-mode body,
+  .capture-mode #root {
+    margin: 0;
+    overflow: hidden;
+    background: white;
+  }
+
+  .capture-mode .canvas-slot {
+    width: calc(var(--canvas-width) * 1px);
+    height: calc(var(--canvas-height) * 1px);
+  }
+
+  [contenteditable="true"]:focus {
+    border-radius: 8px;
+    outline: 4px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    outline-offset: 10px;
+  }
+}
