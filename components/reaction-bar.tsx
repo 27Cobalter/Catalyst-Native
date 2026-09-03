@@ -1,10 +1,15 @@
 import { emojis } from "@/lib/generated/emojis";
-import { getCustomReactionId } from "@/lib/reactions";
+import { getCustomReactionId, getReactionClipboardValue } from "@/lib/reactions";
 import { cn } from "@/lib/utils";
+import { accountAtom } from "@/models/atoms/account";
 import type { CatalystReaction } from "@/models/sdk-types";
+import * as Clipboard from "expo-clipboard";
 import { Image } from "expo-image";
+import { useAtomValue } from "jotai";
 import { Plus } from "lucide-react-native";
+import { useCallback, useRef } from "react";
 import { Pressable, Text, View } from "react-native";
+import Toast from "react-native-toast-message";
 import { withUniwind } from "uniwind";
 
 const UniPlus = withUniwind(Plus);
@@ -22,7 +27,37 @@ type Props = {
 };
 
 export const ReactionBar = ({ reactions, onReact, onUnreact, onAddReaction }: Props) => {
+  const account = useAtomValue(accountAtom);
+  const didLongPressRef = useRef(false);
   const entries = Object.entries(reactions);
+
+  const handleCopyReaction = useCallback(
+    async (key: string, reaction: CatalystReaction) => {
+      const customReactionId = getCustomReactionId(key, reaction);
+      let ownCustomReactionIds: ReadonlySet<string> = new Set();
+
+      if (customReactionId && account) {
+        ownCustomReactionIds = await account.credential.client.catalyst.v1.customReactions
+          .get({ throwOnError: true })
+          .then(({ data }) => new Set(data.items.map((item) => item.id)))
+          .catch(() => new Set<string>());
+      }
+
+      const value = getReactionClipboardValue({
+        symbol: reaction.symbol,
+        customReactionId,
+        ownCustomReactionIds,
+      });
+
+      try {
+        await Clipboard.setStringAsync(value);
+        Toast.show({ type: "success", text1: "リアクションIDをコピーしました" });
+      } catch {
+        Toast.show({ type: "error", text1: "リアクションIDのコピーに失敗しました" });
+      }
+    },
+    [account],
+  );
 
   return (
     <View className="flex-row flex-wrap items-center gap-1.5 py-1">
@@ -38,16 +73,31 @@ export const ReactionBar = ({ reactions, onReact, onUnreact, onAddReaction }: Pr
               accessibilityRole="button"
               accessibilityLabel={`${reaction.symbol} ${reaction.count}件のリアクション`}
               accessibilityHint={
-                reaction.isRemoteOnly ? "外部サービス由来のため、このリアクションは操作できません" : undefined
+                reaction.isRemoteOnly
+                  ? "長押しでリアクションIDをコピーできます。外部サービス由来のため、リアクションの追加や削除はできません"
+                  : "長押しでリアクションIDをコピーできます"
               }
-              disabled={!canToggle}
-              onPress={() =>
-                reaction.hasSelfReaction
-                  ? onUnreact?.(reaction.symbol, customReactionId)
-                  : onReact?.(reaction.symbol, reaction.url, customReactionId)
-              }
+              onPressIn={() => {
+                didLongPressRef.current = false;
+              }}
+              onLongPress={(event) => {
+                event.stopPropagation();
+                didLongPressRef.current = true;
+                void handleCopyReaction(key, reaction);
+              }}
+              onPress={(event) => {
+                event.stopPropagation();
+                if (didLongPressRef.current) return;
+                if (!canToggle) return;
+                if (reaction.hasSelfReaction) {
+                  onUnreact?.(reaction.symbol, customReactionId);
+                } else {
+                  onReact?.(reaction.symbol, reaction.url, customReactionId);
+                }
+              }}
               className={cn(
-                "min-h-8 flex-row items-center gap-1 rounded-full border px-2 py-1 active:opacity-75 disabled:opacity-60",
+                "min-h-8 flex-row items-center gap-1 rounded-full border px-2 py-1 active:opacity-75",
+                reaction.isRemoteOnly && "opacity-60",
                 reaction.hasSelfReaction
                   ? "border-light-toggle-border bg-light-toggle dark:border-dark-toggle-border dark:bg-dark-toggle"
                   : "border-light-divider bg-light-surface dark:border-dark-divider dark:bg-dark-surface-muted",

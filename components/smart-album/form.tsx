@@ -17,6 +17,12 @@ import {
   type BottomSheetBackdropProps,
 } from "@gorhom/bottom-sheet";
 import type { CatalystAlbumDisplayMode } from "@/models/sdk-types";
+import {
+  conditionToHashtag,
+  hashtagsToConditions,
+  type ConditionType,
+  type SmartAlbumCondition,
+} from "@/lib/smart-album-conditions";
 import DateTimePicker, { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import dayjs from "dayjs";
 import { Plus, X } from "lucide-react-native";
@@ -37,19 +43,13 @@ function mergeTimePart(base: Date, newTime: Date): Date {
 const UniPlus = withUniwind(Plus);
 const UniX = withUniwind(X);
 
-export type ConditionType = "hashtag" | "takenBy" | "contest" | "user";
-
-export type SmartAlbumCondition = {
-  id: string;
-  type: ConditionType;
-  value: string;
-  isExclude: boolean;
-};
+export { conditionToHashtag, hashtagsToConditions, type SmartAlbumCondition } from "@/lib/smart-album-conditions";
 
 export const MAX_CONDITIONS = 20;
 
 const CONDITION_TYPE_LABELS: Record<ConditionType, string> = {
   hashtag: "タグ / キーワード",
+  reaction: "リアクション",
   takenBy: "撮影者ID",
   contest: "コンテスト",
   user: "ユーザー",
@@ -57,6 +57,7 @@ const CONDITION_TYPE_LABELS: Record<ConditionType, string> = {
 
 const CONDITION_TYPE_BADGE: Record<ConditionType, string> = {
   hashtag: "tag",
+  reaction: "reaction",
   takenBy: "takenBy",
   contest: "contest",
   user: "user",
@@ -64,6 +65,7 @@ const CONDITION_TYPE_BADGE: Record<ConditionType, string> = {
 
 const CONDITION_PLACEHOLDERS: Record<ConditionType, string> = {
   hashtag: "例: landscape",
+  reaction: "例: heart または :shortcode:",
   takenBy: "例: usr_xxxxx",
   contest: "例: コンテストのslug",
   user: "例: screen_name",
@@ -74,49 +76,6 @@ const DISPLAY_MODE_OPTIONS: { value: CatalystAlbumDisplayMode; label: string }[]
   { value: "grid", label: "グリッド" },
   { value: "gallery", label: "ギャラリー" },
 ];
-
-export function hashtagsToConditions(hashtags: string[]): SmartAlbumCondition[] {
-  return hashtags
-    .map((raw, index) => {
-      const trimmed = raw.trim();
-      if (!trimmed) return null;
-
-      const isExclude = trimmed.startsWith("-");
-      const without = isExclude ? trimmed.slice(1) : trimmed;
-
-      let type: ConditionType = "hashtag";
-      let value = without;
-
-      if (without.startsWith("takenBy:")) {
-        type = "takenBy";
-        value = without.slice("takenBy:".length);
-      } else if (without.startsWith("contest:")) {
-        type = "contest";
-        value = without.slice("contest:".length);
-      } else if (without.startsWith("user:")) {
-        type = "user";
-        value = without.slice("user:".length);
-      }
-
-      if (!value) return null;
-
-      return {
-        id: `${isExclude ? "ex-" : ""}${type}-init-${index}`,
-        type,
-        value,
-        isExclude,
-      } satisfies SmartAlbumCondition;
-    })
-    .filter((c): c is SmartAlbumCondition => c !== null);
-}
-
-export function conditionToHashtag(condition: SmartAlbumCondition): string {
-  const prefix = condition.isExclude ? "-" : "";
-  if (condition.type === "takenBy") return `${prefix}takenBy:${condition.value}`;
-  if (condition.type === "contest") return `${prefix}contest:${condition.value}`;
-  if (condition.type === "user") return `${prefix}user:${condition.value}`;
-  return `${prefix}${condition.value}`;
-}
 
 type Props = {
   title: string;
@@ -453,7 +412,7 @@ export const SmartAlbumForm = ({
           <View className="gap-2">
             <CatalystText variant="label">条件タイプ</CatalystText>
             <View className="flex-row flex-wrap gap-2">
-              {(["hashtag", "takenBy", "contest", "user"] as ConditionType[]).map((type) => (
+              {(["hashtag", "reaction", "takenBy", "contest", "user"] as ConditionType[]).map((type) => (
                 <Pressable
                   key={type}
                   onPress={() => setConditionType(type)}

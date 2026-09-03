@@ -1,5 +1,5 @@
 import type { CatalystReaction } from "@/models/sdk-types";
-import { getCustomReactionId, getReactionKey, isCustomReactionKey } from "./reactions";
+import { getCustomReactionId, getReactionClipboardValue, getReactionKey, isCustomReactionKey } from "./reactions";
 
 describe("isCustomReactionKey", () => {
   it("custom: プレフィックスを持つキーを判定する", () => {
@@ -35,5 +35,41 @@ describe("getCustomReactionId", () => {
   it("どちらにも無ければ undefined", () => {
     const reaction = {} as CatalystReaction;
     expect(getCustomReactionId("👍", reaction)).toBeUndefined();
+  });
+});
+
+describe("getReactionClipboardValue", () => {
+  it("公式リアクションは symbol を返す", () => {
+    expect(getReactionClipboardValue({ symbol: "heart", ownCustomReactionIds: new Set() })).toBe("heart");
+  });
+
+  it("自分のカスタムリアクションは symbol を返す", () => {
+    expect(
+      getReactionClipboardValue({
+        symbol: ":kawaii:",
+        customReactionId: "custom-1",
+        ownCustomReactionIds: new Set(["custom-1"]),
+      }),
+    ).toBe(":kawaii:");
+  });
+
+  it("自分のカスタムリアクションの symbol にコロンがなければ補う", () => {
+    expect(
+      getReactionClipboardValue({
+        symbol: "kawaii",
+        customReactionId: "custom-1",
+        ownCustomReactionIds: new Set(["custom-1"]),
+      }),
+    ).toBe(":kawaii:");
+  });
+
+  it("他人のカスタムリアクションは id を返す", () => {
+    expect(
+      getReactionClipboardValue({
+        symbol: ":kawaii:",
+        customReactionId: "custom-2",
+        ownCustomReactionIds: new Set(["custom-1"]),
+      }),
+    ).toBe("custom-2");
   });
 });
