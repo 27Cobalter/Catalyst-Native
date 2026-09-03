@@ -20,6 +20,7 @@ type Props = {
 
 export type UserTimelineHandle = {
   loadMore: () => void;
+  refresh?: () => Promise<void>;
 };
 
 const ThumbnailCell = memo(({ status, cellSize }: { status: CatalystStatus; cellSize: number }) => {
@@ -127,7 +128,26 @@ export const UserTimeline = memo(
       }
     }, [user, items, client, isInitialLoading]);
 
-    useImperativeHandle(ref, () => ({ loadMore }), [loadMore]);
+    const refresh = useCallback(async () => {
+      if (!user || isLoadingRef.current) {
+        return;
+      }
+
+      isLoadingRef.current = true;
+      try {
+        const { data } = await client.catalyst.v1.timeline.user.by.username.username.get({
+          path: { username: user.screenName },
+          query: {},
+          throwOnError: true,
+        });
+        sets.current = new Set(data.statuses.map((item) => item.id));
+        setItems(data.statuses);
+      } finally {
+        isLoadingRef.current = false;
+      }
+    }, [client, user]);
+
+    useImperativeHandle(ref, () => ({ loadMore, refresh }), [loadMore, refresh]);
 
     useAsyncOneTimeEffect(fetchItems);
 

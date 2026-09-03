@@ -18,7 +18,7 @@ import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { LinkIcon } from "lucide-react-native";
 import { useCallback, useMemo, useState } from "react";
-import { LayoutChangeEvent, Pressable, View, useWindowDimensions } from "react-native";
+import { Animated, LayoutChangeEvent, Pressable, View, useWindowDimensions } from "react-native";
 import { withUniwind } from "uniwind";
 import { StatusText } from "../status/text";
 
@@ -35,6 +35,60 @@ type Props = {
   tags: ProfileTag[];
   onUpdateRelationships?: (rel: CatalystRelationships) => void;
   onLayout: (e: LayoutChangeEvent) => void;
+};
+
+type ProfileBannerProps = {
+  user: EgeriaUser | null;
+  scrollY: Animated.Value;
+};
+
+export const ProfileBanner = ({ user, scrollY }: ProfileBannerProps) => {
+  const { width: screenWidth } = useWindowDimensions();
+  const bannerHeight = Math.max(136, screenWidth / 3);
+  const bannerTranslateY = scrollY.interpolate({
+    inputRange: [0, bannerHeight],
+    outputRange: [0, -bannerHeight],
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const bannerScale = scrollY.interpolate({
+    inputRange: [-bannerHeight, 0],
+    outputRange: [2, 1],
+    extrapolateLeft: "extend",
+    extrapolateRight: "clamp",
+  });
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      className="absolute left-0 top-0"
+      style={{
+        width: screenWidth,
+        height: bannerHeight,
+        transformOrigin: "center top",
+        transform: [{ translateY: bannerTranslateY }, { scale: bannerScale }],
+      }}
+    >
+      {user?.profile?.bannerUrl ? (
+        <UniImage
+          source={{
+            uri: getCdnUrl({
+              src: user.profile.bannerUrl,
+              variant: "header",
+              width: screenWidth,
+            }),
+          }}
+          contentFit="cover"
+          style={{ width: screenWidth, height: bannerHeight }}
+        />
+      ) : (
+        <View
+          className="bg-light-surface-muted dark:bg-dark-surface-muted"
+          style={{ width: screenWidth, height: bannerHeight }}
+        />
+      )}
+    </Animated.View>
+  );
 };
 
 export const ProfileHeader = ({ user, relationships, tags, onUpdateRelationships, onLayout }: Props) => {
@@ -99,27 +153,15 @@ export const ProfileHeader = ({ user, relationships, tags, onUpdateRelationships
   }, [user]);
 
   return (
-    <View className="bg-light-background dark:bg-dark-surface" onLayout={onLayout}>
-      <View>
-        {user?.profile?.bannerUrl ? (
-          <UniImage
-            source={{
-              uri: getCdnUrl({
-                src: user.profile.bannerUrl,
-                variant: "header",
-                width: screenWidth,
-              }),
-            }}
-            contentFit="cover"
-            style={{ width: screenWidth, height: bannerHeight }}
-          />
-        ) : (
-          <View
-            className="bg-light-surface-muted dark:bg-dark-surface-muted"
-            style={{ width: screenWidth, height: bannerHeight }}
-          />
-        )}
+    <View onLayout={onLayout}>
+      <View style={{ width: screenWidth, height: bannerHeight }}>
+        {/* The banner is rendered behind the ScrollView by ProfilePage. */}
       </View>
+      <View
+        pointerEvents="none"
+        className="absolute bottom-0 left-0 right-0 bg-light-background dark:bg-dark-surface"
+        style={{ top: bannerHeight }}
+      />
 
       <View className="-mt-12 flex-row items-end px-5">
         <View className="rounded-full border-4 border-light-background bg-light-surface-muted dark:border-dark-surface dark:bg-dark-surface-muted">
@@ -145,11 +187,7 @@ export const ProfileHeader = ({ user, relationships, tags, onUpdateRelationships
         <View className="pb-2">
           {isLoggedIn &&
             (isMyself || relationships?.isMyself ? (
-              <CatalystButton
-                size="sm"
-                tone="secondary"
-                onPress={() => router.push("/profile/edit")}
-              >
+              <CatalystButton size="sm" tone="secondary" onPress={() => router.push("/profile/edit")}>
                 <CatalystButtonText>編集</CatalystButtonText>
               </CatalystButton>
             ) : (
@@ -246,7 +284,9 @@ export const ProfileHeader = ({ user, relationships, tags, onUpdateRelationships
             <CatalystText variant="label">
               {counts === null || counts.followings === null ? "-" : counts.followings}
             </CatalystText>
-            <CatalystText variant="body" tone="muted">フォロー</CatalystText>
+            <CatalystText variant="body" tone="muted">
+              フォロー
+            </CatalystText>
           </Pressable>
           <Pressable
             className="flex-row items-baseline gap-1 active:opacity-80"
@@ -256,7 +296,9 @@ export const ProfileHeader = ({ user, relationships, tags, onUpdateRelationships
             <CatalystText variant="label">
               {counts === null || counts.followers === null ? "-" : counts.followers}
             </CatalystText>
-            <CatalystText variant="body" tone="muted">フォロワー</CatalystText>
+            <CatalystText variant="body" tone="muted">
+              フォロワー
+            </CatalystText>
           </Pressable>
         </View>
       </View>

@@ -1,4 +1,4 @@
-import { ProfileHeader } from "@/components/profile/header";
+import { ProfileBanner, ProfileHeader } from "@/components/profile/header";
 import { ProfileOverlay } from "@/components/profile/overlay";
 import { TabContent } from "@/components/profile/tab-content";
 import { ProfileTabs } from "@/components/profile/tabs";
@@ -19,6 +19,7 @@ import {
   Animated,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  RefreshControl,
   ScrollView,
   View,
   useWindowDimensions,
@@ -38,6 +39,7 @@ const DEFAULT_TABS: Tab[] = [
 ];
 
 const LOAD_MORE_THRESHOLD = 200;
+const PULL_INDICATOR_DISTANCE = 72;
 
 type Props = {
   screenName: string;
@@ -59,6 +61,7 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
   const [relationships, setRelationships] =
     useState<CatalystRelationships | null>(null);
   const [initialTags, setInitialTags] = useState<ProfileTag[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const tabs: Tab[] = useMemo(
     () =>
       [...DEFAULT_TABS, isMyself && { route: "likes", label: "いいね" }]
@@ -102,6 +105,16 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
           extrapolate: "clamp",
         })
       : 0;
+  const pullIndicatorOpacity = scrollY.interpolate({
+    inputRange: [-PULL_INDICATOR_DISTANCE, -16, 0],
+    outputRange: [1, 0.35, 0],
+    extrapolate: "clamp",
+  });
+  const pullIndicatorScale = scrollY.interpolate({
+    inputRange: [-PULL_INDICATOR_DISTANCE, -16, 0],
+    outputRange: [1, 0.82, 0.72],
+    extrapolate: "clamp",
+  });
 
   useAsyncEffect(async () => {
     if (!screenName) {
@@ -156,6 +169,50 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
     }
   }, [account, client, screenName]);
 
+  const refreshProfile = useCallback(async () => {
+    const [{ data }, refreshedRelationships] = await Promise.all([
+      client.egeria.v1.user.by.username.username.get({
+        path: { username: screenName },
+        throwOnError: true,
+      }),
+      account?.user.screenName === screenName
+        ? Promise.resolve(null)
+        : client.catalyst.v1.relationships.id
+            .get({ path: { id: screenName }, throwOnError: true })
+            .then((result) => result.data)
+            .catch(() => null),
+    ]);
+    const userData = data.user;
+    const tags = await client.catalyst.v1.profileTags.by.user.id
+      .get({ path: { id: userData.id }, throwOnError: true })
+      .then((result) => result.data.tags)
+      .catch(() => []);
+
+    setUser({ ...userData, profileEmoji: userData.profileEmoji ?? null });
+    setInitialTags(tags);
+    if (refreshedRelationships) {
+      setRelationships(refreshedRelationships);
+    }
+  }, [account, client, screenName]);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      const results = await Promise.allSettled([
+        refreshProfile(),
+        tabContentRef.current?.refresh?.() ?? Promise.resolve(),
+      ]);
+      const failed = results.find(
+        (result): result is PromiseRejectedResult => result.status === "rejected",
+      );
+      if (failed) {
+        console.error(`failed to refresh profile: @${screenName}, ${failed.reason}`);
+      }
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refreshProfile, screenName]);
+
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
@@ -180,11 +237,23 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
 
   return (
     <View className="flex-1 bg-light-surface-muted dark:bg-dark-background">
+      <ProfileBanner user={user} scrollY={scrollY} />
+
       <Animated.ScrollView
         ref={view}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        className="bg-light-surface-muted dark:bg-dark-background"
+        alwaysBounceVertical
+        className="bg-transparent"
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColorClassName="accent-transparent"
+            colorsClassName="accent-transparent"
+            progressBackgroundColorClassName="accent-transparent"
+          />
+        }
       >
         <ProfileHeader
           user={user}
@@ -219,6 +288,20 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
         showBackButton={showBackButton}
         onUpdateRelationships={setRelationships}
       />
+
+      <Animated.View
+        pointerEvents="none"
+        className="absolute left-0 right-0 items-center"
+        style={{
+          top: insets.top + 8,
+          opacity: isRefreshing ? 1 : pullIndicatorOpacity,
+          transform: [{ scale: isRefreshing ? 1 : pullIndicatorScale }],
+        }}
+      >
+        <View className="size-9 items-center justify-center rounded-full bg-black/60">
+          <ActivityIndicator size="small" colorClassName="accent-white" />
+        </View>
+      </Animated.View>
 
       {/* Sticky Tab Bar Overlay */}
       <Animated.View
