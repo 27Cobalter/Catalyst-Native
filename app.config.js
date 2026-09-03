@@ -62,6 +62,7 @@ module.exports = ({ config }) => {
       },
       googleServicesFile: "./GoogleService-Info.plist",
       infoPlist: {
+        CFBundleDevelopmentRegion: "ja_JP",
         UIBackgroundModes: ["remote-notification"],
         LSApplicationQueriesSchemes: [
           "googlechrome",
