@@ -3,6 +3,7 @@ import "react-native-get-random-values";
 
 // imports
 import { headerSurfaceOptions } from "@/components/navigation/app-header";
+import { CatalystToast } from "@/components/design-system/toast";
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useSystemReducedMotionSync } from "@/hooks/use-reduced-motion";
@@ -56,7 +57,6 @@ import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import "react-native-reanimated";
-import Toast from "react-native-toast-message";
 
 import "@/global.css";
 
@@ -349,7 +349,7 @@ export default Sentry.wrap(function RootLayout() {
                 />
               </Stack>
               <StatusBar style="auto" />
-              <Toast />
+              <CatalystToast />
             </StreamingProvider>
           </ThemeProvider>
         </KeyboardProvider>
