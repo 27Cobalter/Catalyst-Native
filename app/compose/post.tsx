@@ -1,3 +1,5 @@
+import { ImageMetadataSection, type ImageMetadataEntry } from "@/components/compose/image-metadata-section";
+import { ContestSelectorSheet, type ContestSelectorSheetRef } from "@/components/contest-selector-sheet";
 import {
   CatalystButton,
   CatalystButtonIcon,
@@ -8,18 +10,16 @@ import {
   CatalystText,
   CatalystTextField,
 } from "@/components/design-system";
-import { accountAtom } from "@/models/atoms/account";
-import { ContestSelectorSheet, type ContestSelectorSheetRef } from "@/components/contest-selector-sheet";
-import { ImageMetadataSection, type ImageMetadataEntry } from "@/components/compose/image-metadata-section";
 import { WeeklyThemeSelectorSheet, type WeeklyThemeSelectorSheetRef } from "@/components/theme/selector-sheet";
 import { readImageMetadata, type ImageMetadataSummary } from "@/lib/image-metadata";
+import { accountAtom } from "@/models/atoms/account";
 import type { CatalystContest, CatalystWeeklyTheme } from "@/models/sdk-types";
 import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { CalendarDays, Image as ImageIcon, Trophy, X } from "lucide-react-native";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -349,9 +349,9 @@ export default function PostComposerScreen() {
             </View>
             <View className="flex-row items-start justify-between gap-4 px-5 pt-2">
               <CatalystText variant="caption" tone="subtle" className="flex-1 leading-4">
-              {images.length === 0
-                ? "画像がない場合は本文が必須です"
-                : "画像に添えるキャプションを入力できます（任意）"}
+                {images.length === 0
+                  ? "画像がない場合は本文が必須です"
+                  : "画像に添えるキャプションを入力できます（任意）"}
               </CatalystText>
               <CatalystText variant="caption" tone={isOverLimit ? "danger" : "subtle"}>
                 {characterCount} / {MAX_CHARACTER_COUNT}
@@ -391,6 +391,30 @@ export default function PostComposerScreen() {
             </View>
           </View>
 
+          {/* プライバシーセクション */}
+          <View className="mt-6">
+            <CatalystText variant="caption" tone="subtle" className="px-5 pb-2">
+              プライバシー
+            </CatalystText>
+            <View className="bg-light-background px-5 py-3 dark:bg-dark-surface">
+              <CatalystSegmentedControl options={PRIVACY_OPTIONS} value={privacy} onValueChange={setPrivacy} />
+            </View>
+            <CatalystText variant="caption" tone="subtle" className="px-5 pt-2 leading-4">
+              {selectedPrivacy.description}
+            </CatalystText>
+            <View className="mt-3 min-h-16 flex-row items-center bg-light-background px-5 py-3 dark:bg-dark-surface">
+              <View className="mr-4 flex-1">
+                <CatalystText variant="subtitle" className="text-[15px] font-semibold">
+                  メタデータを非表示
+                </CatalystText>
+                <CatalystText variant="caption" tone="muted">
+                  画像に埋め込まれたメタデータを表示しません
+                </CatalystText>
+              </View>
+              <CatalystSwitch value={isPrivateMetadata} onValueChange={setIsPrivateMetadata} />
+            </View>
+          </View>
+
           {/* コンテストセクション */}
           <View className="mt-6">
             <CatalystText variant="caption" tone="subtle" className="px-5 pb-2">
@@ -423,7 +447,7 @@ export default function PostComposerScreen() {
                     <UniTrophy />
                   </CatalystButtonIcon>
                   <CatalystButtonText>
-                  コンテストに参加する
+                    コンテストに参加する
                   </CatalystButtonText>
                 </CatalystButton>
               </View>
@@ -481,30 +505,6 @@ export default function PostComposerScreen() {
             <CatalystText variant="caption" tone="subtle" className="px-5 pt-2 leading-4">
               お題への参加は週につき一度だけポイントが付与されます。
             </CatalystText>
-          </View>
-
-          {/* プライバシーセクション */}
-          <View className="mt-6">
-            <CatalystText variant="caption" tone="subtle" className="px-5 pb-2">
-              プライバシー
-            </CatalystText>
-            <View className="bg-light-background px-5 py-3 dark:bg-dark-surface">
-              <CatalystSegmentedControl options={PRIVACY_OPTIONS} value={privacy} onValueChange={setPrivacy} />
-            </View>
-            <CatalystText variant="caption" tone="subtle" className="px-5 pt-2 leading-4">
-              {selectedPrivacy.description}
-            </CatalystText>
-            <View className="mt-3 min-h-16 flex-row items-center bg-light-background px-5 py-3 dark:bg-dark-surface">
-              <View className="mr-4 flex-1">
-                <CatalystText variant="subtitle" className="text-[15px] font-semibold">
-                  メタデータを非表示
-                </CatalystText>
-                <CatalystText variant="caption" tone="muted">
-                  画像に埋め込まれたメタデータを表示しません
-                </CatalystText>
-              </View>
-              <CatalystSwitch value={isPrivateMetadata} onValueChange={setIsPrivateMetadata} />
-            </View>
           </View>
         </ScrollView>
       </View>
