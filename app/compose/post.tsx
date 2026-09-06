@@ -220,7 +220,14 @@ export default function PostComposerScreen() {
     setSelectedWeeklyTheme(theme);
   }, []);
 
+  // 挿入の仕方は Web 版に合わせている。本文が空でなければ改行してから末尾に足すだけで、
+  // 既に同じタグが入っていても弾かない
+  const handleInsertHashtag = useCallback((hashtag: string) => {
+    setText((prev) => (prev ? `${prev}\n#${hashtag}` : `#${hashtag}`));
+  }, []);
+
   const selectedPrivacy = PRIVACY_OPTIONS.find((o) => o.value === privacy)!;
+  const weeklyThemeHashtag = selectedWeeklyTheme?.hashtag ?? null;
 
   return (
     <>
@@ -394,22 +401,34 @@ export default function PostComposerScreen() {
               今週のお題
             </CatalystText>
             {selectedWeeklyTheme ? (
-              <View className="flex-row items-center gap-3 bg-light-background px-5 py-3 dark:bg-dark-surface">
-                <UniCalendarDays size={18} className="text-light-toggle-icon dark:text-dark-toggle-icon" />
-                <View className="flex-1 gap-0.5">
-                  <CatalystText variant="subtitle" className="text-[15px] font-semibold" numberOfLines={1}>
-                    {selectedWeeklyTheme.title}
-                  </CatalystText>
-                  <CatalystText variant="caption" tone="muted" numberOfLines={1}>
-                    この投稿で参加すると {selectedWeeklyTheme.points} ポイント獲得できます
-                  </CatalystText>
+              <View className="bg-light-background px-5 py-3 dark:bg-dark-surface">
+                <View className="flex-row items-center gap-3">
+                  <UniCalendarDays size={18} className="text-light-toggle-icon dark:text-dark-toggle-icon" />
+                  <View className="flex-1 gap-0.5">
+                    <CatalystText variant="subtitle" className="text-[15px] font-semibold" numberOfLines={1}>
+                      {selectedWeeklyTheme.title}
+                    </CatalystText>
+                    <CatalystText variant="caption" tone="muted" numberOfLines={1}>
+                      この投稿で参加すると {selectedWeeklyTheme.points} ポイント獲得できます
+                    </CatalystText>
+                  </View>
+                  <Pressable
+                    onPress={() => setSelectedWeeklyTheme(null)}
+                    className="h-6 w-6 items-center justify-center rounded-full bg-black/10 dark:bg-white/10"
+                  >
+                    <UniX size={14} className="text-light-toggle-foreground dark:text-dark-toggle-foreground" />
+                  </Pressable>
                 </View>
-                <Pressable
-                  onPress={() => setSelectedWeeklyTheme(null)}
-                  className="h-6 w-6 items-center justify-center rounded-full bg-black/10 dark:bg-white/10"
-                >
-                  <UniX size={14} className="text-light-toggle-foreground dark:text-dark-toggle-foreground" />
-                </Pressable>
+                {weeklyThemeHashtag ? (
+                  <View className="mt-2 flex-row items-center justify-between gap-2">
+                    <CatalystText variant="caption" tone="muted" numberOfLines={1} className="flex-1">
+                      推奨ハッシュタグ: {weeklyThemeHashtag}
+                    </CatalystText>
+                    <CatalystButton size="sm" tone="secondary" onPress={() => handleInsertHashtag(weeklyThemeHashtag)}>
+                      <CatalystButtonText>本文に挿入</CatalystButtonText>
+                    </CatalystButton>
+                  </View>
+                ) : null}
               </View>
             ) : (
               <View className="bg-light-background px-5 py-3 dark:bg-dark-surface">
