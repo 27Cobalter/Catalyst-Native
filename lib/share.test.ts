@@ -2,12 +2,33 @@ import twtr from "twitter-text";
 import { buildShareText } from "./share";
 
 const URL = "https://catalyst.natsuneko.com/status/123";
+const SITE_NAME = "Catalyst - VR-SNS 向け写真共有サービス";
 
 describe("buildShareText", () => {
   it("短いテキストはそのまま連結される", () => {
     const result = buildShareText("hello world", "natsuneko", URL);
 
-    expect(result).toBe(`hello world by natsuneko | Catalyst ${URL}`);
+    expect(result).toBe(`hello world by natsuneko | ${SITE_NAME}\n${URL}`);
+  });
+
+  // Web 版から X へ共有したときの実際の出力と一致すること
+  it("本文が空でも Web 版と同じ形になる", () => {
+    const result = buildShareText("", "natsuneko", URL);
+
+    expect(result).toBe(` by natsuneko | ${SITE_NAME}\n${URL}`);
+  });
+
+  it("投稿者が取れないときは by ごと省略する", () => {
+    const result = buildShareText("hello", "", URL);
+
+    expect(result).toBe(`hello | ${SITE_NAME}\n${URL}`);
+  });
+
+  // iOS の共有シートは URL を別枠で受け取るので、呼び出し元が空文字を渡してくる
+  it("URL が空なら末尾に改行を付けない", () => {
+    const result = buildShareText("hello", "natsuneko", "");
+
+    expect(result).toBe(`hello by natsuneko | ${SITE_NAME}`);
   });
 
   it("280 文字 (twitter-text 換算) を超えない場合は省略しない", () => {
@@ -15,7 +36,7 @@ describe("buildShareText", () => {
     const result = buildShareText(text, "user", URL);
 
     expect(result).not.toContain("...");
-    expect(result).toBe(`${text} by user | Catalyst ${URL}`);
+    expect(result).toBe(`${text} by user | ${SITE_NAME}\n${URL}`);
   });
 
   it("収まらない長さのテキストは省略記号付きで切り詰める", () => {
@@ -23,7 +44,7 @@ describe("buildShareText", () => {
     const result = buildShareText(text, "natsuneko", URL);
 
     expect(result).toContain("...");
-    expect(result).toContain("by natsuneko | Catalyst");
+    expect(result).toContain(`by natsuneko | ${SITE_NAME}`);
     expect(result.endsWith(URL)).toBe(true);
     expect(twtr.getTweetLength(result)).toBeLessThanOrEqual(280);
   });

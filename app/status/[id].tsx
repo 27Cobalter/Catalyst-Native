@@ -372,9 +372,7 @@ export default function StatusDetailsPage() {
           Clipboard.setStringAsync(statusUrl);
           break;
         case "copyPost":
-          Clipboard.setStringAsync(
-            `${buildShareText(status?.body ?? "", status?.user?.displayName ?? "", "")}\n\n${statusUrl}`,
-          );
+          Clipboard.setStringAsync(buildShareText(status?.body ?? "", status?.user?.displayName ?? "", statusUrl));
           break;
         case "share":
           if (Platform.OS === "ios") {
