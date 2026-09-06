@@ -10,7 +10,9 @@ import {
 } from "@/components/design-system";
 import { accountAtom } from "@/models/atoms/account";
 import { ContestSelectorSheet, type ContestSelectorSheetRef } from "@/components/contest-selector-sheet";
+import { ImageMetadataSection, type ImageMetadataEntry } from "@/components/compose/image-metadata-section";
 import { WeeklyThemeSelectorSheet, type WeeklyThemeSelectorSheetRef } from "@/components/theme/selector-sheet";
+import { readImageMetadata, type ImageMetadataSummary } from "@/lib/image-metadata";
 import type { CatalystContest, CatalystWeeklyTheme } from "@/models/sdk-types";
 import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
@@ -41,6 +43,8 @@ type SelectedImage = {
   width: number;
   height: number;
   fileSize?: number;
+  metadataStatus: ImageMetadataEntry["status"];
+  metadata: ImageMetadataSummary | null;
 };
 
 type Privacy = "public" | "quiet_public" | "followers" | "private";
@@ -81,6 +85,11 @@ export default function PostComposerScreen() {
     if (images.length > 0) return true;
     return text.trim().length > 0;
   }, [isSubmitting, isOverLimit, images.length, text]);
+
+  const metadataEntries = useMemo<ImageMetadataEntry[]>(
+    () => images.map(({ uri, metadataStatus, metadata }) => ({ uri, status: metadataStatus, metadata })),
+    [images],
+  );
 
   useEffect(() => {
     let ignore = false;
@@ -132,11 +141,31 @@ export default function PostComposerScreen() {
     };
   }, [account, themeSlug, selectedWeeklyTheme?.slug]);
 
+  // 画像に VRChat / Resonite の撮影メタデータが埋め込まれているかは投稿するまで分からないため、
+  // 選択直後にローカルで解析して投稿画面に表示する
+  const analyzeMetadata = useCallback(async (uri: string) => {
+    // 解析そのものは JS スレッド上で走るので、そのまま呼ぶとサムネイルや「解析中」の描画ごと
+    // ブロックしてしまう。1 枚ごとにイベントループへ譲って、途中経過が画面に出るようにする
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const patch = (image: SelectedImage, next: Partial<SelectedImage>) =>
+      image.uri === uri ? { ...image, ...next } : image;
+
+    try {
+      const metadata = await readImageMetadata(uri);
+      setImages((prev) => prev.map((image) => patch(image, { metadataStatus: "analyzed", metadata })));
+    } catch (error) {
+      console.error("Failed to read image metadata:", error);
+      setImages((prev) => prev.map((image) => patch(image, { metadataStatus: "failed", metadata: null })));
+    }
+  }, []);
+
   const handlePickImages = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsMultipleSelection: true,
       selectionLimit: MAX_IMAGE_COUNT - images.length,
+      // 埋め込まれたメタデータを保持したまま読み込むために、再エンコードを避ける
       quality: 1,
     });
 
@@ -146,10 +175,17 @@ export default function PostComposerScreen() {
         width: asset.width,
         height: asset.height,
         fileSize: asset.fileSize ?? undefined,
+        metadataStatus: "analyzing",
+        metadata: null,
       }));
       setImages((prev) => [...prev, ...newImages].slice(0, MAX_IMAGE_COUNT));
+
+      // 解析には画像 1 枚ぶんのバイト列をメモリに載せるので、まとめて投げず 1 枚ずつ順に進める
+      void (async () => {
+        for (const image of newImages) await analyzeMetadata(image.uri);
+      })();
     }
-  }, [images.length]);
+  }, [images.length, analyzeMetadata]);
 
   const handleRemoveImage = useCallback((index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
@@ -294,6 +330,8 @@ export default function PostComposerScreen() {
               </CatalystText>
             )}
           </View>
+
+          <ImageMetadataSection entries={metadataEntries} />
 
           {/* キャプションセクション */}
           <View className="mt-6">

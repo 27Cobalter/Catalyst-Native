@@ -15,6 +15,7 @@ minimumReleaseAgeExclude:
   - "@natsuneko-laboratory/react-native-twitter-text"
   - "@natsuneko-laboratory/fleet-renderer-core"
   - "@natsuneko-laboratory/fleet-renderer-react-native"
+  - "@natsuneko-laboratory/memora"
 patchedDependencies:
   "@expo/cli": patches/@expo__cli.patch
   "@likashefqet/react-native-image-zoom": patches/@likashefqet__react-native-image-zoom.patch
