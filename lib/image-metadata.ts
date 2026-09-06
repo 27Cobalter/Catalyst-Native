@@ -4,9 +4,6 @@
 // アプリ側で持ち直すとサーバー側 (steambird) と食い違うため、認識とフィールドの取り出しは
 // 共有パッケージへ寄せ、ここでは画面に出す項目だけへ畳む。
 
-// memora より先に評価される必要がある (理由は memora-polyfill.ts を参照)
-import "./memora-polyfill";
-
 import { parseImageMetadata, type ImageMetadata } from "@natsuneko-laboratory/memora";
 import * as FileSystem from "expo-file-system";
 
