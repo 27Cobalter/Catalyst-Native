@@ -11,11 +11,12 @@ allowBuilds:
   unrs-resolver: true
 minimumReleaseAge: 4320
 minimumReleaseAgeExclude:
-  - "@natsuneko-laboratory/catalyst-sdk"
-  - "@natsuneko-laboratory/react-native-twitter-text"
-  - "@natsuneko-laboratory/fleet-renderer-core"
-  - "@natsuneko-laboratory/fleet-renderer-react-native"
-  - "@natsuneko-laboratory/memora"
+  - '@natsuneko-laboratory/catalyst-sdk'
+  - '@natsuneko-laboratory/react-native-twitter-text'
+  - '@natsuneko-laboratory/fleet-renderer-core'
+  - '@natsuneko-laboratory/fleet-renderer-react-native'
+  - '@natsuneko-laboratory/memora'
+  - '@natsuneko-laboratory/react-native-webcrypto-digest@0.1.0'
 patchedDependencies:
   "@expo/cli": patches/@expo__cli.patch
   "@likashefqet/react-native-image-zoom": patches/@likashefqet__react-native-image-zoom.patch

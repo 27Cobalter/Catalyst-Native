@@ -1,9 +1,10 @@
 // polyfills
+import "@natsuneko-laboratory/react-native-webcrypto-digest";
 import "react-native-get-random-values";
 
 // imports
-import { headerSurfaceOptions } from "@/components/navigation/app-header";
 import { CatalystToast } from "@/components/design-system/toast";
+import { headerSurfaceOptions } from "@/components/navigation/app-header";
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useSystemReducedMotionSync } from "@/hooks/use-reduced-motion";
@@ -166,6 +167,10 @@ export default Sentry.wrap(function RootLayout() {
       const { credential, isLoggedIn, user } = await Credential.tryRestore();
 
       setAccount(isLoggedIn && user ? { user, credential } : null);
+      const hashBuffer = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode("Hello, world!"));
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+      console.log(hash)
     } finally {
       setIsLoaded(true);
       await SplashScreen.hideAsync();
