@@ -1,4 +1,3 @@
-import { emojis } from "@/lib/generated/emojis";
 import { Image } from "expo-image";
 import {
   Clock,
@@ -20,6 +19,7 @@ import {
   ActivityIndicator,
   FlatList,
   type FlatListProps,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -31,7 +31,7 @@ import {
 import type { EmojiCategory, EmojiItem } from "./types";
 import { emojiToTwemojiKey } from "./unicode";
 
-const GRID_COLUMNS = 8;
+const GRID_COLUMNS = Platform.OS === "ios" && Platform.isPad ? 12 : 8;
 const EMOJI_SIZE = 36;
 
 const ICON_MAP: Record<
@@ -83,7 +83,7 @@ const EmojiItemCell = memo(
 
     if (item.type.kind === "unicode") {
       const codepoint = emojiToTwemojiKey(item.type.emoji);
-      const source = emojis[codepoint as keyof typeof emojis];
+      const source = `https://static.natsuneko.com/images/reactions/${codepoint}.png`;
       if (source) {
         return (
           <Pressable onPress={handlePress} style={styles.emojiCell}>
@@ -91,6 +91,7 @@ const EmojiItemCell = memo(
               source={source}
               style={styles.emojiImage}
               contentFit="contain"
+              loading="lazy"
             />
           </Pressable>
         );
