@@ -1,3 +1,4 @@
+import { LIST_COLUMNS } from "@/lib/device-layout";
 import { UserCard } from "@/components/explorer/users/card";
 import { UserListPlaceholder } from "@/components/explorer/users/skeleton";
 import { useAsyncEffect } from "@/hooks/use-async-effect";
@@ -5,7 +6,7 @@ import { clientAtom } from "@/models/atoms/credential";
 import { CatalystFollowListItem } from "@/models/sdk-types";
 import { FlashList, ListRenderItem } from "@shopify/flash-list";
 import { useAtomValue } from "jotai";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 
 type Props = {
@@ -69,9 +70,26 @@ export const FollowList = ({ screenName, type }: Props) => {
     }
   }, [fetchPage, nextPage, isInitialLoading]);
 
-  const renderItem = useCallback<ListRenderItem<CatalystFollowListItem>>(({ item }) => {
-    return <UserCard user={{ ...item, profileEmoji: item.profileEmoji ?? null }} />;
-  }, []);
+  const rows = useMemo(() => {
+    const result: CatalystFollowListItem[][] = [];
+    for (let index = 0; index < users.length; index += LIST_COLUMNS) {
+      result.push(users.slice(index, index + LIST_COLUMNS));
+    }
+    return result;
+  }, [users]);
+
+  const renderItem = useCallback<ListRenderItem<CatalystFollowListItem[]>>(
+    ({ item: row }) => (
+      <View className="flex-row items-stretch">
+        {row.map((item) => (
+          <View key={item.id} className={LIST_COLUMNS === 2 ? "w-1/2" : "w-full"}>
+            <UserCard className="flex-1 items-start" user={{ ...item, profileEmoji: item.profileEmoji ?? null }} />
+          </View>
+        ))}
+      </View>
+    ),
+    [],
+  );
 
   const renderFooter = useCallback(() => {
     if (!isLoadingMore) return null;
@@ -97,8 +115,8 @@ export const FollowList = ({ screenName, type }: Props) => {
 
   return (
     <FlashList
-      data={users}
-      keyExtractor={(w) => w.id}
+      data={rows}
+      keyExtractor={(row) => row[0].id}
       renderItem={renderItem}
       ListFooterComponent={renderFooter}
       ListEmptyComponent={renderEmpty}

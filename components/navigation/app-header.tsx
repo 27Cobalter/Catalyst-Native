@@ -15,6 +15,7 @@ type HeaderItemProps = {
 };
 
 type CatalystAppHeaderProps = {
+  compact?: boolean;
   backLabel?: string;
   canGoBack?: boolean;
   left?: React.ReactNode;
@@ -24,6 +25,7 @@ type CatalystAppHeaderProps = {
 };
 
 export const CatalystAppHeader = ({
+  compact = false,
   backLabel = "戻る",
   canGoBack = false,
   left,
@@ -41,7 +43,7 @@ export const CatalystAppHeader = ({
       style={{ paddingTop: insets.top }}
     >
       <View className="h-[52px] flex-row items-center px-3">
-        <View className="w-[112px] items-start justify-center">
+        <View className={cn("items-start justify-center", !compact && "w-[112px]")}>
           {left ??
             (canGoBack ? (
               <Pressable
@@ -50,20 +52,13 @@ export const CatalystAppHeader = ({
                 className={cn(
                   "min-h-9 max-w-[108px] flex-row items-center rounded-lg pr-3",
                   isDarkMode && "active:bg-dark-surface-muted",
-                  !isDarkMode && "active:bg-light-surface-muted"
+                  !isDarkMode && "active:bg-light-surface-muted",
                 )}
                 hitSlop={8}
                 onPress={onBack}
               >
-                <UniChevronLeft
-                  className="text-light-tint dark:text-dark-tint"
-                  size={24}
-                />
-                <CatalystText
-                  className="shrink text-light-tint dark:text-dark-tint"
-                  numberOfLines={1}
-                  variant="label"
-                >
+                <UniChevronLeft className="text-light-tint dark:text-dark-tint" size={24} />
+                <CatalystText className="shrink text-light-tint dark:text-dark-tint" numberOfLines={1} variant="label">
                   {backLabel}
                 </CatalystText>
               </Pressable>
@@ -72,11 +67,7 @@ export const CatalystAppHeader = ({
 
         <View className="min-w-0 flex-1 items-center justify-center px-2">
           {typeof title === "string" ? (
-            <CatalystText
-              className="text-center"
-              numberOfLines={1}
-              variant="subtitle"
-            >
+            <CatalystText className="text-center" numberOfLines={1} variant="subtitle">
               {title}
             </CatalystText>
           ) : (
@@ -84,32 +75,22 @@ export const CatalystAppHeader = ({
           )}
         </View>
 
-        <View className="w-[112px] flex-row items-center justify-end">
-          {right}
-        </View>
+        <View className={cn("flex-row items-center justify-end", !compact && "w-[112px]")}>{right}</View>
       </View>
     </View>
   );
 };
 
-export const renderCatalystStackHeader = ({
-  back,
-  navigation,
-  options,
-  route,
-}: NativeStackHeaderProps) => {
+export const renderCatalystStackHeader = ({ back, navigation, options, route }: NativeStackHeaderProps) => {
   const canGoBack = !!back;
   const headerItemProps: HeaderItemProps = { canGoBack };
-  const title =
-    typeof options.headerTitle === "string"
-      ? options.headerTitle
-      : (options.title ?? route.name);
+  const title = typeof options.headerTitle === "string" ? options.headerTitle : (options.title ?? route.name);
   const titleNode =
     typeof options.headerTitle === "function"
       ? options.headerTitle({
-        children: title,
-        tintColor: options.headerTintColor,
-      })
+          children: title,
+          tintColor: options.headerTintColor,
+        })
       : title;
 
   return (

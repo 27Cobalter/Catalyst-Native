@@ -1,3 +1,4 @@
+import { LIST_COLUMNS } from "@/lib/device-layout";
 import { AlbumCard } from "@/components/album/card";
 import { ProfileAlbumsPlaceholder } from "@/components/profile/placeholder";
 import { useAsyncEffect } from "@/hooks/use-async-effect";
@@ -55,6 +56,7 @@ export const AlbumList = ({ query, ref }: Props) => {
 
   return (
     <FlashList
+      numColumns={LIST_COLUMNS}
       ref={list}
       data={albums}
       keyExtractor={(w) => w.id}

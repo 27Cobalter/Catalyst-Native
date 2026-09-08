@@ -1,3 +1,4 @@
+import { MEDIA_COLUMNS } from "@/lib/device-layout";
 import { ProfileGalleryPlaceholder } from "@/components/profile/placeholder";
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { getCdnUrl } from "@/lib/media";
@@ -11,7 +12,7 @@ import { useAtomValue } from "jotai";
 import React, { memo, useCallback, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, View, useWindowDimensions } from "react-native";
 
-const COLUMNS = 2;
+const COLUMNS = MEDIA_COLUMNS;
 const GAP = 2;
 
 const GalleryCell = memo(({ status, columnWidth }: { status: CatalystStatus; columnWidth: number }) => {

@@ -1,3 +1,4 @@
+import { LIST_COLUMNS } from "@/lib/device-layout";
 import { CatalystEmptyState } from "@/components/design-system";
 import { UserListPlaceholder } from "@/components/explorer/users/skeleton";
 import { useAsyncEffect } from "@/hooks/use-async-effect";
@@ -6,7 +7,7 @@ import type { CatalystRemoteFollower } from "@/models/sdk-types";
 import { FlashList, type ListRenderItem } from "@shopify/flash-list";
 import { useAtomValue } from "jotai";
 import { Lock } from "lucide-react-native";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { withUniwind } from "uniwind";
 import { RemoteActorCard } from "./remote-actor-card";
@@ -66,8 +67,24 @@ export const RemoteFollowerList = ({ screenName }: Props) => {
     await fetchPage(1);
   }, [screenName]);
 
-  const renderItem = useCallback<ListRenderItem<CatalystRemoteFollower>>(
-    ({ item }) => <RemoteActorCard actor={item} />,
+  const rows = useMemo(() => {
+    const result: CatalystRemoteFollower[][] = [];
+    for (let index = 0; index < actors.length; index += LIST_COLUMNS) {
+      result.push(actors.slice(index, index + LIST_COLUMNS));
+    }
+    return result;
+  }, [actors]);
+
+  const renderItem = useCallback<ListRenderItem<CatalystRemoteFollower[]>>(
+    ({ item: row }) => (
+      <View className="flex-row items-stretch">
+        {row.map((item) => (
+          <View key={item.id} className={LIST_COLUMNS === 2 ? "w-1/2" : "w-full"}>
+            <RemoteActorCard className="flex-1 items-start" actor={item} />
+          </View>
+        ))}
+      </View>
+    ),
     [],
   );
 
@@ -83,8 +100,8 @@ export const RemoteFollowerList = ({ screenName }: Props) => {
 
   return (
     <FlashList
-      data={actors}
-      keyExtractor={(actor) => actor.id}
+      data={rows}
+      keyExtractor={(row) => row[0].id}
       renderItem={renderItem}
       ListEmptyComponent={
         isInitialLoading ? UserListPlaceholder : <CatalystEmptyState title="リモートフォロワーがいません" />

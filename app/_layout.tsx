@@ -253,64 +253,7 @@ export default Sentry.wrap(function RootLayout() {
                   name="gallery"
                   options={{ title: "ギャラリー", headerBackTitle: "戻る" }}
                 />
-                <Stack.Screen
-                  name="settings"
-                  options={{
-                    title: "設定とプライバシー",
-                    headerBackTitle: "戻る",
-                  }}
-                />
-                <Stack.Screen
-                  name="settings/account"
-                  options={{ title: "アカウント", headerBackTitle: "戻る" }}
-                />
-                <Stack.Screen
-                  name="settings/notifications"
-                  options={{ title: "通知", headerBackTitle: "戻る" }}
-                />
-                <Stack.Screen
-                  name="settings/display"
-                  options={{ title: "表示", headerBackTitle: "戻る" }}
-                />
-                <Stack.Screen
-                  name="settings/accessibility"
-                  options={{
-                    title: "アクセシビリティ",
-                    headerBackTitle: "戻る",
-                  }}
-                />
-                <Stack.Screen
-                  name="settings/privacy"
-                  options={{ title: "プライバシー", headerBackTitle: "戻る" }}
-                />
-                <Stack.Screen
-                  name="settings/activitypub"
-                  options={{ title: "ActivityPub 連合", headerBackTitle: "戻る" }}
-                />
-                {__DEV__ ? (
-                  <Stack.Screen
-                    name="settings/debug"
-                    options={{ title: "デバッグ", headerBackTitle: "戻る" }}
-                  />
-                ) : null}
-                <Stack.Screen
-                  name="settings/legal"
-                  options={{ title: "法的情報", headerBackTitle: "戻る" }}
-                />
-                <Stack.Screen
-                  name="settings/legal/licenses"
-                  options={{
-                    title: "オープンソースソフトウェア",
-                    headerBackTitle: "戻る",
-                  }}
-                />
-                <Stack.Screen
-                  name="settings/custom-reactions"
-                  options={{
-                    title: "カスタムリアクション",
-                    headerBackTitle: "戻る",
-                  }}
-                />
+                <Stack.Screen name="settings" options={{ headerShown: false }} />
                 <Stack.Screen
                   name="search/[query]"
                   options={{ headerBackTitle: "戻る" }}

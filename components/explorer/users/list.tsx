@@ -1,3 +1,4 @@
+import { LIST_COLUMNS } from "@/lib/device-layout";
 import { useAsyncEffect } from "@/hooks/use-async-effect";
 import { clientAtom } from "@/models/atoms/credential";
 import type { EgeriaUser } from "@/models/sdk-types";
@@ -52,6 +53,7 @@ export const UserList = ({ query, ref }: Props) => {
 
   return (
     <FlashList
+      numColumns={LIST_COLUMNS}
       ref={list}
       data={users}
       keyExtractor={(w) => w.id}

@@ -1,9 +1,4 @@
-import {
-  CatalystAvatar,
-  CatalystListItem,
-  CatalystListItemContent,
-  CatalystText,
-} from "@/components/design-system";
+import { CatalystAvatar, CatalystListItem, CatalystListItemContent, CatalystText } from "@/components/design-system";
 import { ProfileEmoji } from "@/components/user/profile-emoji";
 import { getCdnUrl } from "@/lib/media";
 import type { EgeriaUser } from "@/models/sdk-types";
@@ -15,14 +10,15 @@ import { withUniwind } from "uniwind";
 const UniChevronRight = withUniwind(ChevronRight);
 
 type Props = {
+  className?: string;
   user: EgeriaUser;
 };
 
-export const UserCard = ({ user }: Props) => {
+export const UserCard = ({ user, className }: Props) => {
   const router = useRouter();
 
   return (
-    <CatalystListItem onPress={() => router.push(`/user/${user.screenName}`)}>
+    <CatalystListItem className={className} onPress={() => router.push(`/user/${user.screenName}`)}>
       <CatalystAvatar
         alt={user.displayName}
         fallback={user.displayName}
@@ -55,10 +51,7 @@ export const UserCard = ({ user }: Props) => {
         )}
       </CatalystListItemContent>
 
-      <UniChevronRight
-        size={14}
-        className="text-light-icon dark:text-dark-icon"
-      />
+      <UniChevronRight size={14} className="text-light-icon dark:text-dark-icon" />
     </CatalystListItem>
   );
 };

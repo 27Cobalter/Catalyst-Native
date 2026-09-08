@@ -1,3 +1,4 @@
+import { POST_COLUMNS, MEDIA_COLUMNS } from "@/lib/device-layout";
 import {
   CatalystActionSheetItem,
   CatalystAvatar,
@@ -15,18 +16,23 @@ import { merge } from "@/lib/merge";
 import { buildShareText } from "@/lib/share";
 import { accountAtom } from "@/models/atoms/account";
 import { openUrlWithBrowser } from "@/models/browser-settings";
-import type {
-  CatalystAlbum,
-  CatalystAlbumDisplayMode,
-  CatalystStatusV1_1,
-  Media
-} from "@/models/sdk-types";
+import type { CatalystAlbum, CatalystAlbumDisplayMode, CatalystStatusV1_1, Media } from "@/models/sdk-types";
 import dayjs from "dayjs";
 import * as Clipboard from "expo-clipboard";
 import { Image } from "expo-image";
 import { Stack, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
-import { Calendar, Copy, ExternalLink, FileQuestion, Flag, MessageSquare, MoreHorizontal, Pencil, Send } from "lucide-react-native";
+import {
+  Calendar,
+  Copy,
+  ExternalLink,
+  FileQuestion,
+  Flag,
+  MessageSquare,
+  MoreHorizontal,
+  Pencil,
+  Send,
+} from "lucide-react-native";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -65,9 +71,9 @@ const UniMoreHorizontal = withUniwind(MoreHorizontal);
 const UniPencil = withUniwind(Pencil);
 const UniSend = withUniwind(Send);
 
-const GRID_COLUMNS = 3;
+const GRID_COLUMNS = POST_COLUMNS;
 const GRID_GAP = 1;
-const GALLERY_COLUMNS = 2;
+const GALLERY_COLUMNS = MEDIA_COLUMNS;
 const GALLERY_GAP = 2;
 const COLLAPSED_DESCRIPTION_LINES = 6;
 const LOAD_MORE_THRESHOLD = 200;
@@ -148,11 +154,7 @@ const AlbumHeader = ({ info }: { info: AlbumInfo }) => {
           onPress={() => router.push(`/user/${user.screenName}`)}
         >
           <CatalystAvatar
-            source={
-              user.profile?.iconUrl
-                ? getCdnUrl({ src: user.profile.iconUrl, variant: "icon", width: 64 })
-                : null
-            }
+            source={user.profile?.iconUrl ? getCdnUrl({ src: user.profile.iconUrl, variant: "icon", width: 64 }) : null}
             fallback={user.displayName}
             size="md"
           />
@@ -288,9 +290,9 @@ const GalleryCell = memo(({ item, columnWidth }: { item: GalleryItem; columnWidt
 });
 GalleryCell.displayName = "GalleryCell";
 
-const distributeToColumns = (items: GalleryItem[], columnWidth: number): [GalleryItem[], GalleryItem[]] => {
-  const columns: [GalleryItem[], GalleryItem[]] = [[], []];
-  const heights = [0, 0];
+const distributeToColumns = (items: GalleryItem[], columnWidth: number): GalleryItem[][] => {
+  const columns: GalleryItem[][] = Array.from({ length: GALLERY_COLUMNS }, () => []);
+  const heights = Array<number>(GALLERY_COLUMNS).fill(0);
 
   for (const item of items) {
     const aspectRatio =
@@ -298,7 +300,7 @@ const distributeToColumns = (items: GalleryItem[], columnWidth: number): [Galler
         ? item.media.metadata.width / item.media.metadata.height
         : 1;
     const cellHeight = columnWidth / aspectRatio;
-    const shorter = heights[0] <= heights[1] ? 0 : 1;
+    const shorter = heights.indexOf(Math.min(...heights));
 
     columns[shorter].push(item);
     heights[shorter] += cellHeight + GALLERY_GAP;
@@ -437,7 +439,7 @@ const AlbumVisualContent = ({
 
   const columnWidth = (screenWidth - GALLERY_GAP * (GALLERY_COLUMNS - 1)) / GALLERY_COLUMNS;
   const galleryItems = expandGalleryItems(items);
-  const [leftColumn, rightColumn] = distributeToColumns(galleryItems, columnWidth);
+  const columns = distributeToColumns(galleryItems, columnWidth);
 
   return (
     <ScrollView
@@ -453,18 +455,15 @@ const AlbumVisualContent = ({
         />
       }
     >
-      {leftColumn.length === 0 && rightColumn.length === 0 && !isLoading ? <EmptyState /> : null}
+      {galleryItems.length === 0 && !isLoading ? <EmptyState /> : null}
       <View className="flex-row" style={{ gap: GALLERY_GAP }}>
-        <View style={{ width: columnWidth }}>
-          {leftColumn.map((item) => (
-            <GalleryCell key={item.key} item={item} columnWidth={columnWidth} />
-          ))}
-        </View>
-        <View style={{ width: columnWidth }}>
-          {rightColumn.map((item) => (
-            <GalleryCell key={item.key} item={item} columnWidth={columnWidth} />
-          ))}
-        </View>
+        {columns.map((column, index) => (
+          <View key={index} style={{ width: columnWidth }}>
+            {column.map((item) => (
+              <GalleryCell key={item.key} item={item} columnWidth={columnWidth} />
+            ))}
+          </View>
+        ))}
       </View>
       {isLoading && (
         <View className="py-4">

@@ -1,3 +1,4 @@
+import { MEDIA_COLUMNS } from "@/lib/device-layout";
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { getCdnUrl } from "@/lib/media";
 import { merge } from "@/lib/merge";
@@ -10,7 +11,7 @@ import React, { memo, useCallback, useImperativeHandle, useRef, useState } from 
 import { ActivityIndicator, Pressable, View, useWindowDimensions } from "react-native";
 import { ProfileGalleryPlaceholder } from "./placeholder";
 
-const COLUMNS = 2;
+const COLUMNS = MEDIA_COLUMNS;
 const GAP = 2;
 
 type Props = {
@@ -58,9 +59,9 @@ const GalleryCell = memo(({ status, columnWidth }: { status: CatalystStatus; col
 });
 GalleryCell.displayName = "GalleryCell";
 
-function distributeToColumns(items: CatalystStatus[], columnWidth: number): [CatalystStatus[], CatalystStatus[]] {
-  const columns: [CatalystStatus[], CatalystStatus[]] = [[], []];
-  const heights = [0, 0];
+function distributeToColumns(items: CatalystStatus[], columnWidth: number): CatalystStatus[][] {
+  const columns: CatalystStatus[][] = Array.from({ length: COLUMNS }, () => []);
+  const heights = Array<number>(COLUMNS).fill(0);
 
   for (const item of items) {
     const media = item.medias[0];
@@ -70,7 +71,7 @@ function distributeToColumns(items: CatalystStatus[], columnWidth: number): [Cat
       media.metadata?.width && media.metadata?.height ? media.metadata.width / media.metadata.height : 1;
     const cellHeight = columnWidth / aspectRatio;
 
-    const shorter = heights[0] <= heights[1] ? 0 : 1;
+    const shorter = heights.indexOf(Math.min(...heights));
     columns[shorter].push(item);
     heights[shorter] += cellHeight + GAP;
   }
@@ -141,21 +142,18 @@ export const UserGallery = memo(
       return <ProfileGalleryPlaceholder />;
     }
 
-    const [leftColumn, rightColumn] = distributeToColumns(items, columnWidth);
+    const columns = distributeToColumns(items, columnWidth);
 
     return (
       <View>
         <View className="flex-row" style={{ gap: GAP }}>
-          <View style={{ width: columnWidth }}>
-            {leftColumn.map((item) => (
-              <GalleryCell key={item.id} status={item} columnWidth={columnWidth} />
-            ))}
-          </View>
-          <View style={{ width: columnWidth }}>
-            {rightColumn.map((item) => (
-              <GalleryCell key={item.id} status={item} columnWidth={columnWidth} />
-            ))}
-          </View>
+          {columns.map((column, index) => (
+            <View key={index} style={{ width: columnWidth }}>
+              {column.map((item) => (
+                <GalleryCell key={item.id} status={item} columnWidth={columnWidth} />
+              ))}
+            </View>
+          ))}
         </View>
         {isLoadingMore && (
           <View className="py-4">

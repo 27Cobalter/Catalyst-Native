@@ -1,3 +1,4 @@
+import { LIST_COLUMNS } from "@/lib/device-layout";
 import { ContestCard } from "@/components/contest/card";
 import { useAsyncEffect } from "@/hooks/use-async-effect";
 import { clientAtom } from "@/models/atoms/credential";
@@ -63,6 +64,7 @@ export const ContestList = ({ states, query, ref }: Props) => {
 
   return (
     <FlashList
+      numColumns={LIST_COLUMNS}
       ref={list}
       data={contests}
       keyExtractor={(w) => w.slug}

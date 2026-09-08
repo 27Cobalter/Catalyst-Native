@@ -1,3 +1,4 @@
+import { POST_COLUMNS } from "@/lib/device-layout";
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { getCdnUrl } from "@/lib/media";
 import { merge } from "@/lib/merge";
@@ -11,7 +12,7 @@ import React, { memo, useCallback, useImperativeHandle, useRef, useState } from 
 import { ActivityIndicator, Pressable, Text, useWindowDimensions, View } from "react-native";
 import { ProfileTimelinePlaceholder } from "./placeholder";
 
-const COLUMNS = 3;
+const COLUMNS = POST_COLUMNS;
 const GAP = 1;
 
 type Props = {

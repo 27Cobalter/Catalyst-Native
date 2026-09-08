@@ -1,3 +1,4 @@
+import { LIST_COLUMNS } from "@/lib/device-layout";
 import { AlbumCard } from "@/components/album/card";
 import { CatalystEmptyState } from "@/components/design-system";
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
@@ -15,11 +16,7 @@ import "@/global.css";
 const UniImages = withUniwind(Images);
 
 const AlbumsEmpty = () => (
-  <CatalystEmptyState
-    title="アルバムはまだありません"
-    icon={<UniImages />}
-    className="min-h-96"
-  />
+  <CatalystEmptyState title="アルバムはまだありません" icon={<UniImages />} className="min-h-96" />
 );
 
 type Props = {
@@ -62,6 +59,7 @@ export const UserAlbums = ({ user }: Props) => {
 
   return (
     <FlashList
+      numColumns={LIST_COLUMNS}
       data={albums}
       keyExtractor={(w) => w.id}
       renderItem={onRender}

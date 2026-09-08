@@ -1,13 +1,14 @@
+import { POST_COLUMNS, MEDIA_COLUMNS, isIPad } from "@/lib/device-layout";
 import { CatalystSkeleton } from "@/components/design-system";
 import { memo, useMemo } from "react";
 import { useWindowDimensions, View } from "react-native";
 
-const TIMELINE_COLUMNS = 3;
+const TIMELINE_COLUMNS = POST_COLUMNS;
 const TIMELINE_GAP = 1;
-const GALLERY_COLUMNS = 2;
+const GALLERY_COLUMNS = MEDIA_COLUMNS;
 const GALLERY_GAP = 2;
 
-/** 3-column square grid (profile posts tab) */
+/** Square grid matching the profile posts tab. */
 export const ProfileTimelinePlaceholder = memo(({ rows = 4 }: { rows?: number }) => {
   const { width: screenWidth } = useWindowDimensions();
   const cellSize = (screenWidth - TIMELINE_GAP * (TIMELINE_COLUMNS - 1)) / TIMELINE_COLUMNS;
@@ -21,10 +22,7 @@ export const ProfileTimelinePlaceholder = memo(({ rows = 4 }: { rows?: number })
       style={{ gap: TIMELINE_GAP }}
     >
       {Array.from({ length: cells }, (_, index) => (
-        <CatalystSkeleton
-          key={index}
-          style={{ width: cellSize, height: cellSize }}
-        />
+        <CatalystSkeleton key={index} style={{ width: cellSize, height: cellSize }} />
       ))}
     </View>
   );
@@ -33,30 +31,21 @@ ProfileTimelinePlaceholder.displayName = "ProfileTimelinePlaceholder";
 
 const GALLERY_HEIGHTS = [0.75, 1.1, 0.9, 1.25, 0.85, 1.05, 0.95, 1.15] as const;
 
-/** 2-column masonry-ish gallery skeleton */
+/** Masonry skeleton matching the gallery column count. */
 export const ProfileGalleryPlaceholder = memo(({ count = 8 }: { count?: number }) => {
   const { width: screenWidth } = useWindowDimensions();
   const columnWidth = (screenWidth - GALLERY_GAP * (GALLERY_COLUMNS - 1)) / GALLERY_COLUMNS;
 
   const columns = useMemo(() => {
-    const left: number[] = [];
-    const right: number[] = [];
-    let leftH = 0;
-    let rightH = 0;
-
+    const columns: number[][] = Array.from({ length: GALLERY_COLUMNS }, () => []);
+    const heights = Array<number>(GALLERY_COLUMNS).fill(0);
     for (let i = 0; i < count; i++) {
-      const ratio = GALLERY_HEIGHTS[i % GALLERY_HEIGHTS.length];
-      const height = columnWidth * ratio;
-      if (leftH <= rightH) {
-        left.push(height);
-        leftH += height + GALLERY_GAP;
-      } else {
-        right.push(height);
-        rightH += height + GALLERY_GAP;
-      }
+      const height = columnWidth * GALLERY_HEIGHTS[i % GALLERY_HEIGHTS.length];
+      const shortest = heights.indexOf(Math.min(...heights));
+      columns[shortest].push(height);
+      heights[shortest] += height + GALLERY_GAP;
     }
-
-    return [left, right] as const;
+    return columns;
   }, [columnWidth, count]);
 
   return (
@@ -85,13 +74,9 @@ ProfileGalleryPlaceholder.displayName = "ProfileGalleryPlaceholder";
 /** Album card list skeleton */
 export const ProfileAlbumsPlaceholder = memo(({ count = 3 }: { count?: number }) => {
   return (
-    <View
-      accessibilityLabel="アルバムを読み込み中"
-      accessibilityRole="progressbar"
-      className="px-3"
-    >
+    <View accessibilityLabel="アルバムを読み込み中" accessibilityRole="progressbar" className="flex-row flex-wrap px-3">
       {Array.from({ length: count }, (_, index) => (
-        <View key={index} className="py-3">
+        <View key={index} className={isIPad ? "w-1/2 px-3 py-3" : "w-full py-3"}>
           <CatalystSkeleton className="h-50 w-full rounded-xl" />
           <View className="mt-2 gap-1.5 px-1">
             <View className="flex-row items-center gap-2">

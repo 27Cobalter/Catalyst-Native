@@ -7,11 +7,13 @@ import { withUniwind } from "uniwind";
 const UniExternalLink = withUniwind(ExternalLink);
 
 type Props = {
+  className?: string;
   actor: CatalystRemoteFollower;
 };
 
-export const RemoteActorCard = ({ actor }: Props) => (
+export const RemoteActorCard = ({ actor, className }: Props) => (
   <CatalystListItem
+    className={className}
     accessibilityRole="link"
     accessibilityLabel={`${actor.displayName}の外部プロフィールを開く`}
     onPress={() => openUrlWithBrowser(actor.profileUri)}

@@ -1,6 +1,6 @@
 import { CatalystDivider, CatalystListItem, CatalystListItemContent, CatalystText } from "@/components/design-system";
 import { accountAtom } from "@/models/atoms/account";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 import { useAtomValue } from "jotai";
 import {
   Accessibility,
@@ -15,7 +15,8 @@ import {
   UserCircle,
 } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { cn } from "@/lib/utils";
 import { withUniwind } from "uniwind";
 
 type SettingsSection = {
@@ -46,7 +47,8 @@ const baseSections: SettingsSection[] = [
   { route: "/settings/legal", title: "法的情報", icon: UniFileText },
 ];
 
-export default function SettingsPage() {
+export function SettingsMenu({ sidebar = false }: { sidebar?: boolean }) {
+  const pathname = usePathname();
   const account = useAtomValue(accountAtom);
   const [activityPubSettingsUserId, setActivityPubSettingsUserId] = useState<string | null>(null);
 
@@ -84,7 +86,7 @@ export default function SettingsPage() {
       : baseSections;
 
   return (
-    <View className="flex-1 bg-light-surface-muted dark:bg-dark-background">
+    <ScrollView className="flex-1 bg-light-surface-muted dark:bg-dark-background">
       <View className="bg-light-background dark:bg-dark-surface">
         {sections.map((section, index) => {
           const Icon = section.icon;
@@ -93,9 +95,14 @@ export default function SettingsPage() {
             <View key={section.route}>
               <CatalystListItem
                 divided={false}
-                className="min-h-14 px-5 py-3.5"
+                accessibilityState={{ selected: sidebar && pathname.startsWith(section.route) }}
+                className={cn(
+                  "min-h-14 px-5 py-3.5",
+                  sidebar && pathname.startsWith(section.route) && "bg-light-surface-muted dark:bg-dark-surface-muted",
+                )}
                 onPress={() => {
-                  router.push(section.route as never);
+                  if (sidebar) router.replace(section.route as never);
+                  else router.push(section.route as never);
                 }}
               >
                 <Icon className="text-light-icon dark:text-dark-icon" size={22} />
@@ -111,6 +118,6 @@ export default function SettingsPage() {
           );
         })}
       </View>
-    </View>
+    </ScrollView>
   );
 }

@@ -1,3 +1,4 @@
+import { LIST_COLUMNS } from "@/lib/device-layout";
 import { CatalystEmptyState, CatalystSkeleton } from "@/components/design-system";
 import { useAsyncEffect } from "@/hooks/use-async-effect";
 import { clientAtom } from "@/models/atoms/credential";
@@ -50,18 +51,21 @@ export const WeeklyThemeList = ({ state, ref }: Props) => {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const list = useRef<FlashListRef<CatalystWeeklyTheme>>(null);
 
-  const fetchThemes = useCallback(async (cursor?: string | null) => {
-    const weeklyThemes = client?.catalyst.v1.weeklyThemes;
-    if (!weeklyThemes) {
-      return { themes: [], nextCursor: null };
-    }
-    const { data } = await weeklyThemes.get({
-      query: { state, take: 20, cursor: cursor ?? undefined },
-      throwOnError: true,
-    });
+  const fetchThemes = useCallback(
+    async (cursor?: string | null) => {
+      const weeklyThemes = client?.catalyst.v1.weeklyThemes;
+      if (!weeklyThemes) {
+        return { themes: [], nextCursor: null };
+      }
+      const { data } = await weeklyThemes.get({
+        query: { state, take: 20, cursor: cursor ?? undefined },
+        throwOnError: true,
+      });
 
-    return data;
-  }, [client, state]);
+      return data;
+    },
+    [client, state],
+  );
 
   const load = useCallback(async () => {
     const data = await fetchThemes();
@@ -78,7 +82,11 @@ export const WeeklyThemeList = ({ state, ref }: Props) => {
     }
   }, [load]);
 
-  useImperativeHandle(ref, () => ({ scrollToTop: () => list.current?.scrollToOffset({ offset: 0, animated: true }) }), []);
+  useImperativeHandle(
+    ref,
+    () => ({ scrollToTop: () => list.current?.scrollToOffset({ offset: 0, animated: true }) }),
+    [],
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -94,17 +102,24 @@ export const WeeklyThemeList = ({ state, ref }: Props) => {
     setIsLoadingMore(true);
     try {
       const data = await fetchThemes(nextCursor);
-      setThemes((previous) => [...previous, ...data.themes.filter((theme) => !previous.some((item) => item.slug === theme.slug))]);
+      setThemes((previous) => [
+        ...previous,
+        ...data.themes.filter((theme) => !previous.some((item) => item.slug === theme.slug)),
+      ]);
       setNextCursor(data.nextCursor);
     } finally {
       setIsLoadingMore(false);
     }
   }, [fetchThemes, isLoadingMore, nextCursor]);
 
-  const renderItem = useCallback<ListRenderItem<CatalystWeeklyTheme>>(({ item }) => <WeeklyThemeCard theme={item} />, []);
+  const renderItem = useCallback<ListRenderItem<CatalystWeeklyTheme>>(
+    ({ item }) => <WeeklyThemeCard theme={item} />,
+    [],
+  );
 
   return (
     <FlashList
+      numColumns={LIST_COLUMNS}
       ref={list}
       data={themes}
       keyExtractor={(item) => item.slug}
