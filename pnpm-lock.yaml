@@ -214,6 +214,9 @@ importers:
       expo-dev-client:
         specifier: ~57.0.14
         version: 57.0.14(expo@57.0.15)(react-native@0.86.2(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/jest-preset@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))
+      expo-eas-ipad-support:
+        specifier: ^1.0.0
+        version: 1.0.0(expo@57.0.15)
       expo-file-system:
         specifier: ^57.0.5
         version: 57.0.5(expo@57.0.15)(react-native@0.86.2(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/jest-preset@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))
@@ -4848,6 +4851,11 @@ packages:
     peerDependencies:
       expo: '*'
       react-native: '*'
+
+  expo-eas-ipad-support@1.0.0:
+    resolution: {integrity: sha512-B7J2Yt8QRmK1g9LlJrFD2DDsq9QYxRATB+I0JJocye8OY5BmzQLZ9yfgGurOZF/JPbMv1XMFvUIAp3gQTx77mQ==}
+    peerDependencies:
+      expo: '>=49.0.0'
 
   expo-file-system@57.0.5:
     resolution: {integrity: sha512-XjGrCClF0935y5wLB9qNQQUVptNEy+0OloBstXlCd+IeNXLo3uNOod6cX4N0hofIhNIrN1Al8fwfay7R0Z1a2A==}
@@ -13827,6 +13835,10 @@ snapshots:
       expo: 57.0.15(9bc993adc8147975d184bfa2aaa7bbbf)
       expo-dev-menu-interface: 57.0.0(expo@57.0.15)
       react-native: 0.86.2(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/jest-preset@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1)
+
+  expo-eas-ipad-support@1.0.0(expo@57.0.15):
+    dependencies:
+      expo: 57.0.15(9bc993adc8147975d184bfa2aaa7bbbf)
 
   expo-file-system@57.0.5(expo@57.0.15)(react-native@0.86.2(patch_hash=1c922f4ad30ff71666e9f58636360251e4b56c5268b7504befade52e48eb7a04)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/jest-preset@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(@react-native/metro-config@0.86.2(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1)):
     dependencies:

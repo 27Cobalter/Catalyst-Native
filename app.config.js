@@ -73,7 +73,6 @@ module.exports = ({ config }) => {
           "ddqQuickLink",
         ],
       },
-      supportsTablet: false,
     },
     android: {
       ...config.android,
@@ -136,7 +135,7 @@ module.exports = ({ config }) => {
       [
         "expo-asset",
         {
-          assets: ["assets/images/emoji", "assets/images/emoji-test.txt"],
+          assets: ["assets/images/emoji-test.txt"],
         },
       ],
       [
@@ -187,6 +186,7 @@ module.exports = ({ config }) => {
       "@react-native-community/datetimepicker",
       "@natsuneko-laboratory/react-native-twitter-text",
       "@sentry/react-native",
+      "expo-eas-ipad-support",
     ],
     extra: {
       router: {},
