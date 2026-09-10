@@ -100,23 +100,11 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
   useScrollToTop(scroller);
 
   // The sticky tab bar overlay is visually hidden (opacity 0) until the header
-  // scrolls out of view. Keep it non-interactive while hidden, otherwise the
-  // invisible bar sits over the banner area and swallows taps — on Android this
+  // scrolls out of view. `isStickyTabBarInteractive` tracks whether it is
+  // actually visible so it can stay non-interactive while hidden — otherwise the
+  // invisible bar sits over the banner area and swallows taps, which on Android
   // manifested as tapping the banner switching the profile tab (#10).
-  const stickyThreshold = headerHeight - 103;
-  useEffect(() => {
-    if (headerHeight <= 0) {
-      setIsStickyTabBarInteractive(false);
-      return;
-    }
-    const id = scrollY.addListener(({ value }) => {
-      setIsStickyTabBarInteractive((prev) => {
-        const next = value >= stickyThreshold;
-        return next === prev ? prev : next;
-      });
-    });
-    return () => scrollY.removeListener(id);
-  }, [scrollY, headerHeight, stickyThreshold]);
+  // It is updated from `handleScroll` below.
 
   const stickyTabBarOpacity =
     headerHeight > 0
@@ -239,13 +227,19 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
       const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
       scrollY.setValue(contentOffset.y);
 
+      const stickyVisible =
+        headerHeight > 0 && contentOffset.y >= headerHeight - 103;
+      setIsStickyTabBarInteractive((prev) =>
+        prev === stickyVisible ? prev : stickyVisible,
+      );
+
       const distanceFromBottom =
         contentSize.height - layoutMeasurement.height - contentOffset.y;
       if (distanceFromBottom < LOAD_MORE_THRESHOLD) {
         tabContentRef.current?.loadMore();
       }
     },
-    [scrollY],
+    [scrollY, headerHeight],
   );
 
   if (!user) {
