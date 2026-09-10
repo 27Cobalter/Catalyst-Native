@@ -4,7 +4,7 @@ import { clientAtom } from "@/models/atoms/credential";
 import type { CatalystStatus, CatalystStatusV1_1 } from "@/models/sdk-types";
 import { useAtomValue } from "jotai";
 import { Heart, Repeat2 } from "lucide-react-native";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Pressable, View } from "react-native";
 import Toast from "react-native-toast-message";
 import { withUniwind } from "uniwind";
@@ -34,10 +34,13 @@ export const ActionBar = ({ isDefaultFavorited, isDefaultReposted, status }: Pro
   const [isTogglingRepost, setIsTogglingRepost] = useState(false);
   const isRepostable = (status as StatusRepostState).visitor?.repostable ?? true;
 
-  useEffect(() => {
+  const resetKey = `${status.id}:${isDefaultFavorited}:${isDefaultReposted}`;
+  const [prevResetKey, setPrevResetKey] = useState(resetKey);
+  if (resetKey !== prevResetKey) {
+    setPrevResetKey(resetKey);
     setIsFavorited(isDefaultFavorited);
     setIsReposted(isDefaultReposted);
-  }, [isDefaultFavorited, isDefaultReposted, status.id]);
+  }
 
   const toggleFavorite = useCallback(async () => {
     if (!account?.credential.client || !status.id || isTogglingFavorite) return;
