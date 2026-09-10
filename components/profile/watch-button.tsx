@@ -53,13 +53,11 @@ export const ProfileWatchButton = ({ userId }: Props) => {
   const sheet = useRef<BottomSheetModal>(null);
   const requestId = useRef(0);
   const [mode, setMode] = useState<CatalystUserWatchMode | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const loadMode = useCallback(
     async (showError: boolean) => {
       const currentRequestId = ++requestId.current;
-      setMode(null);
-      setIsLoading(true);
       try {
         const { data } = await client.catalyst.v1.user.id.watch.get({
           path: { id: userId },
@@ -78,8 +76,17 @@ export const ProfileWatchButton = ({ userId }: Props) => {
     [client, userId],
   );
 
-  useEffect(() => {
+  const [prevUserId, setPrevUserId] = useState(userId);
+  if (prevUserId !== userId) {
+    setPrevUserId(userId);
     setMode(null);
+    setIsLoading(true);
+  }
+
+  useEffect(() => {
+    // loadMode fetches data and calls setState in a race-guarded callback (requestId ref); this is
+    // the standard "fetch in an effect" pattern and not the derived-state anti-pattern this rule targets.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadMode(false);
 
     return () => {
