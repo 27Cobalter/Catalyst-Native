@@ -1,0 +1,13 @@
+{
+  "host": "catalyst.natsuneko.com",
+  "pathPrefixes": [
+    "/status/",
+    "/album/",
+    "/smart-album/",
+    "/contest/",
+    "/tags/",
+    "/themes/",
+    "/user/",
+    "/@"
+  ]
+}

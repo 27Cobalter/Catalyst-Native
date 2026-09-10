@@ -1,6 +1,6 @@
 import { Markdown } from "@/components/ui/markdown";
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
-import { openUrlWithBrowser } from "@/models/browser-settings";
+import { openLink } from "@/lib/open-link";
 import { clientAtom } from "@/models/atoms/credential";
 import type { CatalystAnnouncement } from "@/models/sdk-types";
 import { FlashList, FlashListRef } from "@shopify/flash-list";
@@ -34,7 +34,7 @@ const EmptyState = () => (
 const AnnouncementItem = memo(({ announcement }: { announcement: CatalystAnnouncement }) => {
   const openUrl = useCallback(async () => {
     if (!announcement.url) return;
-    await openUrlWithBrowser(announcement.url);
+    await openLink(announcement.url);
   }, [announcement.url]);
 
   return (

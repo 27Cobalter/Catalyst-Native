@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react-native";
 import { StatusText } from "./text";
 
-jest.mock("@/models/browser-settings", () => ({
-  openUrlWithBrowser: jest.fn(),
+jest.mock("@/lib/open-link", () => ({
+  openLink: jest.fn(),
 }));
 
 // @/components/design-system のバレルは expo-router 経由で expo-glass-effect

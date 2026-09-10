@@ -1,23 +1,15 @@
 // @ts-check
 const pkg = require("./package.json");
 
-const APP_LINK_PATH_PREFIXES = [
-  "/status/",
-  "/album/",
-  "/smart-album/",
-  "/contest/",
-  "/tags/",
-  "/themes/",
-  "/user/",
-  "/@",
-];
+// lib/app-links.ts と同じ定義を共有する (アプリ内リンク判定と intent filter のずれを防ぐため)
+const { host: APP_LINK_HOST, pathPrefixes: APP_LINK_PATH_PREFIXES } = require("./constants/app-links.json");
 
 const APP_LINK_DATA = [
   ...APP_LINK_PATH_PREFIXES,
   ...APP_LINK_PATH_PREFIXES.flatMap((path) => [`/ja${path}`, `/en${path}`]),
 ].map((pathPrefix) => ({
   scheme: "https",
-  host: "catalyst.natsuneko.com",
+  host: APP_LINK_HOST,
   pathPrefix,
 }));
 
@@ -32,7 +24,7 @@ module.exports = ({ config }) => {
     ...new Set(
       [
         ...(config.ios?.associatedDomains ?? []),
-        "applinks:catalyst.natsuneko.com",
+        `applinks:${APP_LINK_HOST}`,
         environment === "development" ? "applinks:catalyst.stg.natsuneko.com" : null,
       ]
         .filter(Boolean)

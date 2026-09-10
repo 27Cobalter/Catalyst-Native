@@ -1,7 +1,7 @@
 import { catalystLinkClassName } from "@/components/design-system";
+import { openLink } from "@/lib/open-link";
 import { cn } from "@/lib/utils";
 import { underlineLinksAtom } from "@/models/atoms/accessibility";
-import { openUrlWithBrowser } from "@/models/browser-settings";
 import { extractEntities } from "@natsuneko-laboratory/react-native-twitter-text";
 import { Link } from "expo-router";
 import { useAtomValue } from "jotai";
@@ -43,7 +43,7 @@ export const StatusText = React.memo(
     const resolvedLinkClassName = cn(linkClassName, underlineLinks && "underline");
 
     const handleLinkPress = useCallback((url: string) => {
-      openUrlWithBrowser(url);
+      void openLink(url);
     }, []);
 
     const val = useMemo(() => {

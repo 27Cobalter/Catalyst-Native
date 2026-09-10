@@ -7,9 +7,9 @@ import {
 } from "@/components/design-system";
 import { useAsyncEffect } from "@/hooks/use-async-effect";
 import { getCdnUrl } from "@/lib/media";
+import { openLink } from "@/lib/open-link";
 import { accountAtom } from "@/models/atoms/account";
 import { clientAtom } from "@/models/atoms/credential";
-import { openUrlWithBrowser } from "@/models/browser-settings";
 import { ProfileEmoji } from "@/components/user/profile-emoji";
 import { ProfileWatchButton } from "@/components/profile/watch-button";
 import { CatalystRelationships, EgeriaUser, ProfileTag } from "@/models/sdk-types";
@@ -248,7 +248,7 @@ export const ProfileHeader = ({ user, relationships, tags, onUpdateRelationships
           {user?.profile?.website ? (
             <Pressable
               className="flex-row items-center active:opacity-80"
-              onPress={() => openUrlWithBrowser(user.profile!.website)}
+              onPress={() => void openLink(user.profile!.website)}
             >
               <UniLinkIcon size={14} className="text-light-icon dark:text-dark-icon" />
               <CatalystText variant="body" tone="link" className="ml-1" numberOfLines={1}>
@@ -264,7 +264,7 @@ export const ProfileHeader = ({ user, relationships, tags, onUpdateRelationships
                 <Pressable
                   className="flex-row items-center active:opacity-80"
                   key={`${website}-${i}`}
-                  onPress={() => openUrlWithBrowser(website)}
+                  onPress={() => void openLink(website)}
                 >
                   <UniLinkIcon size={14} className="text-light-icon dark:text-dark-icon" />
                   <CatalystText variant="body" tone="link" className="ml-1" numberOfLines={1}>
