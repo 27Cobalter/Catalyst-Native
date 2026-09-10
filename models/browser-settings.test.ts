@@ -1,10 +1,15 @@
 import { resetAsyncStorageMock } from "@/test/helpers/async-storage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ExternalBrowser from "@/modules/external-browser/src/ExternalBrowserModule";
 import { getCustomTabsSupportingBrowsersAsync, openBrowserAsync } from "expo-web-browser";
 import { Linking, Platform } from "react-native";
 import { getInstalledBrowsers, loadSelectedBrowser, openUrlWithBrowser, saveSelectedBrowser } from "./browser-settings";
 
 jest.mock("@react-native-async-storage/async-storage");
+jest.mock("@/modules/external-browser/src/ExternalBrowserModule", () => ({
+  __esModule: true,
+  default: { openUrl: jest.fn() },
+}));
 jest.mock("expo-web-browser", () => ({
   getCustomTabsSupportingBrowsersAsync: jest.fn(),
   openBrowserAsync: jest.fn(),
@@ -12,6 +17,7 @@ jest.mock("expo-web-browser", () => ({
 }));
 
 const mockedGetCustomTabsSupportingBrowsersAsync = getCustomTabsSupportingBrowsersAsync as jest.Mock;
+const mockedOpenUrl = ExternalBrowser!.openUrl as jest.Mock;
 
 jest.spyOn(Linking, "openURL").mockResolvedValue(true);
 
@@ -54,11 +60,16 @@ describe("openUrlWithBrowser", () => {
   describe("Android", () => {
     beforeEach(() => {
       jest.replaceProperty(Platform, "OS", "android");
+      // 既定では固有スキームは解決できない端末とみなす (Chrome しか無い端末を想定)
+      jest.spyOn(Linking, "canOpenURL").mockResolvedValue(false);
+      // 既定ではネイティブモジュールが使えないビルドとして扱い、フォールバック側を検証する
+      mockedOpenUrl.mockResolvedValue(false);
       mockedGetCustomTabsSupportingBrowsersAsync.mockResolvedValue({
         defaultBrowserPackage: "com.android.chrome",
         preferredBrowserPackage: "com.android.chrome",
-        browserPackages: ["com.android.chrome", "org.mozilla.firefox"],
-        servicePackages: ["com.android.chrome"],
+        // Android 12 以降の実機に合わせ、Web intent 側は既定ブラウザーしか返さない状況を再現する
+        browserPackages: ["com.android.chrome"],
+        servicePackages: ["com.android.chrome", "org.mozilla.firefox", "com.microsoft.emmx"],
       });
     });
 
@@ -108,13 +119,78 @@ describe("openUrlWithBrowser", () => {
       );
     });
 
+    // パッケージを固定した intent が使えるなら、どのブラウザーでも通常タブで開ける
+    it("ネイティブモジュールが使えるときはブラウザーアプリを直接開く", async () => {
+      mockedOpenUrl.mockResolvedValue(true);
+
+      await openUrlWithBrowser(URL, "chrome");
+
+      expect(mockedOpenUrl).toHaveBeenCalledWith(URL, "com.android.chrome");
+      expect(openBrowserAsync).not.toHaveBeenCalled();
+      expect(Linking.openURL).not.toHaveBeenCalled();
+    });
+
+    it("inApp はネイティブモジュールが使えても Custom Tabs で開く", async () => {
+      mockedOpenUrl.mockResolvedValue(true);
+
+      await openUrlWithBrowser(URL, "inApp");
+
+      expect(mockedOpenUrl).not.toHaveBeenCalled();
+      expect(openBrowserAsync).toHaveBeenCalled();
+    });
+
+    // Edge は microsoft-edge-https:// で URL ごと渡せるので、Custom Tabs ではなく通常タブで開ける
+    it("固有スキームが使えるブラウザーはそのスキームで開く", async () => {
+      jest.spyOn(Linking, "canOpenURL").mockResolvedValue(true);
+
+      await openUrlWithBrowser(URL, "edge");
+
+      expect(Linking.openURL).toHaveBeenCalledWith("microsoft-edge-https://catalyst.natsuneko.com/status/123");
+      expect(openBrowserAsync).not.toHaveBeenCalled();
+    });
+
+    it("固有スキームが解決できない端末では Custom Tabs にフォールバックする", async () => {
+      await openUrlWithBrowser(URL, "edge");
+
+      expect(Linking.openURL).not.toHaveBeenCalled();
+      expect(openBrowserAsync).toHaveBeenCalledWith(
+        URL,
+        expect.objectContaining({ browserPackage: "com.microsoft.emmx" }),
+      );
+    });
+
+    // Android の Chrome は googlechrome:// に URL を渡しても about:blank が開くだけなので使わない
+    it("chrome はスキームを使わず常に Custom Tabs で開く", async () => {
+      jest.spyOn(Linking, "canOpenURL").mockResolvedValue(true);
+
+      await openUrlWithBrowser(URL, "chrome");
+
+      expect(Linking.openURL).not.toHaveBeenCalled();
+      expect(openBrowserAsync).toHaveBeenCalledWith(
+        URL,
+        expect.objectContaining({ browserPackage: "com.android.chrome" }),
+      );
+    });
+
     it("inApp はアプリと同じタスクで開く (最近使ったアプリに並べない)", async () => {
       await openUrlWithBrowser(URL, "inApp");
 
       expect(openBrowserAsync).toHaveBeenCalledWith(URL, expect.objectContaining({ showInRecents: false }));
     });
 
-    it("ブラウザーの列挙に失敗しても落ちない", async () => {
+    // パッケージ未指定の Custom Tabs は暗黙 ACTION_VIEW になり App Link で自分自身に戻ってしまうので、
+    // パッケージが判らないときはブラウザーに限定した intent を使う
+    it("ブラウザーの列挙に失敗したらブラウザー限定の intent で開く", async () => {
+      mockedGetCustomTabsSupportingBrowsersAsync.mockRejectedValue(new Error("unavailable"));
+      mockedOpenUrl.mockResolvedValue(true);
+
+      await openUrlWithBrowser(URL, "systemDefault");
+
+      expect(mockedOpenUrl).toHaveBeenLastCalledWith(URL, null);
+      expect(openBrowserAsync).not.toHaveBeenCalled();
+    });
+
+    it("ブラウザーの列挙に失敗し、ネイティブモジュールも使えなければ Custom Tabs に任せる", async () => {
       mockedGetCustomTabsSupportingBrowsersAsync.mockRejectedValue(new Error("unavailable"));
 
       await openUrlWithBrowser(URL, "systemDefault");
@@ -125,8 +201,34 @@ describe("openUrlWithBrowser", () => {
     it("getInstalledBrowsers はインストール済みのパッケージから選択肢を作る", async () => {
       const installed = await getInstalledBrowsers();
 
-      expect(installed.map((b) => b.key)).toEqual(["systemDefault", "inApp", "chrome", "firefox"]);
-      expect(Linking.canOpenURL).not.toHaveBeenCalled();
+      expect(installed.map((b) => b.key)).toEqual(["systemDefault", "inApp", "chrome", "firefox", "edge"]);
+    });
+
+    it("Custom Tabs サービスしか返さないブラウザーのパッケージも使う", async () => {
+      await openUrlWithBrowser(URL, "firefox");
+
+      expect(openBrowserAsync).toHaveBeenCalledWith(
+        URL,
+        expect.objectContaining({ browserPackage: "org.mozilla.firefox" }),
+      );
+    });
+
+    // Android 12 以降は Web intent の解決に既定ブラウザーしか返らないことがあり、
+    // インストール済みでも Custom Tabs の一覧に出てこないブラウザーがある
+    it("Custom Tabs の一覧に出ないブラウザーでも固有スキームが解決できれば選択肢に出す", async () => {
+      mockedGetCustomTabsSupportingBrowsersAsync.mockResolvedValue({
+        defaultBrowserPackage: "com.android.chrome",
+        preferredBrowserPackage: "com.android.chrome",
+        browserPackages: ["com.android.chrome"],
+        servicePackages: ["com.android.chrome"],
+      });
+      jest
+        .spyOn(Linking, "canOpenURL")
+        .mockImplementation(async (url: string) => url.startsWith("microsoft-edge-https://"));
+
+      const installed = await getInstalledBrowsers();
+
+      expect(installed.map((b) => b.key)).toEqual(["systemDefault", "inApp", "chrome", "edge"]);
     });
   });
 

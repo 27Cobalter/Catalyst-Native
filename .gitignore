@@ -45,6 +45,10 @@ app-example
 /ios
 /android
 
+# local expo modules build output
+modules/*/android/build/
+modules/*/android/.cxx/
+
 .env.local
 
 # build output

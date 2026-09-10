@@ -51,6 +51,19 @@ describe("getInAppPathFromUrl", () => {
   ])("アプリが引き受けない %s は null を返す", (url) => {
     expect(getInAppPathFromUrl(url)).toBeNull();
   });
+
+  it.each([
+    // App Link のプレフィックスには一致するが、アプリに画面が無い Web 専用ページ
+    "https://catalyst.natsuneko.com/status/123/likes",
+    "https://catalyst.natsuneko.com/user/natsuneko/reactions",
+    "https://catalyst.natsuneko.com/tags/",
+  ])("アプリに対応する画面が無い %s は null を返す", (url) => {
+    expect(getInAppPathFromUrl(url)).toBeNull();
+  });
+
+  it("末尾のスラッシュが付いていてもアプリのルートに変換する", () => {
+    expect(getInAppPathFromUrl("https://catalyst.natsuneko.com/status/123/")).toBe("/status/123");
+  });
 });
 
 describe("isSelfHandledAppLink", () => {
@@ -64,5 +77,11 @@ describe("isSelfHandledAppLink", () => {
 
   it("別ドメインは false", () => {
     expect(isSelfHandledAppLink("https://example.com/status/123")).toBe(false);
+  });
+
+  // OS の intent filter はパスのプレフィックスだけで判定するため、
+  // アプリに画面が無いページでも App Link としては引き受けてしまう
+  it("アプリに画面が無くても intent filter に一致すれば true", () => {
+    expect(isSelfHandledAppLink("https://catalyst.natsuneko.com/status/123/likes")).toBe(true);
   });
 });

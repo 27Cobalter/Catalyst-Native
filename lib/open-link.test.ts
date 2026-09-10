@@ -29,6 +29,8 @@ describe("openLink", () => {
     "https://example.com/status/123",
     // App Link に登録していない Catalyst のページはアプリ内に対応するルートがない
     "https://catalyst.natsuneko.com/terms",
+    // App Link のプレフィックスには一致するが、アプリに画面が無い Web 専用ページ
+    "https://catalyst.natsuneko.com/status/123/likes",
   ])("アプリが引き受けない %s はブラウザーで開く", async (url) => {
     await openLink(url);
 

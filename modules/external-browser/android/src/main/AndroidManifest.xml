@@ -1,0 +1,35 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!--
+    Android 11 (API 30) 以降、他アプリの存在確認には <queries> の宣言が必要で、
+    宣言していないスキームは Linking.canOpenURL が常に false を返す。
+    models/browser-settings.ts の ANDROID_SCHEME_BROWSERS / toBrowserSchemeUrl と対応させること。
+
+    明示的な intent (Intent.setPackage) の起動自体に宣言は不要だが、
+    起動前の判定と、インストール済みブラウザーの列挙にはこの宣言が要る。
+  -->
+  <queries>
+    <intent>
+      <action android:name="android.intent.action.VIEW" />
+      <data android:scheme="microsoft-edge-https" />
+    </intent>
+    <intent>
+      <action android:name="android.intent.action.VIEW" />
+      <data android:scheme="firefox" />
+    </intent>
+    <intent>
+      <action android:name="android.intent.action.VIEW" />
+      <data android:scheme="brave" />
+    </intent>
+    <intent>
+      <action android:name="android.intent.action.VIEW" />
+      <data android:scheme="ddgQuickLink" />
+    </intent>
+
+    <!-- インストール済みブラウザーの列挙 (expo-web-browser の browserPackages) 用 -->
+    <intent>
+      <action android:name="android.intent.action.VIEW" />
+      <category android:name="android.intent.category.BROWSABLE" />
+      <data android:scheme="https" />
+    </intent>
+  </queries>
+</manifest>
