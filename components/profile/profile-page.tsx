@@ -55,6 +55,8 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
   const [activeTab, setActiveTab] = useState(0);
   const [scrollY] = useState(() => new Animated.Value(0));
   const [headerHeight, setHeaderHeight] = useState(0);
+  const [isStickyTabBarInteractive, setIsStickyTabBarInteractive] =
+    useState(false);
   const NAV_BAR_HEIGHT = insets.top + 44;
   const isMyself = user?.id === account?.user.id;
   const tabContentRef = useRef<UserTimelineHandle>(null);
@@ -96,6 +98,25 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
   }, [scrollActiveTimelineToTopHandler]);
 
   useScrollToTop(scroller);
+
+  // The sticky tab bar overlay is visually hidden (opacity 0) until the header
+  // scrolls out of view. Keep it non-interactive while hidden, otherwise the
+  // invisible bar sits over the banner area and swallows taps — on Android this
+  // manifested as tapping the banner switching the profile tab (#10).
+  const stickyThreshold = headerHeight - 103;
+  useEffect(() => {
+    if (headerHeight <= 0) {
+      setIsStickyTabBarInteractive(false);
+      return;
+    }
+    const id = scrollY.addListener(({ value }) => {
+      setIsStickyTabBarInteractive((prev) => {
+        const next = value >= stickyThreshold;
+        return next === prev ? prev : next;
+      });
+    });
+    return () => scrollY.removeListener(id);
+  }, [scrollY, headerHeight, stickyThreshold]);
 
   const stickyTabBarOpacity =
     headerHeight > 0
@@ -313,7 +334,7 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
           width: screenWidth,
           opacity: stickyTabBarOpacity,
         }}
-        pointerEvents={headerHeight > 0 ? "auto" : "none"}
+        pointerEvents={isStickyTabBarInteractive ? "auto" : "none"}
       >
         <ProfileTabs
           activeIndex={activeTab}
