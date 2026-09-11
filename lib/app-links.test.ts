@@ -1,4 +1,4 @@
-import { getAppPathFromUrl } from "./app-links";
+import { getAppPathFromUrl, isCatalystUrl } from "./app-links";
 
 describe("getAppPathFromUrl", () => {
   it.each([
@@ -25,5 +25,18 @@ describe("getAppPathFromUrl", () => {
 
   it("壊れた URL は変更しない", () => {
     expect(getAppPathFromUrl("not a url")).toBe("not a url");
+  });
+});
+
+describe("isCatalystUrl", () => {
+  it.each([
+    ["https://catalyst.natsuneko.com/status/123", true],
+    ["http://catalyst.natsuneko.com/", true],
+    ["https://catalyst.stg.natsuneko.com/status/123", false],
+    ["https://example.com/status/123", false],
+    ["com.natsuneko.catalyst://authorize?code=code", false],
+    ["not a url", false],
+  ])("%s の判定は %s", (url, expected) => {
+    expect(isCatalystUrl(url)).toBe(expected);
   });
 });

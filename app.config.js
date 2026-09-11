@@ -70,7 +70,7 @@ module.exports = ({ config }) => {
           "firefox",
           "microsoft-edge-https",
           "brave",
-          "ddqQuickLink",
+          "ddgQuickLink",
         ],
       },
     },
