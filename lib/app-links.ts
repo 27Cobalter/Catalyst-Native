@@ -1,6 +1,20 @@
 const CATALYST_HOST = "catalyst.natsuneko.com";
 const LOCALE_PREFIX_PATTERN = /^\/(?:ja|en)(?=\/)/;
 
+/**
+ * Catalyst 自身が検証済み App Link として処理するホストの URL かどうか。
+ * Android では該当する URL を暗黙の Intent で開くと Catalyst に戻ってきてしまう。
+ */
+export const isCatalystUrl = (url: string): boolean => {
+  try {
+    const { protocol, hostname } = new URL(url);
+
+    return (protocol === "https:" || protocol === "http:") && hostname === CATALYST_HOST;
+  } catch {
+    return false;
+  }
+};
+
 export const getAppPathFromUrl = (path: string): string => {
   try {
     const url = new URL(path);
