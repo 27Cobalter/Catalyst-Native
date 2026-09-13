@@ -4,6 +4,7 @@ packages:
   - packages/*
 
 # package resolution
+nodeLinker: hoisted
 patchedDependencies:
   "@expo/cli": patches/@expo__cli.patch
   "@likashefqet/react-native-image-zoom": patches/@likashefqet__react-native-image-zoom.patch
