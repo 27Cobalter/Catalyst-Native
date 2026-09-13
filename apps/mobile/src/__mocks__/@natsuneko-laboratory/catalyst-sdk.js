@@ -1,3 +1,5 @@
+/* global jest */
+
 // テスト用の手動モック。`jest.mock("@natsuneko-laboratory/catalyst-sdk")` で
 // 明示的に opt-in したテストでのみ使われる。
 // 実際の HTTP 通信は行わず、コンストラクタに渡された値の検査と、

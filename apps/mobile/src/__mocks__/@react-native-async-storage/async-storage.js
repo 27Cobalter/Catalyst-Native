@@ -1,3 +1,5 @@
+/* global jest */
+
 // テスト用の in-memory モック。`jest.mock("@react-native-async-storage/async-storage")`
 // で明示的に opt-in したテストでのみ使われる (settings 系の永続化テスト用)。
 let store = {};

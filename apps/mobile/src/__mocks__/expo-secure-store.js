@@ -1,3 +1,5 @@
+/* global jest */
+
 // テスト用の in-memory モック。`jest.mock("expo-secure-store")` で明示的に
 // opt-in したテストでのみ使われる。
 let store = {};

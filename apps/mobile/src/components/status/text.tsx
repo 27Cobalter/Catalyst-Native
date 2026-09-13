@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { underlineLinksAtom } from "@/models/atoms/accessibility";
 import { openUrlWithBrowser } from "@/models/browser-settings";
 import { extractEntities } from "@natsuneko-laboratory/react-native-twitter-text";
-import { Link } from "expo-router";
+import { Link, type Href } from "expo-router";
 import { useAtomValue } from "jotai";
 import React, { Fragment, useCallback, useMemo } from "react";
 import { Text, View } from "react-native";
@@ -127,7 +127,7 @@ export const StatusText = React.memo(
             a: ({ href, children }: { href: string; children: React.ReactNode }) => {
               if (href.startsWith("/")) {
                 return (
-                  <UniLink className={resolvedLinkClassName} href={href}>
+                  <UniLink className={resolvedLinkClassName} href={href as Href}>
                     {children}
                   </UniLink>
                 );

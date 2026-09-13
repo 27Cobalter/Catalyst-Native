@@ -13,7 +13,7 @@ module.exports = {
     "/node_modules/@react-native/babel-preset/",
   ],
   moduleNameMapper: {
-    "^@/(.*)$": "<rootDir>/$1",
+    "^@/(.*)$": "<rootDir>/src/$1",
   },
   testMatch: ["<rootDir>/**/*.test.ts", "<rootDir>/**/*.test.tsx"],
   testPathIgnorePatterns: ["/node_modules/", "/ios/", "/android/", "/.expo/"],
