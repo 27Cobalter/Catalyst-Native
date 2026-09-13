@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 
-import iconUrl from "../../images/icon.png";
 import type { FormatKey, StoreFormat, StoreSlide } from "../content";
+import iconUrl from "../images/icon.png";
 
 const screenshots = import.meta.glob<string>("../screenshots/*.PNG", {
   eager: true,
@@ -82,10 +82,10 @@ export function StoreCanvas({ editable = false, format, formatKey, slide }: Stor
 
         <div
           className={`absolute overflow-hidden border-b-0 border-[#202126] bg-[#202126] shadow-[0_36px_80px_rgba(20,23,30,0.22)] ${isIpad
-              ? "top-[845px] left-[194px] w-[1660px] rounded-t-[66px] border-[66px]"
-              : compact
-                ? "top-[748px] left-[76px] w-[928px] rounded-t-[112px] border-[18px]"
-                : "top-[845px] left-[76px] w-[1132px] rounded-t-[112px] border-[18px]"
+            ? "top-[845px] left-[194px] w-[1660px] rounded-t-[66px] border-[66px]"
+            : compact
+              ? "top-[748px] left-[76px] w-[928px] rounded-t-[112px] border-[18px]"
+              : "top-[845px] left-[76px] w-[1132px] rounded-t-[112px] border-[18px]"
             }`}
         >
           <div className={`relative overflow-hidden bg-black ${isIpad ? "rounded-t-[10px]" : "rounded-t-[90px]"}`}>

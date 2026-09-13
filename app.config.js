@@ -148,8 +148,7 @@ module.exports = ({ config }) => {
           assets: [
             //
             "assets/images/emoji-test.txt",
-            "assets/images/ui/*.json",
-            "assets/images/ui/*.svg",
+            "assets/images/ui",
           ],
         },
       ],

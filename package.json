@@ -29,11 +29,6 @@
     "submit:android:production": "eas submit --platform android --profile production",
     "submit:ios:preview": "eas submit --platform ios --profile preview",
     "submit:ios:production": "eas submit --platform ios --profile production",
-    "store-shots:dev": "vite --config ./assets/store-screenshots/vite.config.ts",
-    "store-shots:build": "vite build --config ./assets/store-screenshots/vite.config.ts",
-    "store-shots:preview": "vite preview --config ./assets/store-screenshots/vite.config.ts",
-    "store-shots:typecheck": "tsc --noEmit -p ./assets/store-screenshots/tsconfig.json",
-    "store-shots:export": "pnpm store-shots:build && tsx ./assets/store-screenshots/export.ts",
     "lint": "expo lint",
     "expo": "expo",
     "with-env": "dotenv -e .env.local --",
@@ -127,7 +122,6 @@
     "@callstack/licenses": "^0.3.2",
     "@oxfmt/binding-darwin-arm64": "^0.66.0",
     "@oxfmt/binding-win32-x64-msvc": "^0.66.0",
-    "@tailwindcss/vite": "^4.3.3",
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "^30.0.0",
     "@types/node": "26.4.1",
@@ -135,7 +129,6 @@
     "@types/react-dom": "^19.2.5",
     "@types/twitter-text": "^3.1.10",
     "@typescript/native": "npm:typescript@^7.0.2",
-    "@vitejs/plugin-react": "^6.1.1",
     "babel-preset-expo": "^57.0.7",
     "cross-env": "^10.1.0",
     "dotenv-cli": "^11.0.0",
@@ -148,7 +141,6 @@
     "npm-run-all2": "^9.0.3",
     "oxfmt": "^0.66.0",
     "tsx": "^4.23.13",
-    "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "vite": "^8.2.2"
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   }
 }
