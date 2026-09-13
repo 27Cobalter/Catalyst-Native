@@ -5,12 +5,12 @@ iOS / Android / macOS / Windows それぞれにあり、 React Native で開発�
 
 ## プラットフォーム
 
-| Platform | Directory      | Framework           |
-| -------- | -------------- | ------------------- |
-| iOS      | `apps/mobile`  | RN 0.86.2 + Expo 57 |
-| Android  | `apps/mobile`  | RN 0.86.2 + Expo 57 |
-| macOS    | `apps/macos`   | -                   |
-| Windows  | `apps/windows` | -                   |
+| Platform | Directory      | Framework                     |
+| -------- | -------------- | ----------------------------- |
+| iOS      | `apps/mobile`  | RN 0.86.2 + Expo 57           |
+| Android  | `apps/mobile`  | RN 0.86.2 + Expo 57           |
+| macOS    | `apps/macos`   | RN 0.81.6 + RN (macOS) 0.81.9 |
+| Windows  | `apps/windows` | -                             |
 
 ## ライセンス
 
