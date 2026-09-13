@@ -1,5 +1,5 @@
 {
-  "name": "catalyst-native",
+  "name": "@natsuneko-laboratory/catalyst-mobile",
   "version": "1.1.1",
   "private": true,
   "main": "expo-router/entry",
@@ -114,7 +114,7 @@
     "tailwindcss": "^4.3.3",
     "twitter-text": "^3.1.0",
     "unified": "^11.0.5",
-    "uniwind": "1.5.0",
+    "uniwind": "1.12.0",
     "uuid": "^14.0.2",
     "zod": "^4.5.4"
   },
