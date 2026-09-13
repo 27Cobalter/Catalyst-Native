@@ -8,7 +8,7 @@
     ],
     "paths": {
       "@/*": [
-        "./*"
+        "./src/*"
       ]
     }
   },
@@ -19,5 +19,7 @@
     "expo-env.d.ts",
     "nativewind-env.d.ts"
   ],
-  "exclude": ["assets/store-screenshots"]
+  "exclude": [
+    "assets/store-screenshots"
+  ]
 }

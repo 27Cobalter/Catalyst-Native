@@ -4,16 +4,12 @@ import { clientAtom } from "@/models/atoms/credential";
 import type { CatalystStatus, CatalystStatusV1_1 } from "@/models/sdk-types";
 import { useAtomValue } from "jotai";
 import LottieView from 'lottie-react-native';
-import { Heart, Repeat2 } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { Pressable, useColorScheme, View } from "react-native";
 import Toast from "react-native-toast-message";
-import { withUniwind } from "uniwind";
 import { Favorite, FavoriteFill } from "../svg/favorite";
 import { Repost } from "../svg/repost";
 
-const UniHeart = withUniwind(Heart);
-const UniRepeat2 = withUniwind(Repeat2);
 
 type Props = {
   isDefaultFavorited: boolean;
@@ -103,7 +99,7 @@ export const ActionBar = ({ isDefaultFavorited, isDefaultReposted, status }: Pro
         )}
       >
         {isTogglingFavorite.animation ? <LottieView
-          source={require("../../assets/images/ui/favorite-anim.lottie.json")}
+          source={require("@/assets/images/ui/favorite-anim.lottie.json")}
           style={{ width: 24, height: 24 }} autoPlay loop={false}
           colorFilters={[
             {
@@ -145,7 +141,7 @@ export const ActionBar = ({ isDefaultFavorited, isDefaultReposted, status }: Pro
         )}
       >
         {isTogglingRepost.animation ? <LottieView
-          source={require("../../assets/images/ui/repost-anim.lottie.json")}
+          source={require("@/assets/images/ui/repost-anim.lottie.json")}
           style={{ width: 24, height: 24 }} autoPlay loop={false}
           colorFilters={[
             {

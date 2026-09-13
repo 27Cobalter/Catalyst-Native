@@ -7,6 +7,6 @@ const config = getSentryExpoConfig(__dirname);
 config.resolver.assetExts.push("txt");
 
 module.exports = withUniwindConfig(config, {
-  cssEntryFile: "./global.css",
+  cssEntryFile: "./src/global.css",
   dtsFile: "uniwind-types.d.ts",
 });

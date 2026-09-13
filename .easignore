@@ -45,10 +45,6 @@ app-example
 *.aab
 *.ipa
 
-# store assets
-assets/appstore-connect/
-assets/store-banner/
-
 # desktop apps
 apps/asset-studio/
 apps/macos/
