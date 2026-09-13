@@ -10,6 +10,15 @@ patchedDependencies:
   react-native: patches/react-native.patch
   react-native-image-crop-picker@0.51.1: patches/react-native-image-crop-picker@0.51.1.patch
 
+# catalog
+catalog:
+  "@natsuneko-laboratory/catalyst-sdk": 1.0.0-alpha.17
+  "@natsuneko-laboratory/fleet-renderer-core": 0.2.0
+  "@natsuneko-laboratory/fleet-renderer-react-native": 0.1.0
+  "@natsuneko-laboratory/memora": 0.3.0
+  "@natsuneko-laboratory/react-native-twitter-text": 0.1.0
+  "@natsuneko-laboratory/react-native-webcrypto-digest": 0.1.0
+
 # security
 allowBuilds:
   "@firebase/util": false
