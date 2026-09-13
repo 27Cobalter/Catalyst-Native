@@ -8,7 +8,7 @@ nodeLinker: hoisted
 patchedDependencies:
   "@expo/cli": patches/@expo__cli.patch
   "@likashefqet/react-native-image-zoom": patches/@likashefqet__react-native-image-zoom.patch
-  react-native: patches/react-native.patch
+  react-native@0.86.2: patches/react-native@0.86.2.patch
   react-native-image-crop-picker@0.51.1: patches/react-native-image-crop-picker@0.51.1.patch
 
 # catalog
