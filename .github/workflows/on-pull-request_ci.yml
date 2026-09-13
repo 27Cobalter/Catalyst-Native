@@ -29,16 +29,16 @@ jobs:
 
       - name: Build Dependencies
         run: |
-          pnpm prebuilt
+          pnpm --dir apps/mobile prebuilt
 
       - name: Lint
         run: |
-          pnpm lint
+          pnpm --dir apps/mobile lint
 
       - name: Typecheck
         run: |
-          pnpm typecheck
+          pnpm --dir apps/mobile typecheck
 
       - name: Test
         run: |
-          pnpm test --ci
+          pnpm --dir apps/mobile test --ci
