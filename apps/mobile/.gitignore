@@ -1,3 +1,6 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
 node_modules/
 
 # Expo
@@ -29,10 +32,12 @@ yarn-error.*
 
 # local env files
 .env*.local
-.env.local
 
 # typescript
 *.tsbuildinfo
+
+# test coverage
+/coverage
 
 app-example
 
@@ -40,12 +45,13 @@ app-example
 /ios
 /android
 
+.env.local
+
 # build output
 *.apk
 *.aab
 *.ipa
 
-# desktop apps
-apps/asset-studio/
-apps/macos/
-apps/windows/
+# Google Services
+google-services.json
+GoogleService-Info.plist

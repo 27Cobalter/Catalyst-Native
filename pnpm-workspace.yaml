@@ -1,5 +1,26 @@
+# monorepo
 packages:
-  - catalyst-native
+  - apps/*
+  - packages/*
+
+# package resolution
+nodeLinker: hoisted
+patchedDependencies:
+  "@expo/cli": patches/@expo__cli.patch
+  "@likashefqet/react-native-image-zoom": patches/@likashefqet__react-native-image-zoom.patch
+  react-native@0.86.2: patches/react-native@0.86.2.patch
+  react-native-image-crop-picker@0.51.1: patches/react-native-image-crop-picker@0.51.1.patch
+
+# catalog
+catalog:
+  "@natsuneko-laboratory/catalyst-sdk": 1.0.0-alpha.17
+  "@natsuneko-laboratory/fleet-renderer-core": 0.2.0
+  "@natsuneko-laboratory/fleet-renderer-react-native": 0.1.0
+  "@natsuneko-laboratory/memora": 0.3.0
+  "@natsuneko-laboratory/react-native-twitter-text": 0.1.0
+  "@natsuneko-laboratory/react-native-webcrypto-digest": 0.1.0
+
+# security
 allowBuilds:
   "@firebase/util": false
   "@sentry/cli": true
@@ -9,16 +30,12 @@ allowBuilds:
   msgpackr-extract: false
   protobufjs: false
   unrs-resolver: true
+
 minimumReleaseAge: 4320
 minimumReleaseAgeExclude:
-  - '@natsuneko-laboratory/catalyst-sdk'
-  - '@natsuneko-laboratory/react-native-twitter-text'
-  - '@natsuneko-laboratory/fleet-renderer-core'
-  - '@natsuneko-laboratory/fleet-renderer-react-native'
-  - '@natsuneko-laboratory/memora'
-  - '@natsuneko-laboratory/react-native-webcrypto-digest@0.1.0'
-patchedDependencies:
-  "@expo/cli": patches/@expo__cli.patch
-  "@likashefqet/react-native-image-zoom": patches/@likashefqet__react-native-image-zoom.patch
-  react-native: patches/react-native.patch
-  react-native-image-crop-picker@0.51.1: patches/react-native-image-crop-picker@0.51.1.patch
+  - "@natsuneko-laboratory/catalyst-sdk"
+  - "@natsuneko-laboratory/fleet-renderer-core"
+  - "@natsuneko-laboratory/fleet-renderer-react-native"
+  - "@natsuneko-laboratory/memora"
+  - "@natsuneko-laboratory/react-native-twitter-text"
+  - "@natsuneko-laboratory/react-native-webcrypto-digest"
