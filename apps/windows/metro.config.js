@@ -1,11 +1,9 @@
-const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
+const { getDefaultConfig, mergeConfig } = require("@react-native/metro-config");
+const { withUniwindConfig } = require("uniwind/metro");
+const fs = require("fs");
+const path = require("node:path");
 
-const fs = require('fs');
-const path = require('node:path');
-
-const rnwPath = fs.realpathSync(
-  path.resolve(require.resolve('react-native-windows/package.json'), '..'),
-);
+const rnwPath = fs.realpathSync(path.resolve(require.resolve("react-native-windows/package.json"), ".."));
 
 //
 
@@ -18,18 +16,13 @@ const rnwPath = fs.realpathSync(
 
 const config = {
   //
-  watchFolders: [path.resolve(__dirname, '../..')],
+  watchFolders: [path.resolve(__dirname, "../..")],
   resolver: {
-    nodeModulesPaths: [
-      path.resolve(__dirname, 'node_modules'),
-      path.resolve(__dirname, '../../node_modules'),
-    ],
+    nodeModulesPaths: [path.resolve(__dirname, "node_modules"), path.resolve(__dirname, "../../node_modules")],
     disableHierarchicalLookup: true,
     blockList: [
       // This stops "npx @react-native-community/cli run-windows" from causing the metro server to crash if its already running
-      new RegExp(
-        `${path.resolve(__dirname, 'windows').replace(/[/\\]/g, '/')}.*`,
-      ),
+      new RegExp(`${path.resolve(__dirname, "windows").replace(/[/\\]/g, "/")}.*`),
       // This prevents "npx @react-native-community/cli run-windows" from hitting: EBUSY: resource busy or locked, open msbuild.ProjectImports.zip or other files produced by msbuild
       new RegExp(`${rnwPath}/build/.*`),
       new RegExp(`${rnwPath}/target/.*`),
@@ -47,4 +40,7 @@ const config = {
   },
 };
 
-module.exports = mergeConfig(getDefaultConfig(__dirname), config);
+module.exports = withUniwindConfig(mergeConfig(getDefaultConfig(__dirname), config), {
+  cssEntryFile: "./src/global.css",
+  dtsFile: "./src/uniwind-types.d.ts",
+});

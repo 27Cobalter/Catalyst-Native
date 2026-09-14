@@ -1,4 +1,9 @@
 {
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
   "editor.codeActionsOnSave": {
     "source.fixAll": "explicit",
     "source.organizeImports": "explicit",
@@ -34,5 +39,16 @@
     "ListFooterComponentClassName",
     "ListHeaderComponentClassName"
   ],
-  "tailwindCSS.classFunctions": ["useResolveClassNames"]
+  "tailwindCSS.classFunctions": [
+    "useResolveClassNames"
+  ],
+  "files.watcherExclude": {
+    ".git/objects/**": true,
+    ".git/subtree-cache/**": true,
+    ".hg/store/**": true,
+    "*/.git/objects/**": true,
+    "*/.git/subtree-cache/**": true,
+    "*/.hg/store/**": true,
+    "*/node_modules/**": true
+  }
 }
