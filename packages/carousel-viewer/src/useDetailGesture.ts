@@ -35,9 +35,10 @@ type Options = {
 };
 
 const TAP_SLOP = 8;
-const TAP_MAX_DURATION = 250;
+const TAP_MAX_DURATION = 400;
+// Measured from the first tap's release to the second tap's press.
 const DOUBLE_TAP_DELAY = 300;
-const DOUBLE_TAP_DISTANCE = 32;
+const DOUBLE_TAP_DISTANCE = 48;
 // Fraction of the width a slow drag needs to change pages; flicks page by velocity.
 const PAGING_DISTANCE = 0.1;
 
@@ -95,7 +96,10 @@ export function useDetailGesture(o: Options) {
     pressTimer = useSharedValue(0);
   const lastTapTime = useSharedValue(0),
     lastTapX = useSharedValue(0),
-    lastTapY = useSharedValue(0);
+    lastTapY = useSharedValue(0),
+    doubleTapCandidate = useSharedValue(false);
+  // A touch that started during an interruptible settle; the settle keeps animating until the touch moves or pinches.
+  const takeover = useSharedValue(false);
 
   useEffect(
     () => () => {
@@ -128,6 +132,7 @@ export function useDetailGesture(o: Options) {
     pointerA.value = pointerB.value = -1;
     pressRevision.value += 1;
     lastTapTime.value = 0;
+    takeover.value = false;
   }, [
     index,
     width,
@@ -150,11 +155,40 @@ export function useDetailGesture(o: Options) {
     pointerB,
     pressRevision,
     lastTapTime,
+    takeover,
   ]);
+  const settleDone = (revision: number) => {
+    "worklet";
+    return (finished?: boolean) => {
+      "worklet";
+      if (finished && settleRevision.value === revision) {
+        pending.value -= 1;
+        if (pending.value === 0) {
+          interruptible.value = false;
+          // A touch that took over the settle owns the mode; it resumes or ends the settle itself.
+          if (mode.value === "settling") mode.value = "idle";
+        }
+      }
+    };
+  };
+  // Stops a settle that a touch took over, freezing transforms at their current visual position.
+  const takeOver = () => {
+    "worklet";
+    if (!takeover.value) return;
+    takeover.value = false;
+    settleRevision.value += 1;
+    for (const value of [scale, x, y, pager, dismiss]) cancelAnimation(value);
+    pending.value = 0;
+    interruptible.value = false;
+    savedX.value = x.value;
+    savedY.value = y.value;
+    pagerStart.value = pager.value;
+  };
   // Without targets, recovers the current transform into bounds; with targets, animates a zoom (double tap).
   const settle = (targetScale?: number, targetX?: number, targetY?: number) => {
     "worklet";
-    interruptible.value = targetScale !== undefined || mode.value === "pinching" || mode.value === "panning";
+    interruptible.value =
+      targetScale !== undefined || mode.value === "pinching" || mode.value === "panning" || mode.value === "undecided";
     mode.value = "settling";
     const revision = ++settleRevision.value;
     const target = clamp(targetScale ?? scale.value, minScale, maxScale);
@@ -173,21 +207,24 @@ export function useDetailGesture(o: Options) {
       interruptible.value = false;
       return;
     }
-    const done = (finished?: boolean) => {
-      "worklet";
-      if (finished && settleRevision.value === revision) {
-        pending.value -= 1;
-        if (pending.value === 0) {
-          mode.value = "idle";
-          interruptible.value = false;
-        }
-      }
-    };
+    const done = settleDone(revision);
     for (const [value, destination] of corrections) {
       if (value.value !== destination) value.value = withSpring(destination, spring, done);
     }
   };
 
+  // Ends a touch that did not take ownership: let a taken-over settle keep running, otherwise settle.
+  const resume = () => {
+    "worklet";
+    if (takeover.value) {
+      takeover.value = false;
+      if (pending.value > 0) {
+        mode.value = "settling";
+        return;
+      }
+    }
+    settle();
+  };
   const gesture = Gesture.Manual()
     .shouldCancelWhenOutside(false)
     .onTouchesDown((e, manager) => {
@@ -202,14 +239,12 @@ export function useDetailGesture(o: Options) {
           blocked.value = true;
           return;
         }
-        // A fresh touch takes over zoom recovery at its current visual position.
-        settleRevision.value += 1;
-        for (const value of [scale, x, y, pager, dismiss]) cancelAnimation(value);
-        pending.value = 0;
-        interruptible.value = false;
+        // Keep animating so a tap (e.g. the first half of a double tap) does not freeze the settle.
+        takeover.value = true;
         mode.value = "idle";
       }
       if (e.numberOfTouches > 2) {
+        takeOver();
         blocked.value = true;
         settle();
         return;
@@ -222,6 +257,7 @@ export function useDetailGesture(o: Options) {
           settle();
           return;
         }
+        takeOver();
         const a = e.allTouches[0],
           b = e.allTouches[1];
         pointerA.value = a.id;
@@ -246,6 +282,9 @@ export function useDetailGesture(o: Options) {
         pagerStart.value = pager.value;
         downTime.value = lastTime.value;
         moved.value = longPressed.value = false;
+        doubleTapCandidate.value =
+          downTime.value - lastTapTime.value <= DOUBLE_TAP_DELAY &&
+          Math.hypot(a.x - lastTapX.value, a.y - lastTapY.value) <= DOUBLE_TAP_DISTANCE;
         if (onLongPress) {
           const revision = pressRevision.value;
           // A UI-thread timer: the timing animation only exists to call back after the duration.
@@ -332,6 +371,8 @@ export function useDetailGesture(o: Options) {
           if (direction === "paging" && scale.value <= pagingScaleThreshold) mode.value = direction;
           if (direction === "dismissing" && scale.value <= dismissScaleThreshold) mode.value = direction;
         }
+        // The drag now owns the transforms; continue from where the settle currently is.
+        if (mode.value !== "undecided") takeOver();
       }
 
       if (mode.value === "panning") {
@@ -388,14 +429,9 @@ export function useDetailGesture(o: Options) {
         // A new touch may grab the pager while it springs, so consecutive swipes are never dropped.
         mode.value = "settling";
         interruptible.value = true;
-        pending.value = 0;
+        pending.value = 1;
         const revision = ++settleRevision.value;
-        pager.value = withSpring(-target * width, { ...spring, velocity: vx }, (finished) => {
-          if (finished && settleRevision.value === revision) {
-            mode.value = "idle";
-            interruptible.value = false;
-          }
-        });
+        pager.value = withSpring(-target * width, { ...spring, velocity: vx }, settleDone(revision));
         // Report immediately so the next swipe and the indicator do not wait for the spring to rest.
         if (target !== from) scheduleOnRN(onIndexChange, target);
       } else if (mode.value === "dismissing" && shouldDismiss(dismiss.value, vy, height)) {
@@ -415,13 +451,10 @@ export function useDetailGesture(o: Options) {
         !longPressed.value &&
         Date.now() - downTime.value <= TAP_MAX_DURATION
       ) {
-        const now = Date.now();
-        const isDoubleTap =
-          doubleTapScale > 1 &&
-          now - lastTapTime.value <= DOUBLE_TAP_DELAY &&
-          Math.hypot(lastX.value - lastTapX.value, lastY.value - lastTapY.value) <= DOUBLE_TAP_DISTANCE;
-        if (isDoubleTap) {
+        if (doubleTapScale > 1 && doubleTapCandidate.value) {
           lastTapTime.value = 0;
+          // Zoom from the current (possibly mid-animation) transform.
+          takeOver();
           if (scale.value > pagingScaleThreshold) settle(1, 0, 0);
           else {
             const target = clamp(doubleTapScale, minScale, maxScale);
@@ -434,18 +467,19 @@ export function useDetailGesture(o: Options) {
             );
           }
         } else {
-          lastTapTime.value = now;
+          lastTapTime.value = Date.now();
           lastTapX.value = lastX.value;
           lastTapY.value = lastY.value;
-          settle();
+          resume();
         }
-      } else settle();
+      } else resume();
       manager.end();
     })
     .onTouchesCancelled((_e, manager) => {
       pressRevision.value += 1;
       restartPinch.value = false;
       blocked.value = false;
+      takeOver();
       settle();
       manager.fail();
     });

@@ -238,3 +238,68 @@ test("paging reports the page on release and a new swipe can take over the runni
   assert.equal(g.pager.value, -400);
   assert.equal(g.mode.value, "idle");
 });
+function withClock(run) {
+  const realNow = Date.now;
+  let now = 10_000;
+  Date.now = () => now;
+  try {
+    run((ms) => (now += ms));
+  } finally {
+    Date.now = realNow;
+  }
+}
+test("a relaxed double tap zooms: the delay is measured from release to the next press", () => {
+  withClock((advance) => {
+    const { g, event, flush } = setup({ doubleTapScale: 2 });
+    event("onTouchesDown", [point(1, 200, 400)]);
+    advance(150);
+    event("onTouchesUp", []);
+    advance(250);
+    event("onTouchesDown", [point(1, 230, 420)]);
+    advance(200);
+    event("onTouchesUp", []);
+    flush();
+    assert.equal(g.scale.value, 2);
+  });
+});
+test("double tap right after a swipe zooms instead of being blocked by the paging spring", () => {
+  withClock((advance) => {
+    const { g, event, flush, changes } = setup({ doubleTapScale: 2 });
+    event("onTouchesDown", [point(1, 300, 400)]);
+    advance(16);
+    event("onTouchesMove", [point(1, 200, 400)]);
+    advance(16);
+    event("onTouchesUp", []);
+    assert.deepEqual(changes, [2]);
+    // The paging spring is still on its way to page 2.
+    g.pager.value = -700;
+    advance(100);
+    event("onTouchesDown", [point(1, 200, 400)]);
+    advance(80);
+    event("onTouchesUp", []);
+    // The first tap leaves the spring running rather than freezing it.
+    assert.equal(g.mode.value, "settling");
+    advance(120);
+    event("onTouchesDown", [point(1, 200, 400)]);
+    advance(80);
+    event("onTouchesUp", []);
+    flush();
+    assert.equal(g.scale.value, 2);
+    assert.equal(g.pager.value, -800);
+    assert.equal(g.mode.value, "idle");
+  });
+});
+test("slow separate taps do not zoom", () => {
+  withClock((advance) => {
+    const { g, event, flush } = setup({ doubleTapScale: 2 });
+    event("onTouchesDown", [point(1, 200, 400)]);
+    advance(80);
+    event("onTouchesUp", []);
+    advance(500);
+    event("onTouchesDown", [point(1, 200, 400)]);
+    advance(80);
+    event("onTouchesUp", []);
+    flush();
+    assert.equal(g.scale.value, 1);
+  });
+});
