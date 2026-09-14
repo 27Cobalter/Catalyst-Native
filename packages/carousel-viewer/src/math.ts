@@ -21,11 +21,18 @@ export function getPanBounds(width: number, height: number, baseWidth: number, b
   return { x: Math.max(0, (baseWidth * scale - width) / 2), y: Math.max(0, (baseHeight * scale - height) / 2) };
 }
 
-export function getPagingTarget(index: number, count: number, translation: number, velocity: number, width: number) {
+export function getPagingTarget(
+  index: number,
+  count: number,
+  translation: number,
+  velocity: number,
+  width: number,
+  distanceRatio = 0.2,
+) {
   "worklet";
   const direction = Math.abs(velocity) > 500 ? velocity : translation;
   return clamp(
-    index + (Math.abs(translation) > width * 0.2 || Math.abs(velocity) > 500 ? -Math.sign(direction) : 0),
+    index + (Math.abs(translation) > width * distanceRatio || Math.abs(velocity) > 500 ? -Math.sign(direction) : 0),
     0,
     Math.max(0, count - 1),
   );

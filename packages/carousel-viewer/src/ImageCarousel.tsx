@@ -17,6 +17,9 @@ import { PageIndicator } from "./PageIndicator";
 import { styles } from "./styles";
 import type { PagerProps } from "./types";
 
+// Fraction of the width a slow drag needs to change pages; flicks page by velocity.
+const CAROUSEL_PAGING_DISTANCE = 0.1;
+
 type Props = PagerProps & { onOpenDetail: (index: number) => void };
 
 function CarouselPages({
@@ -27,26 +30,32 @@ function CarouselPages({
 }: Props & { width: number; height: number; offset: SharedValue<number> }) {
   const { images, index, onIndexChange, onOpenDetail, renderImage, detailEnabled = true } = props;
   const { reduced, spring } = useMotion(props.reduceMotion);
+  // Page the track is at or springing to. Gestures read this instead of `index`, which lags behind until re-render.
+  const page = useSharedValue(index);
   const settling = useSharedValue(false);
+  const dragStart = useSharedValue(0);
+  const count = images.length;
   const previous = useRef({ index, width });
   // Page the animation starts from, so pages in between stay mounted while jumping several pages.
   const [jumpFrom, setJumpFrom] = useState<number | null>(null);
   useEffect(() => () => cancelAnimation(offset), [offset]);
   useLayoutEffect(() => {
     const target = -index * width;
-    // Swipes already ended at the target; external index changes (e.g. indicator taps) spring there.
-    const animate =
-      !reduced && previous.current.width === width && previous.current.index !== index && offset.value !== target;
-    const from = previous.current.index;
+    const from = previous.current;
     previous.current = { index, width };
+    // A swipe already moved `page` here and is springing with its fling velocity; leave it running.
+    if (from.width === width && from.index !== index && page.value === index) return;
+    // External index changes (e.g. indicator taps) spring there; resizes snap.
+    const animate = !reduced && from.width === width && from.index !== index && offset.value !== target;
     cancelAnimation(offset);
+    page.value = index;
     if (!animate) {
       offset.value = target;
       settling.value = false;
       setJumpFrom(null);
       return;
     }
-    setJumpFrom(Math.abs(from - index) > 1 ? from : null);
+    setJumpFrom(Math.abs(from.index - index) > 1 ? from.index : null);
     settling.value = true;
     offset.value = withSpring(target, spring, (finished) => {
       if (finished) {
@@ -55,7 +64,7 @@ function CarouselPages({
       }
     });
     // `spring` is rebuilt every render; it only depends on the reduce-motion values listed here.
-  }, [index, width, offset, settling, reduced, props.reduceMotion]);
+  }, [index, width, offset, page, settling, reduced, props.reduceMotion]);
   const firstPage = Math.max(0, Math.min(index, jumpFrom ?? index) - 1);
   const lastPage = Math.max(index, jumpFrom ?? index) + 1;
 
@@ -63,29 +72,46 @@ function CarouselPages({
     .maxPointers(1)
     .activeOffsetX([-8, 8])
     .failOffsetY([-12, 12])
+    .onStart(() => {
+      // Grab the track where it is, even mid-spring, so consecutive swipes are never dropped.
+      cancelAnimation(offset);
+      settling.value = false;
+      dragStart.value = offset.value;
+    })
     .onUpdate((e) => {
-      if (settling.value) return;
-      offset.value =
-        -index * width +
-        rubberBand(e.translationX, index === images.length - 1 ? 0 : -width, index === 0 ? 0 : width, width);
+      // Only the neighbours of `page` are mounted, so resist beyond them (and beyond the ends).
+      offset.value = rubberBand(
+        dragStart.value + e.translationX,
+        -Math.min(page.value + 1, count - 1) * width,
+        -Math.max(page.value - 1, 0) * width,
+        width,
+      );
     })
     .onEnd((e) => {
-      if (settling.value) return;
+      const from = page.value;
+      const target = getPagingTarget(
+        from,
+        count,
+        offset.value + from * width,
+        e.velocityX,
+        width,
+        CAROUSEL_PAGING_DISTANCE,
+      );
+      page.value = target;
       settling.value = true;
-      const target = getPagingTarget(index, images.length, e.translationX, e.velocityX, width);
       offset.value = withSpring(-target * width, { ...spring, velocity: e.velocityX }, (finished) => {
-        if (finished) {
-          if (target !== index) scheduleOnRN(onIndexChange, target);
-          else settling.value = false;
-        }
+        if (finished) settling.value = false;
       });
+      // Report immediately so the next swipe and the indicator do not wait for the spring to rest.
+      if (target !== from) scheduleOnRN(onIndexChange, target);
     })
     .onFinalize((_e, success) => {
-      if (!success && !settling.value) offset.value = withSpring(-index * width, spring);
+      if (!success && !settling.value && offset.value !== -page.value * width)
+        offset.value = withSpring(-page.value * width, spring);
     });
 
   const tap = Gesture.Tap().onEnd((_e, success) => {
-    if (success && detailEnabled && !settling.value) scheduleOnRN(onOpenDetail, index);
+    if (success && detailEnabled && !settling.value) scheduleOnRN(onOpenDetail, page.value);
   });
 
   const animated = useAnimatedStyle(() => ({ transform: [{ translateX: offset.value }] }));

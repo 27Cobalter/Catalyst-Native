@@ -20,6 +20,7 @@ function builder(manual = false) {
     "maxPointers",
     "activeOffsetX",
     "failOffsetY",
+    "onStart",
     "onUpdate",
     "onEnd",
     "onFinalize",
@@ -222,5 +223,31 @@ test("carousel keeps intermediate pages mounted while springing to a distant ind
   );
   await act(() => renderer.update(React.createElement(ImageCarousel, { ...props, index: 3 })));
   for (const index of [0, 1, 2, 3]) assert.ok(imageNode(renderer, index), `page ${index} is mounted`);
+  await act(() => renderer.unmount());
+});
+
+test("carousel pages on a short drag and accepts the next swipe before re-render", async () => {
+  const changes = [];
+  let renderer;
+  await act(() => {
+    renderer = create(React.createElement(ImageCarousel, { ...props, onIndexChange: (i) => changes.push(i) }));
+  });
+  await act(() =>
+    renderer.root
+      .find((node) => typeof node.props.onLayout === "function")
+      .props.onLayout({ nativeEvent: { layout: { width: 400, height: 400 } } }),
+  );
+  const [pan] = renderer.root.findByType("GestureDetector").props.gesture;
+  const swipe = (translationX) => {
+    pan.callbacks.onStart();
+    pan.callbacks.onUpdate({ translationX });
+    pan.callbacks.onEnd({ translationX, velocityX: 0 });
+  };
+  swipe(-50);
+  swipe(-50);
+  assert.deepEqual(changes, [1, 2]);
+  // A drag under 10% of the width returns to the current page.
+  swipe(-30);
+  assert.deepEqual(changes, [1, 2]);
   await act(() => renderer.unmount());
 });
