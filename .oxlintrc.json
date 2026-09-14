@@ -1,0 +1,48 @@
+{
+  "plugins": [],
+  "jsPlugins": [
+    "oxlint-tailwindcss",
+    {
+      "name": "react-native",
+      "specifier": "oxlint-plugin-react-native"
+    }
+  ],
+  "rules": {
+    "react-native/no-unused-styles": "error",
+    "react-native/split-platform-components": "warn",
+    "react-native/no-inline-styles": "warn",
+    "react-native/no-color-literals": "warn",
+    "react-native/no-raw-text": "off",
+    // Correctness — catch real bugs
+    "tailwindcss/no-conflicting-classes": "error",
+    "tailwindcss/no-deprecated-classes": "error",
+    "tailwindcss/no-duplicate-classes": "warn",
+    "tailwindcss/no-unknown-classes": "error",
+    // Modernization — keep classes in current canonical form
+    "tailwindcss/enforce-canonical": "warn",
+    "tailwindcss/no-unnecessary-arbitrary-value": "warn",
+    // Style and consistency
+    "tailwindcss/enforce-sort-order": "warn",
+    "tailwindcss/consistent-variant-order": "warn",
+    "tailwindcss/enforce-consistent-important-position": "warn",
+    "tailwindcss/no-unnecessary-whitespace": "warn"
+  },
+  "settings": {
+    "tailwindcss": {
+      "entryPoint": [
+        {
+          "files": "apps/macos/**",
+          "use": "apps/macos/src/global.css"
+        },
+        {
+          "files": "apps/mobile/**",
+          "use": "apps/mobile/src/global.css"
+        },
+        {
+          "files": "apps/windows/**",
+          "use": "apps/windows/src/global.css"
+        }
+      ]
+    }
+  }
+}

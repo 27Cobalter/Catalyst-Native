@@ -10,7 +10,7 @@ iOS / Android / macOS / Windows それぞれにあり、 React Native で開発�
 | iOS      | `apps/mobile`  | RN 0.86.2 + Expo 57             |
 | Android  | `apps/mobile`  | RN 0.86.2 + Expo 57             |
 | macOS    | `apps/macos`   | RN 0.81.6 + RN (macOS) 0.81.9   |
-| Windows  | `apps/windows` | RN 0.84.0 + RN (Windows) 0.84.0 |                           |
+| Windows  | `apps/windows` | RN 0.84.0 + RN (Windows) 0.84.0 |
 
 ## ライセンス
 
