@@ -28,6 +28,7 @@ import { ImageGallery } from "@natsuneko-laboratory/carousel-viewer";
 
 既定の Carousel は親幅いっぱいの正方形です。
 `style={{ height: 280, aspectRatio: undefined }}` 等でサイズを変更できます。
+dot indicator は画像領域の外側・下部に表示し、その高さは `style` の画像サイズに含めません。
 
 Expo / Bare ともにホスト側へ React Native Gesture Handler、Reanimated 4、
 React Native Worklets、Safe Area Context をインストールし、
@@ -53,6 +54,8 @@ Metro が TypeScript ソースを処理する workspace 向けパッケージで
 画像 ID は一意で安定した値を使用してください。画像一覧変更時の選択は index 基準です。
 縦横サイズが不明な画像には React Native の Image.getSize を使用します。
 現在画像と前後画像のみを mount します。
+隣接ページへの切替では表示済み画像の mount と読み込み状態を維持し、Detail の zoom/pan のみリセットします。
+表示範囲から外れた画像は unmount されるため、遠いページへ戻る際のキャッシュは画像ローダーに依存します。
 
 ## 操作
 
@@ -78,7 +81,8 @@ node --test packages/carousel-viewer/tests/*.test.ts packages/carousel-viewer/te
 ./node_modules/.bin/tsc -p packages/carousel-viewer/tsconfig.json --noEmit
 ```
 
-計算ロジックと、実際の Detail gesture callback に対するタッチ列を自動検証します。
+計算ロジック、実際の Detail gesture callback に対するタッチ列、ページ切替時の画像の mount 維持を自動検証します。
+Worklets Babel plugin を通した closure に Gesture オブジェクトが含まれないことも検証します。
 ジェスチャー用テストの native/animation adapter は deterministic な mock です。
 実デバイスの認識・フレームレート・spring の見た目を保証するものではありません。
 実機での受け入れ確認は [MANUAL_TESTS.md](MANUAL_TESTS.md) を参照してください。

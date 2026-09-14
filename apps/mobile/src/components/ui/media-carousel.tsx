@@ -4,24 +4,23 @@ import { useHaptics } from "@/hooks/use-haptics";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { getCdnUrl } from "@/lib/media";
 import { cn } from "@/lib/utils";
-import type { EpicleseReference } from "@/models/epiclese";
 import { timelineImageQualityAtom, timelineWifiUpgradeAtom } from "@/models/atoms/image-quality";
-import NetInfo from "@react-native-community/netinfo";
-import { useAtomValue } from "jotai";
-import { Zoomable } from "@likashefqet/react-native-image-zoom";
+import type { EpicleseReference } from "@/models/epiclese";
+import type { Media } from "@/models/sdk-types";
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
   type BottomSheetBackdropProps,
 } from "@gorhom/bottom-sheet";
-import type { Media } from "@/models/sdk-types";
+import { Zoomable } from "@likashefqet/react-native-image-zoom";
+import NetInfo from "@react-native-community/netinfo";
+import { File, Paths } from "expo-file-system";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
-import { File, Paths } from "expo-file-system";
 import { Asset as MediaLibraryAsset, requestPermissionsAsync as requestMediaLibraryPermissions } from "expo-media-library";
-import { Download, ImageDown, Share2 } from "lucide-react-native";
-import { EyeOff } from "lucide-react-native";
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAtomValue } from "jotai";
+import { Download, EyeOff, ImageDown, Share2 } from "lucide-react-native";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Modal, Platform, Pressable, ScrollView, Share, Text, View, useColorScheme, useWindowDimensions } from "react-native";
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, {
@@ -144,11 +143,11 @@ export const MediaCarousel = memo(({ medias, onIndexChange, pins }: Props) => {
           quality === "original"
             ? getCdnUrl({ src: media.url, variant: "original", width: 9999 })
             : getCdnUrl({
-                src: media.url,
-                variant: "medium",
-                width: SCREEN_WIDTH,
-                aspect: { w: media.metadata?.width ?? 1, h: media.metadata?.height ?? 1 },
-              });
+              src: media.url,
+              variant: "medium",
+              width: SCREEN_WIDTH,
+              aspect: { w: media.metadata?.width ?? 1, h: media.metadata?.height ?? 1 },
+            });
 
         const file = await File.downloadFileAsync(url, Paths.cache, { idempotent: true });
         await MediaLibraryAsset.create(file.uri);

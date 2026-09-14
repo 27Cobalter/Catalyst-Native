@@ -20,7 +20,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "#0008",
   },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#fff", opacity: 0.4 },
-  activeDot: { opacity: 1 },
+  indicatorBelow: { position: "relative", bottom: undefined, marginTop: 8, marginBottom: 8 },
   white: { color: "#fff" },
   close: { padding: 16, alignSelf: "flex-end", backgroundColor: "#0008", borderRadius: 24 },
   chrome: { ...StyleSheet.absoluteFill, justifyContent: "space-between" },

@@ -1,21 +1,64 @@
 import { useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, findNodeHandle, Modal, Pressable, Text, View } from "react-native";
 import { GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
-import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useDerivedValue, useReducedMotion, useSharedValue, withTiming } from "react-native-reanimated";
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { ImageContent, useImageSize } from "./ImageContent";
 import { PageIndicator } from "./PageIndicator";
 import { clamp, getContainSize } from "./math";
 import { styles } from "./styles";
-import type { PagerProps } from "./types";
+import type { GalleryImage, PagerProps } from "./types";
 import { useDetailGesture } from "./useDetailGesture";
 
 type Props = PagerProps & { onClose: () => void };
+
+function DetailPage({
+  image,
+  page,
+  active,
+  width,
+  height,
+  renderImage,
+  zoomValues,
+}: {
+  image: GalleryImage;
+  page: number;
+  active: boolean;
+  width: number;
+  height: number;
+  renderImage: PagerProps["renderImage"];
+  zoomValues: Pick<ReturnType<typeof useDetailGesture>, "x" | "y" | "scale" | "dismiss">;
+}) {
+  const metadata = useImageSize(image, width, height);
+  const base = getContainSize(width, height, metadata.width, metadata.height);
+  const { x, y, scale, dismiss } = zoomValues;
+  const reduced = useReducedMotion();
+  const zoom = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: active ? x.value : 0 },
+      { translateY: active ? y.value + dismiss.value : 0 },
+      {
+        scale: active
+          ? scale.value * (reduced ? 1 : 1 - 0.08 * Math.min(Math.abs(dismiss.value) / (height * 0.5), 1))
+          : 1,
+      },
+    ],
+  }));
+  return (
+    <View style={[styles.page, { width, height, left: page * width }]}>
+      <Animated.View style={[{ width: base.width, height: base.height }, zoom]}>
+        <ImageContent image={image} index={page} mode="detail" renderImage={renderImage} />
+      </Animated.View>
+    </View>
+  );
+}
+
 function DetailPager({ width, height, ...props }: Props & { width: number; height: number }) {
   const { images, index, renderImage, onClose, onIndexChange } = props;
   const metadata = useImageSize(images[index], width, height);
   const base = getContainSize(width, height, metadata.width, metadata.height);
-  const g = useDetailGesture({
+  // Worklets may capture shared values, but not the ManualGesture instance.
+  const { gesture, closing, dismiss, pager, x, y, scale } = useDetailGesture({
     width,
     height,
     baseWidth: base.width,
@@ -28,23 +71,18 @@ function DetailPager({ width, height, ...props }: Props & { width: number; heigh
     dismissScaleThreshold: props.dismissScaleThreshold ?? 1.02,
     onIndexChange,
     onClose,
+    imageIdentity: JSON.stringify([images[index].id, images[index].uri]),
   });
   const insets = useSafeAreaInsets();
-  const reduced = useReducedMotion();
+  const count = images.length;
+  const progress = useDerivedValue(() => clamp(-pager.value / width, 0, count - 1));
   const background = useAnimatedStyle(() => ({
-    opacity: g.closing.value
-      ? Math.max(0, 1 - Math.abs(g.dismiss.value) / height)
-      : 1 - 0.7 * Math.min(Math.abs(g.dismiss.value) / (height * 0.5), 1),
+    opacity: closing.value
+      ? Math.max(0, 1 - Math.abs(dismiss.value) / height)
+      : 1 - 0.7 * Math.min(Math.abs(dismiss.value) / (height * 0.5), 1),
   }));
-  const track = useAnimatedStyle(() => ({ transform: [{ translateX: g.pager.value }] }));
-  const zoom = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: g.x.value },
-      { translateY: g.y.value + g.dismiss.value },
-      { scale: g.scale.value * (reduced ? 1 : 1 - 0.08 * Math.min(Math.abs(g.dismiss.value) / (height * 0.5), 1)) },
-    ],
-  }));
-  const chrome = useAnimatedStyle(() => ({ opacity: 1 - Math.min(Math.abs(g.dismiss.value) / (height * 0.3), 1) }));
+  const track = useAnimatedStyle(() => ({ transform: [{ translateX: pager.value }] }));
+  const chrome = useAnimatedStyle(() => ({ opacity: 1 - Math.min(Math.abs(dismiss.value) / (height * 0.3), 1) }));
   const closeRef = useRef<View>(null);
 
   useEffect(() => {
@@ -58,7 +96,7 @@ function DetailPager({ width, height, ...props }: Props & { width: number; heigh
   return (
     <View style={styles.fill} accessibilityViewIsModal onAccessibilityEscape={onClose}>
       <Animated.View style={[styles.black, background]} />
-      <GestureDetector gesture={g.gesture}>
+      <GestureDetector gesture={gesture}>
         <Animated.View
           style={styles.viewport}
           accessible
@@ -80,15 +118,16 @@ function DetailPager({ width, height, ...props }: Props & { width: number; heigh
             {images.slice(Math.max(0, index - 1), index + 2).map((image, i) => {
               const page = Math.max(0, index - 1) + i;
               return (
-                <View key={image.id} style={[styles.page, { width, height, left: (page - index) * width }]}>
-                  {page === index ? (
-                    <Animated.View style={[{ width: base.width, height: base.height }, zoom]}>
-                      <ImageContent image={image} index={page} mode="detail" renderImage={renderImage} />
-                    </Animated.View>
-                  ) : (
-                    <ImageContent image={image} index={page} mode="detail" renderImage={renderImage} />
-                  )}
-                </View>
+                <DetailPage
+                  key={image.id}
+                  image={image}
+                  page={page}
+                  active={page === index}
+                  width={width}
+                  height={height}
+                  renderImage={renderImage}
+                  zoomValues={{ x, y, scale, dismiss }}
+                />
               );
             })}
           </Animated.View>
@@ -106,7 +145,7 @@ function DetailPager({ width, height, ...props }: Props & { width: number; heigh
             <Text style={styles.white}>閉じる</Text>
           </Pressable>
           {props.renderOverlay?.({ index, close: onClose })}
-          <PageIndicator count={images.length} index={index} bottom={insets.bottom + 12} />
+          <PageIndicator count={count} index={index} bottom={insets.bottom + 12} progress={progress} />
         </SafeAreaView>
       </Animated.View>
     </View>
@@ -129,13 +168,7 @@ function DetailSurface(props: Props) {
 
   return (
     <Animated.View style={[styles.fill, entrance]} onLayout={(e) => setSize(e.nativeEvent.layout)}>
-      {size.width > 0 && size.height > 0 && props.images.length > 0 && (
-        <DetailPager
-          key={`${props.index}:${props.images[props.index].id}:${props.images[props.index].uri}:${size.width}:${size.height}`}
-          {...props}
-          {...size}
-        />
-      )}
+      {size.width > 0 && size.height > 0 && props.images.length > 0 && <DetailPager {...props} {...size} />}
     </Animated.View>
   );
 }

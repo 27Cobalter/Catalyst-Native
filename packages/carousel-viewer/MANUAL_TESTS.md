@@ -5,6 +5,9 @@ ImageGallery を表示して確認してください。全項目が実機で通�
 v1 acceptance criteria をすべて確認済みとは扱いません。
 
 - [ ] Carousel の左右 drag、高速 flick、先頭・末尾の抵抗と spring 復帰。
+- [ ] Carousel / Detail の隣接ページを往復しても、読み込み済み画像に spinner やちらつきが再発しない。
+- [ ] Carousel の dot indicator が画像の外側・下部に表示され、画像の aspect ratio を変えない。
+- [ ] Detail を開いて pinch しても `Cannot copy value of type 'ManualGesture'` が出ない。
 - [ ] tap で同じ index を開き、Detail 内のページ送り後に同じ index へ戻る。
 - [ ] Detail の先頭・末尾、左右 flick、移動距離不足からの復帰。
 - [ ] 上下 dismiss とキャンセル。背景の透明度と画像の追従。

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import { Gesture } from "react-native-gesture-handler";
 import { cancelAnimation, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
@@ -27,6 +27,7 @@ type Options = {
   dismissScaleThreshold: number;
   onIndexChange: (index: number) => void;
   onClose: () => void;
+  imageIdentity?: string;
 };
 
 export function useDetailGesture(o: Options) {
@@ -43,11 +44,12 @@ export function useDetailGesture(o: Options) {
     dismissScaleThreshold,
     onIndexChange,
     onClose,
+    imageIdentity,
   } = o;
   const scale = useSharedValue(1),
     x = useSharedValue(0),
     y = useSharedValue(0);
-  const pager = useSharedValue(0),
+  const pager = useSharedValue(-index * width),
     dismiss = useSharedValue(0),
     closing = useSharedValue(false);
   const mode = useSharedValue<ViewerGestureState>("idle"),
@@ -77,32 +79,94 @@ export function useDetailGesture(o: Options) {
   );
 
   const pending = useSharedValue(0);
+  const interruptible = useSharedValue(false);
+  const settleRevision = useSharedValue(0);
+  // Reset transforms without remounting the pager or its preloaded images.
+  useLayoutEffect(() => {
+    for (const value of [scale, x, y, pager, dismiss]) cancelAnimation(value);
+    scale.value = 1;
+    x.value = y.value = dismiss.value = 0;
+    pager.value = -index * width;
+    mode.value = "idle";
+    blocked.value = closing.value = restartPinch.value = false;
+    pending.value = 0;
+    interruptible.value = false;
+    settleRevision.value += 1;
+    pointerA.value = pointerB.value = -1;
+  }, [
+    index,
+    width,
+    height,
+    imageIdentity,
+    scale,
+    x,
+    y,
+    pager,
+    dismiss,
+    mode,
+    blocked,
+    closing,
+    restartPinch,
+    pending,
+    interruptible,
+    settleRevision,
+    pointerA,
+    pointerB,
+  ]);
   const settle = () => {
     "worklet";
+    interruptible.value = mode.value === "pinching" || mode.value === "panning";
     mode.value = "settling";
+    const revision = ++settleRevision.value;
     const target = clamp(scale.value, minScale, maxScale);
     const bounds = getPanBounds(width, height, baseWidth, baseHeight, target);
-    pending.value = 5;
+    const corrections = [
+      [scale, target],
+      [x, clamp(x.value, -bounds.x, bounds.x)],
+      [y, clamp(y.value, -bounds.y, bounds.y)],
+      [pager, -index * width],
+      [dismiss, 0],
+    ] as const;
+    // In-bounds releases need no recovery animation or input lock.
+    pending.value = corrections.filter(([value, destination]) => value.value !== destination).length;
+    if (pending.value === 0) {
+      mode.value = "idle";
+      interruptible.value = false;
+      return;
+    }
     const done = (finished?: boolean) => {
       "worklet";
-      if (finished) {
+      if (finished && settleRevision.value === revision) {
         pending.value -= 1;
-        if (pending.value === 0) mode.value = "idle";
+        if (pending.value === 0) {
+          mode.value = "idle";
+          interruptible.value = false;
+        }
       }
     };
-    scale.value = withSpring(target, spring, done);
-    x.value = withSpring(clamp(x.value, -bounds.x, bounds.x), spring, done);
-    y.value = withSpring(clamp(y.value, -bounds.y, bounds.y), spring, done);
-    pager.value = withSpring(0, spring, done);
-    dismiss.value = withSpring(0, spring, done);
+    for (const [value, destination] of corrections) {
+      if (value.value !== destination) value.value = withSpring(destination, spring, done);
+    }
   };
 
   const gesture = Gesture.Manual()
     .shouldCancelWhenOutside(false)
     .onTouchesDown((e, manager) => {
-      if (mode.value === "settling" || closing.value || blocked.value) {
+      if (closing.value || blocked.value) {
         blocked.value = true;
         return;
+      }
+      if (mode.value === "settling") {
+        if (!interruptible.value) {
+          blocked.value = true;
+          return;
+        }
+        // A fresh touch takes over zoom recovery at its current visual position.
+        settleRevision.value += 1;
+        for (const value of [scale, x, y, pager, dismiss]) cancelAnimation(value);
+        pending.value = 0;
+        interruptible.value = false;
+        mode.value = "idle";
       }
       if (e.numberOfTouches > 2) {
         blocked.value = true;
@@ -138,7 +202,8 @@ export function useDetailGesture(o: Options) {
         velocityX.value = velocityY.value = 0;
         savedX.value = x.value;
         savedY.value = y.value;
-        mode.value = scale.value > pagingScaleThreshold ? "panning" : "undecided";
+        // A second finger can start pinch immediately until a drag actually begins.
+        mode.value = "undecided";
         manager.activate();
       }
     })
@@ -165,7 +230,13 @@ export function useDetailGesture(o: Options) {
         const b = e.allTouches.find((t) => t.id === pointerB.value);
         if (!b) return;
         const proposed = (savedScale.value * Math.hypot(b.x - a.x, b.y - a.y)) / distance.value;
-        scale.value = rubberBand(proposed, minScale, maxScale, minScale * 0.15, 0.2);
+        scale.value = rubberBand(
+          proposed,
+          Math.min(minScale, savedScale.value),
+          Math.max(maxScale, savedScale.value),
+          minScale * 0.15,
+          0.2,
+        );
         x.value = getZoomTranslationForFocalPoint(
           focalX.value,
           (a.x + b.x) / 2 - width / 2,
@@ -193,17 +264,22 @@ export function useDetailGesture(o: Options) {
       lastTime.value = now;
 
       if (mode.value === "undecided") {
-        const direction = lockDirection(dx, dy);
-        if (direction === "paging" && scale.value <= pagingScaleThreshold) mode.value = direction;
-        if (direction === "dismissing" && scale.value <= dismissScaleThreshold) mode.value = direction;
+        if (scale.value > pagingScaleThreshold) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) >= 8) mode.value = "panning";
+        } else {
+          const direction = lockDirection(dx, dy);
+          if (direction === "paging" && scale.value <= pagingScaleThreshold) mode.value = direction;
+          if (direction === "dismissing" && scale.value <= dismissScaleThreshold) mode.value = direction;
+        }
       }
 
       if (mode.value === "panning") {
         const bounds = getPanBounds(width, height, baseWidth, baseHeight, scale.value);
-        x.value = rubberBand(savedX.value + dx, -bounds.x, bounds.x, width);
-        y.value = rubberBand(savedY.value + dy, -bounds.y, bounds.y, height);
+        // Re-grabbing during recovery must not apply resistance to the baseline twice.
+        x.value = rubberBand(savedX.value + dx, Math.min(-bounds.x, savedX.value), Math.max(bounds.x, savedX.value), width);
+        y.value = rubberBand(savedY.value + dy, Math.min(-bounds.y, savedY.value), Math.max(bounds.y, savedY.value), height);
       } else if (mode.value === "paging") {
-        pager.value = rubberBand(dx, index === count - 1 ? 0 : -width, index === 0 ? 0 : width, width);
+        pager.value = -index * width + rubberBand(dx, index === count - 1 ? 0 : -width, index === 0 ? 0 : width, width);
       } else if (mode.value === "dismissing") {
         dismiss.value = dy;
       }
@@ -230,7 +306,7 @@ export function useDetailGesture(o: Options) {
       if (mode.value === "paging") {
         const target = getPagingTarget(index, count, lastX.value - startX.value, vx, width);
         mode.value = "settling";
-        pager.value = withSpring((index - target) * width, { ...spring, velocity: vx }, (finished) => {
+        pager.value = withSpring(-target * width, { ...spring, velocity: vx }, (finished) => {
           if (finished) {
             if (target !== index) scheduleOnRN(onIndexChange, target);
             else mode.value = "idle";

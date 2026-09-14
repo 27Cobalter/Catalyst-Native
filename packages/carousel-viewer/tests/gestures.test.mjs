@@ -10,6 +10,7 @@ const animate = (target, _config, done) => {
 };
 const mock = {
   useEffect: () => {},
+  useLayoutEffect: () => {},
   cancelAnimation: () => {},
   Gesture: {
     Manual() {
@@ -52,7 +53,7 @@ registerHooks({
         format: "module",
         shortCircuit: true,
         source:
-          "export const { Gesture, useEffect, cancelAnimation, useSharedValue, withSpring, withTiming, ReduceMotion, scheduleOnRN } = globalThis.__carouselTest;",
+          "export const { Gesture, useEffect, useLayoutEffect, cancelAnimation, useSharedValue, withSpring, withTiming, ReduceMotion, scheduleOnRN } = globalThis.__carouselTest;",
       };
     return next(url, context);
   },
@@ -105,7 +106,7 @@ test("vertical ownership never becomes paging", () => {
   event("onTouchesMove", [point(1, 200, 550)]);
   event("onTouchesMove", [point(1, 390, 600)]);
   assert.equal(g.mode.value, "dismissing");
-  assert.equal(g.pager.value, 0);
+  assert.equal(g.pager.value, -400);
   event("onTouchesUp", []);
   flush();
   assert.deepEqual(changes, []);
@@ -125,7 +126,7 @@ test("pinch preserves focal position, then lifting one finger settles without pa
   const x = g.x.value;
   event("onTouchesMove", [point(1, 0, 0)]);
   assert.equal(g.x.value, x);
-  assert.equal(g.pager.value, 0);
+  assert.equal(g.pager.value, -400);
   event("onTouchesUp", []);
 });
 test("zoomed edge drag remains pan and returns within bounds", () => {
@@ -135,7 +136,7 @@ test("zoomed edge drag remains pan and returns within bounds", () => {
   event("onTouchesMove", [point(1, 1200, 1400)]);
   assert.equal(g.mode.value, "panning");
   assert.ok(g.x.value > 200 && g.x.value < 600);
-  assert.equal(g.pager.value, 0);
+  assert.equal(g.pager.value, -400);
   assert.equal(g.dismiss.value, 0);
   event("onTouchesUp", []);
   flush();
@@ -154,7 +155,7 @@ test("second finger first settles paging and starts a fresh pinch baseline", () 
   flush();
   event("onTouchesMove", [point(1, 100, 400), point(2, 200, 400)]);
   assert.equal(g.mode.value, "pinching");
-  assert.equal(g.pager.value, 0);
+  assert.equal(g.pager.value, -400);
   event("onTouchesMove", [point(1, 50, 400), point(2, 250, 400)]);
   assert.equal(g.scale.value, 2);
   assert.deepEqual(changes, []);

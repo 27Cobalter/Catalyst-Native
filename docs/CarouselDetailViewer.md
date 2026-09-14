@@ -249,7 +249,9 @@ release 後は spring animation で current page へ戻す。
 
 # 8. Page Indicator
 
-画像下部中央へ dot indicator を表示する。
+Carousel の画像領域の外側、下部中央へ dot indicator を表示する。
+画像のサイズ・aspect ratio は画像領域に適用し、indicator の高さは別に確保する。
+Fullscreen Detail Viewer の indicator は従来通り Safe Area 内に重ねて表示する。
 
 ```txt
 ○ ○ ● ○ ○
