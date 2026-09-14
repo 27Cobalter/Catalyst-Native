@@ -46,6 +46,7 @@
     "@natsuneko-laboratory/fleet-renderer-core": "catalog:",
     "@natsuneko-laboratory/fleet-renderer-react-native": "catalog:",
     "@natsuneko-laboratory/memora": "catalog:",
+    "@natsuneko-laboratory/react-native-carousel-viewer": "workspace:*",
     "@natsuneko-laboratory/react-native-twitter-text": "catalog:",
     "@natsuneko-laboratory/react-native-webcrypto-digest": "catalog:",
     "@react-native-async-storage/async-storage": "3.1.1",
