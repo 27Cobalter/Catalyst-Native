@@ -11,6 +11,7 @@ const animate = (target, _config, done) => {
 const mock = {
   useEffect: () => {},
   useLayoutEffect: () => {},
+  useRef: (current) => ({ current }),
   cancelAnimation: () => {},
   Gesture: {
     Manual() {
@@ -54,7 +55,7 @@ registerHooks({
         format: "module",
         shortCircuit: true,
         source:
-          "export const { Gesture, useEffect, useLayoutEffect, cancelAnimation, useSharedValue, withSpring, withTiming, ReduceMotion, useReducedMotion, scheduleOnRN } = globalThis.__carouselTest;",
+          "export const { Gesture, useEffect, useLayoutEffect, useRef, cancelAnimation, useSharedValue, withSpring, withTiming, ReduceMotion, useReducedMotion, scheduleOnRN } = globalThis.__carouselTest;",
       };
     return next(url, context);
   },
@@ -217,4 +218,23 @@ test("long press is cancelled by movement or lifting the finger", () => {
   event("onTouchesUp", []);
   flush();
   assert.deepEqual(presses, []);
+});
+test("paging reports the page on release and a new swipe can take over the running spring", () => {
+  const { g, event, flush, changes } = setup();
+  event("onTouchesDown", [point(1, 200, 400)]);
+  event("onTouchesMove", [point(1, 150, 400)]);
+  event("onTouchesUp", []);
+  // 50px is past 10% of the width, and the change is reported before the spring rests.
+  assert.deepEqual(changes, [2]);
+  assert.equal(g.mode.value, "settling");
+  event("onTouchesDown", [point(1, 100, 400)]);
+  assert.equal(g.mode.value, "undecided");
+  event("onTouchesMove", [point(1, 200, 400)]);
+  assert.equal(g.mode.value, "paging");
+  assert.equal(g.pager.value, -700);
+  event("onTouchesUp", []);
+  flush();
+  assert.deepEqual(changes, [2, 1]);
+  assert.equal(g.pager.value, -400);
+  assert.equal(g.mode.value, "idle");
 });

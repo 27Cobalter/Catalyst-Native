@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { Gesture } from "react-native-gesture-handler";
 import { cancelAnimation, ReduceMotion, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
@@ -38,6 +38,8 @@ const TAP_SLOP = 8;
 const TAP_MAX_DURATION = 250;
 const DOUBLE_TAP_DELAY = 300;
 const DOUBLE_TAP_DISTANCE = 32;
+// Fraction of the width a slow drag needs to change pages; flicks page by velocity.
+const PAGING_DISTANCE = 0.1;
 
 export function useDetailGesture(o: Options) {
   const {
@@ -62,6 +64,9 @@ export function useDetailGesture(o: Options) {
   const scale = useSharedValue(1),
     x = useSharedValue(0),
     y = useSharedValue(0);
+  // Page the pager is at or springing to. Worklets read this instead of `index`, which lags behind until re-render.
+  const page = useSharedValue(index),
+    pagerStart = useSharedValue(0);
   const pager = useSharedValue(-index * width),
     dismiss = useSharedValue(0),
     closing = useSharedValue(false);
@@ -102,8 +107,15 @@ export function useDetailGesture(o: Options) {
   const pending = useSharedValue(0);
   const interruptible = useSharedValue(false);
   const settleRevision = useSharedValue(0);
+  const previous = useRef({ index, width, height });
   // Reset transforms without remounting the pager or its preloaded images.
   useLayoutEffect(() => {
+    const from = previous.current;
+    previous.current = { index, width, height };
+    // A swipe already reported this page: its spring (and any touch that took over from it) keeps running.
+    // Paging only starts unzoomed, so there is no zoom state to reset.
+    if (from.index !== index && from.width === width && from.height === height && page.value === index) return;
+    page.value = index;
     for (const value of [scale, x, y, pager, dismiss]) cancelAnimation(value);
     scale.value = 1;
     x.value = y.value = dismiss.value = 0;
@@ -121,6 +133,7 @@ export function useDetailGesture(o: Options) {
     width,
     height,
     imageIdentity,
+    page,
     scale,
     x,
     y,
@@ -150,7 +163,7 @@ export function useDetailGesture(o: Options) {
       [scale, target],
       [x, clamp(targetX ?? x.value, -bounds.x, bounds.x)],
       [y, clamp(targetY ?? y.value, -bounds.y, bounds.y)],
-      [pager, -index * width],
+      [pager, -page.value * width],
       [dismiss, 0],
     ] as const;
     // In-bounds releases need no recovery animation or input lock.
@@ -230,6 +243,7 @@ export function useDetailGesture(o: Options) {
         velocityX.value = velocityY.value = 0;
         savedX.value = x.value;
         savedY.value = y.value;
+        pagerStart.value = pager.value;
         downTime.value = lastTime.value;
         moved.value = longPressed.value = false;
         if (onLongPress) {
@@ -242,7 +256,7 @@ export function useDetailGesture(o: Options) {
             (finished) => {
               if (finished && pressRevision.value === revision && mode.value === "undecided" && !moved.value) {
                 longPressed.value = true;
-                scheduleOnRN(onLongPress, index);
+                scheduleOnRN(onLongPress, page.value);
               }
             },
           );
@@ -336,7 +350,13 @@ export function useDetailGesture(o: Options) {
           height,
         );
       } else if (mode.value === "paging") {
-        pager.value = -index * width + rubberBand(dx, index === count - 1 ? 0 : -width, index === 0 ? 0 : width, width);
+        // Continue from where the pager was grabbed (possibly mid-spring); only neighbours of `page` are mounted.
+        pager.value = rubberBand(
+          pagerStart.value + dx,
+          -Math.min(page.value + 1, count - 1) * width,
+          -Math.max(page.value - 1, 0) * width,
+          width,
+        );
       } else if (mode.value === "dismissing") {
         dismiss.value = dy;
       }
@@ -362,14 +382,22 @@ export function useDetailGesture(o: Options) {
       const vx = Date.now() - lastTime.value > 100 ? 0 : velocityX.value;
       const vy = Date.now() - lastTime.value > 100 ? 0 : velocityY.value;
       if (mode.value === "paging") {
-        const target = getPagingTarget(index, count, lastX.value - startX.value, vx, width);
+        const from = page.value;
+        const target = getPagingTarget(from, count, pager.value + from * width, vx, width, PAGING_DISTANCE);
+        page.value = target;
+        // A new touch may grab the pager while it springs, so consecutive swipes are never dropped.
         mode.value = "settling";
+        interruptible.value = true;
+        pending.value = 0;
+        const revision = ++settleRevision.value;
         pager.value = withSpring(-target * width, { ...spring, velocity: vx }, (finished) => {
-          if (finished) {
-            if (target !== index) scheduleOnRN(onIndexChange, target);
-            else mode.value = "idle";
+          if (finished && settleRevision.value === revision) {
+            mode.value = "idle";
+            interruptible.value = false;
           }
         });
+        // Report immediately so the next swipe and the indicator do not wait for the spring to rest.
+        if (target !== from) scheduleOnRN(onIndexChange, target);
       } else if (mode.value === "dismissing" && shouldDismiss(dismiss.value, vy, height)) {
         mode.value = "settling";
         closing.value = true;
