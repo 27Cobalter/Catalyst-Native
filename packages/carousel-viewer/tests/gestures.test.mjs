@@ -33,7 +33,8 @@ const mock = {
   useSharedValue: (value) => ({ value }),
   withSpring: animate,
   withTiming: animate,
-  ReduceMotion: { System: "system" },
+  ReduceMotion: { System: "system", Never: "never", Always: "always" },
+  useReducedMotion: () => false,
   scheduleOnRN: (fn, ...args) => fn(...args),
 };
 globalThis.__carouselTest = mock;
@@ -53,14 +54,14 @@ registerHooks({
         format: "module",
         shortCircuit: true,
         source:
-          "export const { Gesture, useEffect, useLayoutEffect, cancelAnimation, useSharedValue, withSpring, withTiming, ReduceMotion, scheduleOnRN } = globalThis.__carouselTest;",
+          "export const { Gesture, useEffect, useLayoutEffect, cancelAnimation, useSharedValue, withSpring, withTiming, ReduceMotion, useReducedMotion, scheduleOnRN } = globalThis.__carouselTest;",
       };
     return next(url, context);
   },
 });
 const { useDetailGesture } = await import("../src/useDetailGesture.ts");
 const point = (id, x, y) => ({ id, x, y });
-function setup() {
+function setup(options = {}) {
   completions.length = 0;
   const changes = [],
     closed = [];
@@ -77,6 +78,7 @@ function setup() {
     dismissScaleThreshold: 1.02,
     onIndexChange: (i) => changes.push(i),
     onClose: () => closed.push(true),
+    ...options,
   });
   const event = (name, touches) =>
     g.gesture.callbacks[name](
@@ -171,4 +173,48 @@ test("cancellation settles every transform and releases ownership", () => {
   assert.equal(g.x.value, 0);
   assert.equal(g.y.value, 0);
   assert.equal(g.mode.value, "idle");
+});
+test("double tap zooms around the tapped point and a second double tap resets", () => {
+  const { g, event, flush } = setup({ doubleTapScale: 2 });
+  for (let i = 0; i < 2; i++) {
+    event("onTouchesDown", [point(1, 300, 400)]);
+    event("onTouchesUp", []);
+  }
+  flush();
+  assert.equal(g.scale.value, 2);
+  // Tapped point (100px right of center) stays under the finger, clamped to pan bounds.
+  assert.equal(g.x.value, -100);
+  assert.equal(g.y.value, 0);
+  assert.equal(g.mode.value, "idle");
+  for (let i = 0; i < 2; i++) {
+    event("onTouchesDown", [point(1, 300, 400)]);
+    event("onTouchesUp", []);
+  }
+  flush();
+  assert.equal(g.scale.value, 1);
+  assert.equal(g.x.value, 0);
+});
+test("long press fires once when the finger stays still, and drags after it do nothing", () => {
+  const presses = [];
+  const { g, event, flush, changes } = setup({ onLongPress: (i) => presses.push(i) });
+  event("onTouchesDown", [point(1, 200, 400)]);
+  flush();
+  assert.deepEqual(presses, [1]);
+  event("onTouchesMove", [point(1, 50, 400)]);
+  assert.equal(g.pager.value, -400);
+  event("onTouchesUp", []);
+  flush();
+  assert.deepEqual(changes, []);
+});
+test("long press is cancelled by movement or lifting the finger", () => {
+  const presses = [];
+  const { event, flush } = setup({ onLongPress: (i) => presses.push(i) });
+  event("onTouchesDown", [point(1, 200, 400)]);
+  event("onTouchesMove", [point(1, 100, 400)]);
+  event("onTouchesUp", []);
+  flush();
+  event("onTouchesDown", [point(1, 200, 400)]);
+  event("onTouchesUp", []);
+  flush();
+  assert.deepEqual(presses, []);
 });

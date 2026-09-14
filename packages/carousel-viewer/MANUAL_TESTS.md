@@ -18,6 +18,9 @@ v1 acceptance criteria をすべて確認済みとは扱いません。
 - [ ] pinch 中に一本指へ戻しても pan/paging/dismiss を開始しない。
 - [ ] paging / dismiss 中に二本目の指を追加すると、復帰完了後から pinch を開始する。
 - [ ] キャンセル、三本目の指、アプリの background/foreground 後に操作が再開できる。
+- [ ] ダブルタップでタップ位置を中心に拡大し、再度のダブルタップで等倍に戻る。一回タップやドラッグでは反応しない。
+- [ ] 長押しで `onLongPress` が一度だけ呼ばれ、動かした場合・pinch 時は呼ばれない。
+- [ ] `renderCarouselOverlay` 上のボタンを押しても Carousel のタップ・スワイプが発火しない。
 - [ ] 端末回転、iPad split view、window resize 後も index を保持して zoom をリセット。
 - [ ] metadata 不明・低速読み込み・読み込み失敗・カスタム renderImage。
 - [ ] VoiceOver / TalkBack で位置と alt を読み上げ、前後移動・閉じる操作が可能。

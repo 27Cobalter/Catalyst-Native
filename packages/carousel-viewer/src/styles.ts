@@ -22,6 +22,16 @@ export const styles = StyleSheet.create({
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#fff", opacity: 0.4 },
   indicatorBelow: { position: "relative", bottom: undefined, marginTop: 8, marginBottom: 8 },
   white: { color: "#fff" },
-  close: { padding: 16, alignSelf: "flex-end", backgroundColor: "#0008", borderRadius: 24 },
+  close: {
+    width: 44,
+    height: 44,
+    margin: 8,
+    alignSelf: "flex-end",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#0008",
+    borderRadius: 22,
+  },
+  closeIcon: { color: "#fff", fontSize: 28, lineHeight: 32 },
   chrome: { ...StyleSheet.absoluteFill, justifyContent: "space-between" },
 });

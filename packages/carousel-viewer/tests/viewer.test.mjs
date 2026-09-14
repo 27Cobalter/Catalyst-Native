@@ -209,3 +209,18 @@ test("detail pinch uses serializable worklets and page changes reset zoom withou
   assert.equal(next.onTouchesMove.__closure.pager.value, -400);
   await act(() => renderer.unmount());
 });
+
+test("carousel keeps intermediate pages mounted while springing to a distant index", async () => {
+  let renderer;
+  await act(() => {
+    renderer = create(React.createElement(ImageCarousel, props));
+  });
+  await act(() =>
+    renderer.root
+      .find((node) => typeof node.props.onLayout === "function")
+      .props.onLayout({ nativeEvent: { layout: { width: 400, height: 400 } } }),
+  );
+  await act(() => renderer.update(React.createElement(ImageCarousel, { ...props, index: 3 })));
+  for (const index of [0, 1, 2, 3]) assert.ok(imageNode(renderer, index), `page ${index} is mounted`);
+  await act(() => renderer.unmount());
+});

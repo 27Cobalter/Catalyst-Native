@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect } from "react";
 import { Gesture } from "react-native-gesture-handler";
-import { cancelAnimation, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import { cancelAnimation, ReduceMotion, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { spring } from "./animation";
+import { spring as defaultSpring } from "./animation";
 import {
   clamp,
   getPagingTarget,
@@ -27,8 +27,17 @@ type Options = {
   dismissScaleThreshold: number;
   onIndexChange: (index: number) => void;
   onClose: () => void;
+  onLongPress?: (index: number) => void;
+  doubleTapScale?: number;
+  longPressDuration?: number;
+  spring?: typeof defaultSpring;
   imageIdentity?: string;
 };
+
+const TAP_SLOP = 8;
+const TAP_MAX_DURATION = 250;
+const DOUBLE_TAP_DELAY = 300;
+const DOUBLE_TAP_DISTANCE = 32;
 
 export function useDetailGesture(o: Options) {
   const {
@@ -44,6 +53,10 @@ export function useDetailGesture(o: Options) {
     dismissScaleThreshold,
     onIndexChange,
     onClose,
+    onLongPress,
+    doubleTapScale = 2.5,
+    longPressDuration = 500,
+    spring = defaultSpring,
     imageIdentity,
   } = o;
   const scale = useSharedValue(1),
@@ -70,12 +83,20 @@ export function useDetailGesture(o: Options) {
   const restartPinch = useSharedValue(false);
   const pointerA = useSharedValue(-1),
     pointerB = useSharedValue(-1);
+  const downTime = useSharedValue(0),
+    moved = useSharedValue(false),
+    longPressed = useSharedValue(false),
+    pressRevision = useSharedValue(0),
+    pressTimer = useSharedValue(0);
+  const lastTapTime = useSharedValue(0),
+    lastTapX = useSharedValue(0),
+    lastTapY = useSharedValue(0);
 
   useEffect(
     () => () => {
-      for (const value of [scale, x, y, pager, dismiss]) cancelAnimation(value);
+      for (const value of [scale, x, y, pager, dismiss, pressTimer]) cancelAnimation(value);
     },
-    [scale, x, y, pager, dismiss],
+    [scale, x, y, pager, dismiss, pressTimer],
   );
 
   const pending = useSharedValue(0);
@@ -93,6 +114,8 @@ export function useDetailGesture(o: Options) {
     interruptible.value = false;
     settleRevision.value += 1;
     pointerA.value = pointerB.value = -1;
+    pressRevision.value += 1;
+    lastTapTime.value = 0;
   }, [
     index,
     width,
@@ -112,18 +135,21 @@ export function useDetailGesture(o: Options) {
     settleRevision,
     pointerA,
     pointerB,
+    pressRevision,
+    lastTapTime,
   ]);
-  const settle = () => {
+  // Without targets, recovers the current transform into bounds; with targets, animates a zoom (double tap).
+  const settle = (targetScale?: number, targetX?: number, targetY?: number) => {
     "worklet";
-    interruptible.value = mode.value === "pinching" || mode.value === "panning";
+    interruptible.value = targetScale !== undefined || mode.value === "pinching" || mode.value === "panning";
     mode.value = "settling";
     const revision = ++settleRevision.value;
-    const target = clamp(scale.value, minScale, maxScale);
+    const target = clamp(targetScale ?? scale.value, minScale, maxScale);
     const bounds = getPanBounds(width, height, baseWidth, baseHeight, target);
     const corrections = [
       [scale, target],
-      [x, clamp(x.value, -bounds.x, bounds.x)],
-      [y, clamp(y.value, -bounds.y, bounds.y)],
+      [x, clamp(targetX ?? x.value, -bounds.x, bounds.x)],
+      [y, clamp(targetY ?? y.value, -bounds.y, bounds.y)],
       [pager, -index * width],
       [dismiss, 0],
     ] as const;
@@ -152,6 +178,8 @@ export function useDetailGesture(o: Options) {
   const gesture = Gesture.Manual()
     .shouldCancelWhenOutside(false)
     .onTouchesDown((e, manager) => {
+      // Any additional finger cancels a pending long press.
+      pressRevision.value += 1;
       if (closing.value || blocked.value) {
         blocked.value = true;
         return;
@@ -202,6 +230,23 @@ export function useDetailGesture(o: Options) {
         velocityX.value = velocityY.value = 0;
         savedX.value = x.value;
         savedY.value = y.value;
+        downTime.value = lastTime.value;
+        moved.value = longPressed.value = false;
+        if (onLongPress) {
+          const revision = pressRevision.value;
+          // A UI-thread timer: the timing animation only exists to call back after the duration.
+          pressTimer.value = 0;
+          pressTimer.value = withTiming(
+            1,
+            { duration: longPressDuration, reduceMotion: ReduceMotion.Never },
+            (finished) => {
+              if (finished && pressRevision.value === revision && mode.value === "undecided" && !moved.value) {
+                longPressed.value = true;
+                scheduleOnRN(onLongPress, index);
+              }
+            },
+          );
+        }
         // A second finger can start pinch immediately until a drag actually begins.
         mode.value = "undecided";
         manager.activate();
@@ -263,7 +308,9 @@ export function useDetailGesture(o: Options) {
       lastY.value = a.y;
       lastTime.value = now;
 
+      if (Math.max(Math.abs(dx), Math.abs(dy)) >= TAP_SLOP) moved.value = true;
       if (mode.value === "undecided") {
+        if (longPressed.value) return;
         if (scale.value > pagingScaleThreshold) {
           if (Math.max(Math.abs(dx), Math.abs(dy)) >= 8) mode.value = "panning";
         } else {
@@ -276,8 +323,18 @@ export function useDetailGesture(o: Options) {
       if (mode.value === "panning") {
         const bounds = getPanBounds(width, height, baseWidth, baseHeight, scale.value);
         // Re-grabbing during recovery must not apply resistance to the baseline twice.
-        x.value = rubberBand(savedX.value + dx, Math.min(-bounds.x, savedX.value), Math.max(bounds.x, savedX.value), width);
-        y.value = rubberBand(savedY.value + dy, Math.min(-bounds.y, savedY.value), Math.max(bounds.y, savedY.value), height);
+        x.value = rubberBand(
+          savedX.value + dx,
+          Math.min(-bounds.x, savedX.value),
+          Math.max(bounds.x, savedX.value),
+          width,
+        );
+        y.value = rubberBand(
+          savedY.value + dy,
+          Math.min(-bounds.y, savedY.value),
+          Math.max(bounds.y, savedY.value),
+          height,
+        );
       } else if (mode.value === "paging") {
         pager.value = -index * width + rubberBand(dx, index === count - 1 ? 0 : -width, index === 0 ? 0 : width, width);
       } else if (mode.value === "dismissing") {
@@ -285,6 +342,7 @@ export function useDetailGesture(o: Options) {
       }
     })
     .onTouchesUp((e, manager) => {
+      pressRevision.value += 1;
       if (e.numberOfTouches < 2) restartPinch.value = false;
       if (blocked.value) {
         if (e.numberOfTouches === 0) {
@@ -323,10 +381,41 @@ export function useDetailGesture(o: Options) {
             if (finished) scheduleOnRN(onClose);
           },
         );
+      } else if (
+        mode.value === "undecided" &&
+        !moved.value &&
+        !longPressed.value &&
+        Date.now() - downTime.value <= TAP_MAX_DURATION
+      ) {
+        const now = Date.now();
+        const isDoubleTap =
+          doubleTapScale > 1 &&
+          now - lastTapTime.value <= DOUBLE_TAP_DELAY &&
+          Math.hypot(lastX.value - lastTapX.value, lastY.value - lastTapY.value) <= DOUBLE_TAP_DISTANCE;
+        if (isDoubleTap) {
+          lastTapTime.value = 0;
+          if (scale.value > pagingScaleThreshold) settle(1, 0, 0);
+          else {
+            const target = clamp(doubleTapScale, minScale, maxScale);
+            const focusX = lastX.value - width / 2,
+              focusY = lastY.value - height / 2;
+            settle(
+              target,
+              getZoomTranslationForFocalPoint(focusX, focusX, x.value, scale.value, target),
+              getZoomTranslationForFocalPoint(focusY, focusY, y.value, scale.value, target),
+            );
+          }
+        } else {
+          lastTapTime.value = now;
+          lastTapX.value = lastX.value;
+          lastTapY.value = lastY.value;
+          settle();
+        }
       } else settle();
       manager.end();
     })
     .onTouchesCancelled((_e, manager) => {
+      pressRevision.value += 1;
       restartPinch.value = false;
       blocked.value = false;
       settle();

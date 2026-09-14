@@ -49,6 +49,13 @@ Metro が TypeScript ソースを処理する workspace 向けパッケージで
 - `renderImage(image, { mode, index })`: カスタム画像。親の領域いっぱいに contain してください。独自ローダーの場合、loading/error 表示は呼び出し側で担当します。
 - `style`: Carousel のサイズ指定。
 - `renderOverlay({ index, close })`: Safe Area 内に追加する任意の UI。
+- `doubleTapScale = 2.5`: Detail のダブルタップでタップ位置を中心に拡大し、拡大中なら等倍に戻します。1 以下で無効。
+- `onLongPress(index)` / `longPressDuration = 500`: Detail 画像の長押し。指が動く・二本目の指が触れると取り消します。
+- `reduceMotion`: 指定するとシステムの Reduce Motion 設定より優先します。
+- `detailEnabled = true`: false の場合、Carousel のタップで Detail を開きません。
+- `renderCarouselOverlay({ index, width, height })`: Carousel の画像領域の上に重ねる UI。gesture の外側に配置するため、overlay 上のタッチは Carousel の操作になりません。
+- `renderCarouselIndicator({ count, index, progress, setIndex })`: 既定の dot indicator を置き換えます。
+- `renderDetailForeground({ index, close })`: Detail の全画面・Safe Area 外に描画する UI（bottom sheet など）。dismiss 中もフェードしません。
 - 単独利用向けに `ImageCarousel` と `ImageDetailViewer` も export しています。いずれも `index` と `onIndexChange` による controlled component です。Detail は表示中だけ mount してください。
 
 画像 ID は一意で安定した値を使用してください。画像一覧変更時の選択は index 基準です。

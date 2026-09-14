@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, findNodeHandle, Modal, Pressable, Text, View } from "react-native";
 import { GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
-import Animated, { useAnimatedStyle, useDerivedValue, useReducedMotion, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from "react-native-reanimated";
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useMotion } from "./animation";
 import { ImageContent, useImageSize } from "./ImageContent";
-import { PageIndicator } from "./PageIndicator";
 import { clamp, getContainSize } from "./math";
+import { PageIndicator } from "./PageIndicator";
 import { styles } from "./styles";
 import type { GalleryImage, PagerProps } from "./types";
 import { useDetailGesture } from "./useDetailGesture";
@@ -19,6 +20,7 @@ function DetailPage({
   width,
   height,
   renderImage,
+  reduceMotion,
   zoomValues,
 }: {
   image: GalleryImage;
@@ -27,12 +29,13 @@ function DetailPage({
   width: number;
   height: number;
   renderImage: PagerProps["renderImage"];
+  reduceMotion?: boolean;
   zoomValues: Pick<ReturnType<typeof useDetailGesture>, "x" | "y" | "scale" | "dismiss">;
 }) {
   const metadata = useImageSize(image, width, height);
   const base = getContainSize(width, height, metadata.width, metadata.height);
   const { x, y, scale, dismiss } = zoomValues;
-  const reduced = useReducedMotion();
+  const { reduced } = useMotion(reduceMotion);
   const zoom = useAnimatedStyle(() => ({
     transform: [
       { translateX: active ? x.value : 0 },
@@ -57,6 +60,7 @@ function DetailPager({ width, height, ...props }: Props & { width: number; heigh
   const { images, index, renderImage, onClose, onIndexChange } = props;
   const metadata = useImageSize(images[index], width, height);
   const base = getContainSize(width, height, metadata.width, metadata.height);
+  const { spring } = useMotion(props.reduceMotion);
   // Worklets may capture shared values, but not the ManualGesture instance.
   const { gesture, closing, dismiss, pager, x, y, scale } = useDetailGesture({
     width,
@@ -71,6 +75,10 @@ function DetailPager({ width, height, ...props }: Props & { width: number; heigh
     dismissScaleThreshold: props.dismissScaleThreshold ?? 1.02,
     onIndexChange,
     onClose,
+    onLongPress: props.onLongPress,
+    doubleTapScale: props.doubleTapScale,
+    longPressDuration: props.longPressDuration,
+    spring,
     imageIdentity: JSON.stringify([images[index].id, images[index].uri]),
   });
   const insets = useSafeAreaInsets();
@@ -126,6 +134,7 @@ function DetailPager({ width, height, ...props }: Props & { width: number; heigh
                   width={width}
                   height={height}
                   renderImage={renderImage}
+                  reduceMotion={props.reduceMotion}
                   zoomValues={{ x, y, scale, dismiss }}
                 />
               );
@@ -142,12 +151,17 @@ function DetailPager({ width, height, ...props }: Props & { width: number; heigh
             onPress={onClose}
             style={styles.close}
           >
-            <Text style={styles.white}>閉じる</Text>
+            <Text style={styles.closeIcon}>&times;</Text>
           </Pressable>
           {props.renderOverlay?.({ index, close: onClose })}
           <PageIndicator count={count} index={index} bottom={insets.bottom + 12} progress={progress} />
         </SafeAreaView>
       </Animated.View>
+      {props.renderDetailForeground && (
+        <View style={styles.absolute} pointerEvents="box-none">
+          {props.renderDetailForeground({ index, close: onClose })}
+        </View>
+      )}
     </View>
   );
 }
@@ -155,7 +169,7 @@ function DetailPager({ width, height, ...props }: Props & { width: number; heigh
 function DetailSurface(props: Props) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const opening = useSharedValue(0);
-  const reduced = useReducedMotion();
+  const { reduced } = useMotion(props.reduceMotion);
 
   useEffect(() => {
     opening.value = withTiming(1, { duration: reduced ? 0 : 180 });
