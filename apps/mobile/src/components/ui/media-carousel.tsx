@@ -51,8 +51,10 @@ export const MediaCarousel = memo(({ medias, onIndexChange, pins }: Props) => {
   const mediaIdentity = useMemo(() => medias.map((media) => media.id).join(":"), [medias]);
   const [isBlurRemoved, setIsBlurRemoved] = useState(false);
   const [arePinsVisible, setArePinsVisible] = useState(true);
+  // Detail に表示中のページ。閉じている間は null（Carousel のスワイプで再レンダリングしないため）
+  const [detailIndex, setDetailIndex] = useState<number | null>(null);
   const imageActionsSheetRef = useRef<BottomSheet>(null);
-  const actionTargetMediaRef = useRef<Media | null>(null);
+  const actionTargetRef = useRef<{ media: Media; url: string } | null>(null);
 
   const imageQuality = useAtomValue(timelineImageQualityAtom);
   const wifiUpgrade = useAtomValue(timelineWifiUpgradeAtom);
@@ -70,6 +72,8 @@ export const MediaCarousel = memo(({ medias, onIndexChange, pins }: Props) => {
     // The gallery itself is remounted via `key`.
     setIsBlurRemoved(false);
     setArePinsVisible(true);
+    setDetailIndex(null);
+    actionTargetRef.current = null;
   }, [mediaIdentity]);
 
   const timelineVariant = useMemo(() => {
@@ -79,6 +83,9 @@ export const MediaCarousel = memo(({ medias, onIndexChange, pins }: Props) => {
     return imageQuality === "low" ? "timeline" : "small";
   }, [imageQuality, wifiUpgrade, isWifi]);
 
+  // フルスクリーン表示はタイムラインの画質設定とは独立。Wi-Fi アップグレードのみを見て段階を上げる
+  const fullscreenVariant = wifiUpgrade && isWifi ? "large" : "medium";
+
   const mediaById = useMemo(() => new Map(medias.map((media) => [media.id, media])), [medias]);
 
   const images = useMemo<GalleryImage[]>(
@@ -87,42 +94,36 @@ export const MediaCarousel = memo(({ medias, onIndexChange, pins }: Props) => {
         id: media.id,
         uri: getCdnUrl({
           src: media.url,
-          variant: "medium",
+          variant: fullscreenVariant,
           width: SCREEN_WIDTH,
           aspect: getAspect(media),
         }),
         width: media.metadata?.width ?? undefined,
         height: media.metadata?.height ?? undefined,
       })),
-    [medias, SCREEN_WIDTH],
+    [medias, SCREEN_WIDTH, fullscreenVariant],
   );
 
   const doShareImage = useCallback(async () => {
-    const media = actionTargetMediaRef.current;
-    if (!media) return;
+    const target = actionTargetRef.current;
+    if (!target) return;
 
     imageActionsSheetRef.current?.close();
 
     try {
-      const url = getCdnUrl({
-        src: media.url,
-        variant: "medium",
-        width: SCREEN_WIDTH,
-        aspect: getAspect(media),
-      });
-      const file = await File.downloadFileAsync(url, Paths.cache, {
+      const file = await File.downloadFileAsync(target.url, Paths.cache, {
         idempotent: true,
       });
-      await Share.share(Platform.OS === "ios" ? { url: file.uri } : { message: url });
+      await Share.share(Platform.OS === "ios" ? { url: file.uri } : { message: target.url });
     } catch (e) {
       Alert.alert("エラー", `画像の共有に失敗しました。\n${e instanceof Error ? e.message : String(e)}`);
     }
-  }, [SCREEN_WIDTH]);
+  }, []);
 
   const doSaveImage = useCallback(
     async (quality: "current" | "original") => {
-      const media = actionTargetMediaRef.current;
-      if (!media) return;
+      const target = actionTargetRef.current;
+      if (!target) return;
 
       imageActionsSheetRef.current?.close();
 
@@ -133,15 +134,11 @@ export const MediaCarousel = memo(({ medias, onIndexChange, pins }: Props) => {
           return;
         }
 
+        // "current" は長押し時に表示していた URL をそのまま使う。表示と保存が食い違わないようにするため
         const url =
           quality === "original"
-            ? getCdnUrl({ src: media.url, variant: "original", width: 9999 })
-            : getCdnUrl({
-                src: media.url,
-                variant: "medium",
-                width: SCREEN_WIDTH,
-                aspect: getAspect(media),
-              });
+            ? getCdnUrl({ src: target.media.url, variant: "original", width: 9999 })
+            : target.url;
 
         const file = await File.downloadFileAsync(url, Paths.cache, {
           idempotent: true,
@@ -152,23 +149,25 @@ export const MediaCarousel = memo(({ medias, onIndexChange, pins }: Props) => {
         Alert.alert("エラー", `画像の保存に失敗しました。\n${e instanceof Error ? e.message : String(e)}`);
       }
     },
-    [SCREEN_WIDTH, haptics],
+    [haptics],
   );
 
   const handleImageLongPress = useCallback(
     (index: number) => {
       const media = medias[index];
-      if (!media) return;
+      const url = images[index]?.uri;
+      if (!media || !url) return;
 
+      // シートを開いている間に medias が差し替わっても取り違えないよう、ここで対象を確定する
       haptics.impact(Haptics.ImpactFeedbackStyle.Heavy);
-      actionTargetMediaRef.current = media;
+      actionTargetRef.current = { media, url };
       imageActionsSheetRef.current?.snapToIndex(0);
     },
-    [haptics, medias],
+    [haptics, medias, images],
   );
 
   const renderImage = useCallback(
-    (image: GalleryImage, { mode }: { mode: "carousel" | "detail" }) => {
+    (image: GalleryImage, { mode, index }: { mode: "carousel" | "detail"; index: number }) => {
       const media = mediaById.get(image.id);
       if (!media) return null;
 
@@ -179,6 +178,9 @@ export const MediaCarousel = memo(({ medias, onIndexChange, pins }: Props) => {
             source={{ uri: image.uri }}
             className="size-full"
             contentFit="contain"
+            // ズームはビューのレイアウトサイズを変えない transform なので、ダウンスケールを許すと
+            // 画面解像度のビットマップを拡大することになる。表示中のページだけ元解像度を保持する
+            allowDownscaling={index !== detailIndex}
           />
         );
       }
@@ -201,7 +203,7 @@ export const MediaCarousel = memo(({ medias, onIndexChange, pins }: Props) => {
         </View>
       );
     },
-    [mediaById, mediaIdentity, SCREEN_WIDTH, timelineVariant],
+    [mediaById, mediaIdentity, SCREEN_WIDTH, timelineVariant, detailIndex],
   );
 
   const hasSensitiveContent = medias.some((m) => m.metadata?.isSensitive || m.metadata?.isSpoiler);
@@ -266,6 +268,17 @@ export const MediaCarousel = memo(({ medias, onIndexChange, pins }: Props) => {
     [],
   );
 
+  const handleCloseDetail = useCallback(() => setDetailIndex(null), []);
+
+  const handleIndexChange = useCallback(
+    (index: number) => {
+      // Detail を開いていないときは allowDownscaling に影響しないので、再レンダリングを避ける
+      setDetailIndex((current) => (current === null ? null : index));
+      onIndexChange?.(index);
+    },
+    [onIndexChange],
+  );
+
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />,
     [],
@@ -319,7 +332,9 @@ export const MediaCarousel = memo(({ medias, onIndexChange, pins }: Props) => {
       reduceMotion={reducedMotion}
       detailEnabled={!isBlurred}
       style={{ height: carouselHeight, aspectRatio: undefined }}
-      onIndexChange={onIndexChange}
+      onIndexChange={handleIndexChange}
+      onOpenDetail={setDetailIndex}
+      onCloseDetail={handleCloseDetail}
       onLongPress={handleImageLongPress}
       renderImage={renderImage}
       renderCarouselOverlay={renderCarouselOverlay}
