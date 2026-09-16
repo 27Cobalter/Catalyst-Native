@@ -39,9 +39,11 @@ type PageProps = {
   // ギャラリーなど一覧を広く見せたいページはメインカラムの最大幅を外す
   wide?: boolean;
   rightRail?: boolean;
+  // Tabs ナビゲータのように children 自身が flex:1 で高さを管理する場合、外側の ScrollView に入れると潰れるため無効化する
+  scroll?: boolean;
 };
 
-export const Page = ({ header, children, wide = false, rightRail = true }: PageProps) => {
+export const Page = ({ header, children, wide = false, rightRail = true, scroll = true }: PageProps) => {
   const [width, setWidth] = useState(0);
   const showRightRail = rightRail && width >= RIGHT_RAIL_BREAKPOINT;
 
@@ -57,10 +59,17 @@ export const Page = ({ header, children, wide = false, rightRail = true }: PageP
           showRightRail && "border-r",
         )}
       >
-        <ScrollView stickyHeaderIndices={[0]} contentContainerClassName="pb-10">
-          {header}
-          {children}
-        </ScrollView>
+        {scroll ? (
+          <ScrollView stickyHeaderIndices={[0]} contentContainerClassName="pb-10">
+            {header}
+            {children}
+          </ScrollView>
+        ) : (
+          <View className="flex-1">
+            {header}
+            {children}
+          </View>
+        )}
       </View>
       {showRightRail && <RightRail />}
     </View>
