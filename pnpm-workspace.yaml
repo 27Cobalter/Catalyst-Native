@@ -42,5 +42,6 @@ minimumReleaseAgeExclude:
   - "@natsuneko-laboratory/fleet-renderer-core"
   - "@natsuneko-laboratory/fleet-renderer-react-native"
   - "@natsuneko-laboratory/memora"
+  - "@natsuneko-laboratory/react-native-desktop-navigation"
   - "@natsuneko-laboratory/react-native-twitter-text"
   - "@natsuneko-laboratory/react-native-webcrypto-digest"

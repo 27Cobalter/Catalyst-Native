@@ -16,9 +16,14 @@
   [super applicationDidFinishLaunching:notification];
 
   // App Store / Mail 風に、タイトルバーを透過させてコンテンツをその下まで敷き詰める。
+  // styleMask の変更はコンテンツ矩形を維持してウィンドウ枠をタイトルバー分縮めるため、
+  // 復元済みの枠を戻さないと自動保存された枠が起動ごとに小さくなっていく。
+  NSRect frame = self.window.frame;
   self.window.styleMask |= NSWindowStyleMaskFullSizeContentView;
+  [self.window setFrame:frame display:YES];
   self.window.titlebarAppearsTransparent = YES;
   self.window.titleVisibility = NSWindowTitleHidden;
+  self.window.contentMinSize = NSMakeSize(800, 560);
 }
 
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
