@@ -8,7 +8,14 @@
     "test": "jest"
   },
   "dependencies": {
+    "@natsuneko-laboratory/catalyst-sdk": "catalog:",
+    "@natsuneko-laboratory/fleet-renderer-core": "catalog:",
+    "@natsuneko-laboratory/fleet-renderer-react-native": "catalog:",
+    "@natsuneko-laboratory/memora": "catalog:",
+    "@natsuneko-laboratory/react-native-carousel-viewer": "workspace:*",
     "@natsuneko-laboratory/react-native-desktop-navigation": "0.1.0-alpha.14",
+    "@natsuneko-laboratory/react-native-twitter-text": "catalog:",
+    "@natsuneko-laboratory/react-native-webcrypto-digest": "catalog:",
     "@react-native/new-app-screen": "0.81.6",
     "cn": "catalog:",
     "lucide-react-native": "^1.45.0",
