@@ -12,8 +12,13 @@
   // They will be passed down to the ViewController used by React Native.
   self.initialProps = @{};
   self.dependencyProvider = [RCTAppDependencyProvider new];
-  
-  return [super applicationDidFinishLaunching:notification];
+
+  [super applicationDidFinishLaunching:notification];
+
+  // App Store / Mail 風に、タイトルバーを透過させてコンテンツをその下まで敷き詰める。
+  self.window.styleMask |= NSWindowStyleMaskFullSizeContentView;
+  self.window.titlebarAppearsTransparent = YES;
+  self.window.titleVisibility = NSWindowTitleHidden;
 }
 
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
