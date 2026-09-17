@@ -2,10 +2,11 @@ import { CatalystActionSheetItem, CatalystDivider } from "@/components/design-sy
 import { MediaPinOverlay } from "@/components/status/media-pin-overlay";
 import { useHaptics } from "@/hooks/use-haptics";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import { getCdnUrl } from "@/lib/media";
+import { getCdnUrl, resolveDeliveredImageType } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import { timelineImageQualityAtom, timelineWifiUpgradeAtom } from "@/models/atoms/image-quality";
 import type { EpicleseReference } from "@/models/epiclese";
+import { CatalystDownloader } from "@/models/image-downloader";
 import type { Media } from "@/models/sdk-types";
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
 import {
@@ -191,6 +192,20 @@ export const MediaCarousel = memo(({ medias, createdAt, onIndexChange, pins }: P
       });
 
       try {
+        // Android ではダウンロード・保存先への配置・完了通知・タップで開く動作をすべて OS に任せる。
+        // ネイティブ側が無い環境（iOS）では下の写真ライブラリ経由にフォールバックする
+        if (CatalystDownloader) {
+          // Android 9 以前は公開ディレクトリへの書き込みに権限が要る。10 以降は OS が肩代わりする
+          if (Number(Platform.Version) < 29 && !(await ensureMediaLibraryPermission())) return;
+
+          // ダウンロードマネージャは保存先を先に決める必要があるので、ここだけ事前に型を問い合わせる
+          const { extension, mimeType } = await resolveDeliveredImageType(url);
+          const fileName = buildSavedFileName(createdAt, target.media, variant, extension);
+          await CatalystDownloader.enqueueImageDownload(url, `${SAVE_ALBUM_NAME}/${fileName}`, mimeType);
+          haptics.notification(Haptics.NotificationFeedbackType.Success);
+          return;
+        }
+
         if (!(await ensureMediaLibraryPermission())) return;
 
         const downloaded = await File.downloadFileAsync(url, Paths.cache, {

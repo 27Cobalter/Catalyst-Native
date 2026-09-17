@@ -95,3 +95,15 @@ export const getCdnUrl = ({ src, variant, width, aspect, mode, format }: GetCdnU
 
   return cdn.toString();
 };
+
+/**
+ * URL が実際に返すフォーマットを問い合わせる。`format` を指定しても CDN は 8K 程度の大きな画像では
+ * 変換せず JPEG を返すため、保存時の拡張子は要求ではなく実際のレスポンスに合わせる必要がある。
+ */
+export const resolveDeliveredImageType = async (url: string) => {
+  const response = await fetch(url, { method: "HEAD" });
+
+  return response.headers.get("content-type") === "image/webp"
+    ? { extension: ".webp", mimeType: "image/webp" }
+    : { extension: ".jpg", mimeType: "image/jpeg" };
+};

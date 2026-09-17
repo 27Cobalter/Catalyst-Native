@@ -1,4 +1,4 @@
-import { getCdnUrl, getIdenticonUrl } from "./media";
+import { getCdnUrl, getIdenticonUrl, resolveDeliveredImageType } from "./media";
 
 describe("getIdenticonUrl", () => {
   it("id から identicon URL を組み立てる", () => {
@@ -132,6 +132,32 @@ describe("getCdnUrl", () => {
       expect(url.pathname).toBe("/foo.png");
       expect(url.searchParams.get("token")).toBeNull();
       expect(url.searchParams.get("width")).toBe("512");
+    });
+  });
+});
+
+describe("resolveDeliveredImageType", () => {
+  const mockHead = (contentType: string | null) => {
+    global.fetch = jest.fn().mockResolvedValue({
+      headers: { get: () => contentType },
+    }) as unknown as typeof fetch;
+  };
+
+  it("WebP が返るなら webp 拡張子にする", async () => {
+    mockHead("image/webp");
+
+    await expect(resolveDeliveredImageType("https://example.com/x?format=webp")).resolves.toEqual({
+      extension: ".webp",
+      mimeType: "image/webp",
+    });
+  });
+
+  it("WebP を要求しても JPEG が返る場合（8K など CDN が変換しないケース）は jpg 拡張子にする", async () => {
+    mockHead("image/jpeg");
+
+    await expect(resolveDeliveredImageType("https://example.com/x?format=webp")).resolves.toEqual({
+      extension: ".jpg",
+      mimeType: "image/jpeg",
     });
   });
 });
