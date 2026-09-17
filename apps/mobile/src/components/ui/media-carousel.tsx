@@ -50,8 +50,7 @@ const SAVE_ALBUM_NAME = "Catalyst";
 /**
  * 投稿日時とメディアの並び順からファイル名を組み立てる。保存順ではなく投稿順にソートできるよう投稿日時を使う。
  * variant は実際に保存した画質（"original" または Wi-Fi 設定に応じて変わる fullscreenVariant）をそのままサフィックスにする。
- * extension はダウンロード後にサーバーの Content-Type から決まったものをそのまま使う（CDN は format=auto で
- * WebP/AVIF を返すことがあるため、jpg 固定にはしない）
+ * extension は CDN が実際に返したフォーマットに合わせる。
  */
 const buildSavedFileName = (createdAt: string, media: Media, variant: string, extension: string) => {
   const d = new Date(createdAt);
@@ -178,20 +177,26 @@ export const MediaCarousel = memo(({ medias, createdAt, onIndexChange, pins }: P
 
       imageActionsSheetRef.current?.close();
 
-      // "current" は長押し時に表示していた URL と画質をそのまま使う。Wi-Fi の切り替わりで
-      // ファイル名の画質サフィックスと中身がずれないよう、変数ではなく長押し時の値を見る
+      // 画質は長押し時の値を見る。Wi-Fi の切り替わりでファイル名の画質サフィックスと中身がずれないようにするため
       const variant = quality === "original" ? "original" : target.variant;
-      const url =
-        quality === "original" ? getCdnUrl({ src: target.media.url, variant, width: 9999 }) : target.url;
+      // 表示用 URL を使い回さず組み立て直す。保存では WebP を明示的に要求したいため。
+      // ただし 8K 程度の大きな画像では CDN が変換せず JPEG を返すので、
+      // 拡張子は要求ではなく実際に返ってきた中身に合わせる
+      const url = getCdnUrl({
+        src: target.media.url,
+        variant,
+        width: quality === "original" ? 9999 : SCREEN_WIDTH,
+        aspect: quality === "original" ? undefined : getAspect(target.media),
+        format: "webp",
+      });
 
       try {
         if (!(await ensureMediaLibraryPermission())) return;
 
-        // ディレクトリ宛にダウンロードし、レスポンスの Content-Type から決まる実際の拡張子を採用する
-        // （CDN は format=auto で配信しており、常に jpg とは限らないため）
         const downloaded = await File.downloadFileAsync(url, Paths.cache, {
           idempotent: true,
         });
+        // 取得済みのファイルから拡張子が分かるので、こちらは問い合わせ不要
         const destination = new File(
           Paths.cache,
           buildSavedFileName(createdAt, target.media, variant, downloaded.extension || ".jpg"),
@@ -215,7 +220,7 @@ export const MediaCarousel = memo(({ medias, createdAt, onIndexChange, pins }: P
         });
       }
     },
-    [haptics, createdAt],
+    [haptics, createdAt, SCREEN_WIDTH],
   );
 
   const handleImageLongPress = useCallback(

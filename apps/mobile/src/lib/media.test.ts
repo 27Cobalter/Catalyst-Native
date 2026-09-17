@@ -39,6 +39,28 @@ describe("getCdnUrl", () => {
         getCdnUrl({ src: "https://citlali.natsuneko.com/image-id", variant: "thumbnail", width: 512 }),
       ).toBe("https://citlali.natsuneko.com/image-id/thumbnail?format=auto");
     });
+
+    it("format 指定時は auto ではなくそのフォーマットを要求する", () => {
+      expect(
+        getCdnUrl({
+          src: "https://citlali.natsuneko.com/image-id",
+          variant: "original",
+          width: 9999,
+          format: "webp",
+        }),
+      ).toBe("https://citlali.natsuneko.com/image-id/original?format=webp");
+    });
+
+    it("format 指定は format=auto を付けないホストにも効く", () => {
+      expect(
+        getCdnUrl({
+          src: "https://imagedelivery.net/hash/image-id",
+          variant: "original",
+          width: 9999,
+          format: "webp",
+        }),
+      ).toBe("https://imagedelivery.net/hash/image-id/original?format=webp");
+    });
   });
 
   it("api.natsuneko.com はそのまま返す", () => {
@@ -91,6 +113,14 @@ describe("getCdnUrl", () => {
 
       expect(url.searchParams.get("crop")).toBe("2:2");
       expect(url.searchParams.get("fit")).toBeNull();
+    });
+
+    it("format 指定時は format クエリを付与する", () => {
+      const url = new URL(
+        getCdnUrl({ src: "https://example.com/image.png", width: 512, format: "webp" }),
+      );
+
+      expect(url.searchParams.get("format")).toBe("webp");
     });
 
     it("images.natsuneko.com は既存のクエリパラメータを破棄して組み立て直す", () => {
