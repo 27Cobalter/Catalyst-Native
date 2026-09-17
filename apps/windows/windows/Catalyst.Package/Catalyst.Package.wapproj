@@ -4,6 +4,7 @@
   <PropertyGroup>
     <ProjectGuid>{647eae74-a636-489c-924f-21544ccf5ac6}</ProjectGuid>
     <DefaultLanguage>en-US</DefaultLanguage>
+    <TargetPlatformVersion>10.0.26100.0</TargetPlatformVersion>
     <EntryPointProjectUniqueName>..\Catalyst\Catalyst.vcxproj</EntryPointProjectUniqueName>
     <DebuggerType>NativeOnly</DebuggerType>
     <BackgroundTaskDebugEngines>NativeOnly</BackgroundTaskDebugEngines>

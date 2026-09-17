@@ -10,12 +10,22 @@
     "test:windows": "jest --config jest.config.windows.js"
   },
   "dependencies": {
+    "@natsuneko-laboratory/catalyst-sdk": "catalog:",
+    "@natsuneko-laboratory/fleet-renderer-core": "catalog:",
+    "@natsuneko-laboratory/fleet-renderer-react-native": "catalog:",
+    "@natsuneko-laboratory/memora": "catalog:",
+    "@natsuneko-laboratory/react-native-carousel-viewer": "workspace:*",
+    "@natsuneko-laboratory/react-native-desktop-navigation": "0.1.0-alpha.16",
+    "@natsuneko-laboratory/react-native-twitter-text": "catalog:",
+    "@natsuneko-laboratory/react-native-webcrypto-digest": "catalog:",
     "@react-native/new-app-screen": "0.84.0",
     "cn": "catalog:",
+    "lucide-react-native": "^1.45.0",
     "react": "19.2.3",
     "react-native": "0.84.0",
     "react-native-safe-area-context": "^5.5.2",
     "react-native-windows": "^0.84.0",
+    "react-native-svg": "^15.15.5",
     "tailwindcss": "catalog:",
     "uniwind": "catalog:"
   },

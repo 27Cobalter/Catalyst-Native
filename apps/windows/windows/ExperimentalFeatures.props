@@ -10,6 +10,16 @@
       See https://microsoft.github.io/react-native-windows/docs/new-architecture
     -->
     <RnwNewArch>true</RnwNewArch>
+    <UseNewArchitecture>true</UseNewArchitecture>
+    <UseExperimentalWinUI3>true</UseExperimentalWinUI3>
+
+    <!--
+      RNW derives UseFabric from RnwNewArch, but only in ReactNativeArchitecture.props, which
+      library projects import after the <Choose> that picks their application type. Older library
+      vcxproj files (react-native-svg) therefore read it as empty and select the UWP branch,
+      which needs a toolset the New Architecture does not otherwise require. Set it up front.
+    -->
+    <UseFabric>true</UseFabric>
 
     <!--
       Changes compilation to assume use of Microsoft.ReactNative NuGet packages
