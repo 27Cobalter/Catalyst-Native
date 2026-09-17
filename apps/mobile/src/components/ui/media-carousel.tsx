@@ -14,10 +14,12 @@ import {
   type GalleryImage,
 } from "@natsuneko-laboratory/react-native-carousel-viewer";
 import NetInfo from "@react-native-community/netinfo";
+import * as Sentry from "@sentry/react-native";
 import { File, Paths } from "expo-file-system";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import {
+  Album as MediaLibraryAlbum,
   Asset as MediaLibraryAsset,
   requestPermissionsAsync as requestMediaLibraryPermissions,
 } from "expo-media-library";
@@ -25,6 +27,7 @@ import { useAtomValue } from "jotai";
 import { Download, EyeOff, ImageDown, Share2 } from "lucide-react-native";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Platform, Pressable, Share, Text, View, useColorScheme, useWindowDimensions } from "react-native";
+import Toast from "react-native-toast-message";
 import { withUniwind } from "uniwind";
 
 const UniImage = withUniwind(Image);
@@ -35,9 +38,52 @@ const UniImageDown = withUniwind(ImageDown);
 
 type Props = {
   medias: Media[];
+  /** 投稿日時（ISO 8601）。保存時のファイル名に使う */
+  createdAt: string;
   onIndexChange?: (index: number) => void;
   /** media.id → 写真上のピン（座標付きメタデータ）。渡された場合のみオーバーレイを表示する */
   pins?: Record<string, EpicleseReference[] | undefined>;
+};
+
+const SAVE_ALBUM_NAME = "Catalyst";
+
+/**
+ * 投稿日時とメディアの並び順からファイル名を組み立てる。保存順ではなく投稿順にソートできるよう投稿日時を使う。
+ * variant は実際に保存した画質（"original" または Wi-Fi 設定に応じて変わる fullscreenVariant）をそのままサフィックスにする。
+ * extension はダウンロード後にサーバーの Content-Type から決まったものをそのまま使う（CDN は format=auto で
+ * WebP/AVIF を返すことがあるため、jpg 固定にはしない）
+ */
+const buildSavedFileName = (createdAt: string, media: Media, variant: string, extension: string) => {
+  const d = new Date(createdAt);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const timestamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  // 投稿の最大枚数は10枚なので2桁ゼロパディングで揃える
+  const order = pad(media.order + 1);
+  return `Catalyst_${timestamp}_${order}_${variant}${extension}`;
+};
+
+/** 既定の保存先に作ってからアルバムへ移すと二度手間なので、アルバムがあれば最初からそこに作る */
+const saveToPhotoLibrary = async (fileUri: string) => {
+  const album = await MediaLibraryAlbum.get(SAVE_ALBUM_NAME);
+  if (album) {
+    await MediaLibraryAsset.create(fileUri, album);
+    return;
+  }
+
+  const asset = await MediaLibraryAsset.create(fileUri);
+  // アルバム作成に失敗しても写真自体は保存済みなので、保存失敗として扱わない
+  await MediaLibraryAlbum.create(SAVE_ALBUM_NAME, [asset]).catch((e) => Sentry.captureException(e));
+};
+
+const ensureMediaLibraryPermission = async () => {
+  const { status } = await requestMediaLibraryPermissions();
+  if (status === "granted") return true;
+
+  Alert.alert(
+    "写真へのアクセスを許可してください",
+    "画像を保存するには、端末の設定で Catalyst に写真へのアクセスを許可する必要があります。",
+  );
+  return false;
 };
 
 const getAspect = (media: Media) => ({
@@ -45,7 +91,7 @@ const getAspect = (media: Media) => ({
   h: media.metadata?.height ?? 1,
 });
 
-export const MediaCarousel = memo(({ medias, onIndexChange, pins }: Props) => {
+export const MediaCarousel = memo(({ medias, createdAt, onIndexChange, pins }: Props) => {
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const theme = useColorScheme() ?? "light";
   const mediaIdentity = useMemo(() => medias.map((media) => media.id).join(":"), [medias]);
@@ -54,7 +100,7 @@ export const MediaCarousel = memo(({ medias, onIndexChange, pins }: Props) => {
   // Detail に表示中のページ。閉じている間は null（Carousel のスワイプで再レンダリングしないため）
   const [detailIndex, setDetailIndex] = useState<number | null>(null);
   const imageActionsSheetRef = useRef<BottomSheet>(null);
-  const actionTargetRef = useRef<{ media: Media; url: string } | null>(null);
+  const actionTargetRef = useRef<{ media: Media; url: string; variant: "large" | "medium" } | null>(null);
 
   const imageQuality = useAtomValue(timelineImageQualityAtom);
   const wifiUpgrade = useAtomValue(timelineWifiUpgradeAtom);
@@ -116,7 +162,12 @@ export const MediaCarousel = memo(({ medias, onIndexChange, pins }: Props) => {
       });
       await Share.share(Platform.OS === "ios" ? { url: file.uri } : { message: target.url });
     } catch (e) {
-      Alert.alert("エラー", `画像の共有に失敗しました。\n${e instanceof Error ? e.message : String(e)}`);
+      Sentry.captureException(e);
+      Toast.show({
+        type: "error",
+        text1: "画像を共有できませんでした",
+        text2: "時間をおいて、もう一度お試しください",
+      });
     }
   }, []);
 
@@ -127,29 +178,44 @@ export const MediaCarousel = memo(({ medias, onIndexChange, pins }: Props) => {
 
       imageActionsSheetRef.current?.close();
 
+      // "current" は長押し時に表示していた URL と画質をそのまま使う。Wi-Fi の切り替わりで
+      // ファイル名の画質サフィックスと中身がずれないよう、変数ではなく長押し時の値を見る
+      const variant = quality === "original" ? "original" : target.variant;
+      const url =
+        quality === "original" ? getCdnUrl({ src: target.media.url, variant, width: 9999 }) : target.url;
+
       try {
-        const { status } = await requestMediaLibraryPermissions();
-        if (status !== "granted") {
-          Alert.alert("権限エラー", "写真を保存するには写真ライブラリへのアクセス許可が必要です。");
-          return;
-        }
+        if (!(await ensureMediaLibraryPermission())) return;
 
-        // "current" は長押し時に表示していた URL をそのまま使う。表示と保存が食い違わないようにするため
-        const url =
-          quality === "original"
-            ? getCdnUrl({ src: target.media.url, variant: "original", width: 9999 })
-            : target.url;
-
-        const file = await File.downloadFileAsync(url, Paths.cache, {
+        // ディレクトリ宛にダウンロードし、レスポンスの Content-Type から決まる実際の拡張子を採用する
+        // （CDN は format=auto で配信しており、常に jpg とは限らないため）
+        const downloaded = await File.downloadFileAsync(url, Paths.cache, {
           idempotent: true,
         });
-        await MediaLibraryAsset.create(file.uri);
-        haptics.notification(Haptics.NotificationFeedbackType.Success);
+        const destination = new File(
+          Paths.cache,
+          buildSavedFileName(createdAt, target.media, variant, downloaded.extension || ".jpg"),
+        );
+        // 同じ画像を再保存したとき、前回のキャッシュが残っていても失敗させない
+        await downloaded.move(destination, { overwrite: true });
+
+        try {
+          await saveToPhotoLibrary(destination.uri);
+          haptics.notification(Haptics.NotificationFeedbackType.Success);
+        } finally {
+          // 写真ライブラリに取り込んだ後の中間ファイルは不要。残すと次回の保存を邪魔する
+          if (destination.exists) destination.delete();
+        }
       } catch (e) {
-        Alert.alert("エラー", `画像の保存に失敗しました。\n${e instanceof Error ? e.message : String(e)}`);
+        Sentry.captureException(e);
+        Toast.show({
+          type: "error",
+          text1: "画像を保存できませんでした",
+          text2: "時間をおいて、もう一度お試しください",
+        });
       }
     },
-    [haptics],
+    [haptics, createdAt],
   );
 
   const handleImageLongPress = useCallback(
@@ -158,12 +224,12 @@ export const MediaCarousel = memo(({ medias, onIndexChange, pins }: Props) => {
       const url = images[index]?.uri;
       if (!media || !url) return;
 
-      // シートを開いている間に medias が差し替わっても取り違えないよう、ここで対象を確定する
+      // シートを開いている間に medias や画質設定が変わっても取り違えないよう、ここで対象を確定する
       haptics.impact(Haptics.ImpactFeedbackStyle.Heavy);
-      actionTargetRef.current = { media, url };
+      actionTargetRef.current = { media, url, variant: fullscreenVariant };
       imageActionsSheetRef.current?.snapToIndex(0);
     },
-    [haptics, medias, images],
+    [haptics, medias, images, fullscreenVariant],
   );
 
   const renderImage = useCallback(

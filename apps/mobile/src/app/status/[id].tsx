@@ -478,7 +478,12 @@ export default function StatusDetailsPage() {
             </View>
 
             {status.medias.length > 0 ? (
-              <MediaCarousel medias={status.medias} onIndexChange={setCurrentMediaIndex} pins={mediaPins} />
+              <MediaCarousel
+                medias={status.medias}
+                createdAt={status.createdAt}
+                onIndexChange={setCurrentMediaIndex}
+                pins={mediaPins}
+              />
             ) : null}
 
             <View className="px-5 py-4">
