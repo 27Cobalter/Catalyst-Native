@@ -14,5 +14,5 @@
     "strict": true,
     "types": ["node", "vite/client"]
   },
-  "include": ["src", "content.ts", "export.ts", "vite.config.ts"]
+  "include": ["src", "content.ts", "uwp.ts", "export.ts", "vite.config.ts"]
 }

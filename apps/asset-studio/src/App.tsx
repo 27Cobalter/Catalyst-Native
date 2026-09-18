@@ -2,6 +2,7 @@ import { type ChangeEvent, useLayoutEffect, useMemo, useRef, useState } from "re
 
 import { type FormatKey, type StoreFormat, type StoreSlide, formats, slides } from "../content";
 import { StoreCanvas } from "./StoreCanvas";
+import { UwpTool } from "./UwpTool";
 
 type PreviewFormat = StoreFormat & { scale: number };
 
@@ -9,6 +10,7 @@ interface CaptureOptions {
   capture: boolean;
   formatKey: FormatKey;
   slideIndex: number;
+  tool: Tool;
 }
 
 function isFormatKey(value: string | null): value is FormatKey {
@@ -23,7 +25,9 @@ function useCaptureOptions(): CaptureOptions {
     const requestedSlide = Number(params.get("slide") ?? 0);
     const slideIndex = Number.isInteger(requestedSlide) ? Math.min(Math.max(requestedSlide, 0), slides.length - 1) : 0;
 
-    return { capture: params.get("capture") === "1", formatKey, slideIndex };
+    const tool: Tool = params.get("tool") === "uwp" ? "uwp" : "screenshots";
+
+    return { capture: params.get("capture") === "1", formatKey, slideIndex, tool };
   }, []);
 }
 
@@ -65,9 +69,19 @@ function CanvasPreview({ formatKey, slide }: { formatKey: FormatKey; slide: Stor
   );
 }
 
-function Studio({ initialFormatKey }: { initialFormatKey: FormatKey }) {
+type Tool = "screenshots" | "uwp";
+
+function Studio({ initialFormatKey, initialTool }: { initialFormatKey: FormatKey; initialTool: Tool }) {
+  const [tool, setTool] = useState<Tool>(initialTool);
   const [formatKey, setFormatKey] = useState<FormatKey>(initialFormatKey);
   const format = formats[formatKey];
+
+  function selectTool(next: Tool) {
+    setTool(next);
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set("tool", next);
+    window.history.replaceState(null, "", nextUrl);
+  }
 
   function selectFormat(event: ChangeEvent<HTMLSelectElement>) {
     const nextFormat = event.target.value;
@@ -85,9 +99,21 @@ function Studio({ initialFormatKey }: { initialFormatKey: FormatKey }) {
         <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-4">
           <div>
             <p className="font-utility text-xs font-semibold tracking-[0.18em] text-[#c9507f]">CATALYST ASSET STUDIO</p>
-            <h1 className="mt-1 text-xl font-bold">Store screenshots</h1>
+            <h1 className="mt-1 text-xl font-bold">{tool === "uwp" ? "Windows Store assets" : "Store screenshots"}</h1>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex gap-1 rounded-lg bg-[#f1f2f4] p-1 text-sm font-semibold">
+            {([["screenshots", "スクリーンショット"], ["uwp", "Windows (UWP)"]] as const).map(([key, label]) => (
+              <button
+                className={`rounded-md px-3 py-1.5 ${tool === key ? "bg-white shadow-sm" : "text-[#686e78]"}`}
+                key={key}
+                onClick={() => selectTool(key)}
+                type="button"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className={tool === "uwp" ? "hidden" : "flex items-center gap-3"}>
             <label className="text-sm font-medium text-[#555b65]" htmlFor="format">
               出力サイズ
             </label>
@@ -107,6 +133,9 @@ function Studio({ initialFormatKey }: { initialFormatKey: FormatKey }) {
         </div>
       </header>
 
+      {tool === "uwp" ? (
+        <UwpTool />
+      ) : (
       <section className="mx-auto max-w-[1600px] px-6 py-8">
         <div className="mb-7 rounded-xl border border-black/10 bg-white px-5 py-4 text-sm leading-6 text-[#555b65] shadow-sm">
           文言・画像・アクセント色は{" "}
@@ -141,15 +170,16 @@ function Studio({ initialFormatKey }: { initialFormatKey: FormatKey }) {
           現在のプレビュー: {format.width} × {format.height}px
         </p>
       </section>
+      )}
     </main>
   );
 }
 
 export function App() {
-  const { capture, formatKey, slideIndex } = useCaptureOptions();
+  const { capture, formatKey, slideIndex, tool } = useCaptureOptions();
   return capture ? (
     <CaptureView formatKey={formatKey} slideIndex={slideIndex} />
   ) : (
-    <Studio initialFormatKey={formatKey} />
+    <Studio initialFormatKey={formatKey} initialTool={tool} />
   );
 }
