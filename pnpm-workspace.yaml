@@ -17,8 +17,10 @@ catalog:
   "@natsuneko-laboratory/fleet-renderer-core": 0.2.0
   "@natsuneko-laboratory/fleet-renderer-react-native": 0.1.0
   "@natsuneko-laboratory/memora": 0.3.0
+  "@natsuneko-laboratory/react-native-credential-store": 0.1.0-alpha.1
+  "@natsuneko-laboratory/react-native-desktop-navigation": 0.1.0-alpha.16
   "@natsuneko-laboratory/react-native-twitter-text": 0.1.0
-  "@natsuneko-laboratory/react-native-webcrypto-digest": 0.1.0
+  "@natsuneko-laboratory/react-native-webcrypto-digest": 0.2.0
   clsx: 2.1.1
   cn: 0.2.6
   tailwind-merge: 3.6.0
@@ -42,6 +44,7 @@ minimumReleaseAgeExclude:
   - "@natsuneko-laboratory/fleet-renderer-core"
   - "@natsuneko-laboratory/fleet-renderer-react-native"
   - "@natsuneko-laboratory/memora"
+  - "@natsuneko-laboratory/react-native-credential-store"
   - "@natsuneko-laboratory/react-native-desktop-navigation"
   - "@natsuneko-laboratory/react-native-twitter-text"
   - "@natsuneko-laboratory/react-native-webcrypto-digest"

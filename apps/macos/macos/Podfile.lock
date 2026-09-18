@@ -28,7 +28,7 @@ PODS:
     - SocketRocket
     - Yoga
   - boost (1.84.0)
-  - DesktopNavigation (0.1.0-alpha.14):
+  - DesktopNavigation (0.1.0-alpha.16):
     - boost
     - DoubleConversion
     - fast_float
@@ -1892,6 +1892,8 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
+  - react-native-webcrypto-digest (0.2.0):
+    - React-Core
   - React-NativeModulesApple (0.81.9):
     - boost
     - DoubleConversion
@@ -2503,6 +2505,7 @@ DEPENDENCIES:
   - React-microtasksnativemodule (from `../../../node_modules/react-native-macos/ReactCommon/react/nativemodule/microtasks`)
   - "react-native-netinfo (from `../../../node_modules/@react-native-community/netinfo`)"
   - react-native-safe-area-context (from `../../../node_modules/react-native-safe-area-context`)
+  - "react-native-webcrypto-digest (from `../../../node_modules/@natsuneko-laboratory/react-native-webcrypto-digest`)"
   - React-NativeModulesApple (from `../../../node_modules/react-native-macos/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-oscompat (from `../../../node_modules/react-native-macos/ReactCommon/oscompat`)
   - React-perflogger (from `../../../node_modules/react-native-macos/ReactCommon/reactperflogger`)
@@ -2631,6 +2634,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/@react-native-community/netinfo"
   react-native-safe-area-context:
     :path: "../../../node_modules/react-native-safe-area-context"
+  react-native-webcrypto-digest:
+    :path: "../../../node_modules/@natsuneko-laboratory/react-native-webcrypto-digest"
   React-NativeModulesApple:
     :path: "../../../node_modules/react-native-macos/ReactCommon/react/nativemodule/core/platform/ios"
   React-oscompat:
@@ -2699,7 +2704,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   AsyncStorage: 10b4956c3184302f5003b3360acc30b9c59dce1e
   boost: cea1d4f90a3a59537f3deb03ff5656489d7133dd
-  DesktopNavigation: b1d2bdb1795d2b160ce0be1f842629b01f0be988
+  DesktopNavigation: 26b0184cc9c4526e1197b6586096a4f45b4cbeb7
   DoubleConversion: d31b1eb37f6d6f456530c4fd9124b857d6889cab
   fast_float: 20817c22759af6ac8d4d67e6e059b8b499953656
   FBLazyVector: 3cde5aa3abeda29fd70560e5a3e3199e6add163f
@@ -2741,6 +2746,7 @@ SPEC CHECKSUMS:
   React-microtasksnativemodule: a0f271cefc1bae9ff0cb8f4237b9f7481cd97543
   react-native-netinfo: a0be8c77f8420a60ddf07eb87be1a36f02a1bd65
   react-native-safe-area-context: 6cf08f4151132f9cf2adb948dc6c4ac387f8d30f
+  react-native-webcrypto-digest: da5dc9e394510b374b0d519c47752e4569ccae15
   React-NativeModulesApple: 02b57ec4dced7eb81bedcccdad1ca62fee961c4d
   React-oscompat: 66d4c9c770c0690b00c652a568f30b4713104ebf
   React-perflogger: 0834475c95233811e2095a13fc6fad0bac270dae
