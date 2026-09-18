@@ -8,7 +8,7 @@ const files = listFiles();
 export function UwpTool() {
   const [source, setSource] = useState<string>(defaultIcon);
   const [transparent, setTransparent] = useState(false);
-  const [background, setBackground] = useState("#c9507f");
+  const [background, setBackground] = useState("#F3B4CF");
   const [padding, setPadding] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

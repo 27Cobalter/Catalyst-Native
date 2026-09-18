@@ -57,16 +57,35 @@ export function listFiles(): UwpFile[] {
   ]);
 }
 
+function canvasOf(width: number, height: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("2D canvas is unavailable");
+  ctx.imageSmoothingQuality = "high";
+  return [canvas, ctx];
+}
+
+/** Halve repeatedly so large sources are averaged instead of point-sampled (avoids jaggies). */
+function downscale(image: HTMLImageElement, size: number): CanvasImageSource {
+  let source: CanvasImageSource = image;
+  let current = image.naturalWidth;
+  while (current / 2 > size) {
+    current = Math.max(Math.ceil(current / 2), Math.ceil(size));
+    const [canvas, ctx] = canvasOf(current, current);
+    ctx.drawImage(source, 0, 0, current, current);
+    source = canvas;
+  }
+  return source;
+}
+
 export function renderFile(
-  image: CanvasImageSource,
+  image: HTMLImageElement,
   file: UwpFile,
   options: { background: string | null; padding: number },
 ): Promise<Blob> {
-  const canvas = document.createElement("canvas");
-  canvas.width = file.width;
-  canvas.height = file.height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("2D canvas is unavailable");
+  const [canvas, ctx] = canvasOf(file.width, file.height);
 
   if (file.asset.background && options.background) {
     ctx.fillStyle = options.background;
@@ -76,8 +95,7 @@ export function renderFile(
   // padding only shrinks assets that are already padded; full-bleed ones stay full-bleed
   const fill = file.asset.fill === 1 ? 1 : file.asset.fill * (1 - options.padding);
   const side = Math.min(file.width, file.height) * fill;
-  ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(image, (file.width - side) / 2, (file.height - side) / 2, side, side);
+  ctx.drawImage(downscale(image, side), (file.width - side) / 2, (file.height - side) / 2, side, side);
 
   return new Promise((resolve, reject) =>
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("PNG encoding failed"))), "image/png"),
