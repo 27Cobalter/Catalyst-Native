@@ -58,3 +58,6 @@ app-example
 # Google Services
 google-services.json
 GoogleService-Info.plist
+
+# Gradle Services
+.gradle/
