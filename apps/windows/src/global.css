@@ -391,3 +391,38 @@
    */
   --color-dark-toggle-icon: oklch(0.86 0.05 352);
 }
+
+/* =========================================================
+ * Windows (HiDPI)
+ * ========================================================= */
+
+/* 125% / 150% などの拡大率では 1dp の線が 1.25px / 1.5px になり、にじんだり太さが揃わなくなる。
+ * 区切り線や枠線は常に物理 1px になる hairline を使う
+ */
+@utility h-hairline {
+  height: hairlineWidth();
+}
+
+@utility w-hairline {
+  width: hairlineWidth();
+}
+
+@utility border-hairline {
+  border-width: hairlineWidth();
+}
+
+@utility border-t-hairline {
+  border-top-width: hairlineWidth();
+}
+
+@utility border-b-hairline {
+  border-bottom-width: hairlineWidth();
+}
+
+@utility border-l-hairline {
+  border-left-width: hairlineWidth();
+}
+
+@utility border-r-hairline {
+  border-right-width: hairlineWidth();
+}

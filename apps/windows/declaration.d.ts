@@ -67,11 +67,38 @@ declare module 'react-native' {
     className?: string
   }
 
-  interface ViewProps {
+  // react-native-windows が View / Pressable に追加しているプロパティ (react-native-windows/Libraries/Components/View/ViewPropTypes.d.ts)
+  interface WindowsKeyboardEvent {
+    altKey: boolean
+    ctrlKey: boolean
+    metaKey: boolean
+    shiftKey: boolean
+    key: string
+    code: string
+  }
+
+  interface WindowsHandledKeyboardEvent {
+    altKey?: boolean
+    ctrlKey?: boolean
+    metaKey?: boolean
+    shiftKey?: boolean
+    code: string
+  }
+
+  interface WindowsViewProps {
+    tooltip?: string
+    enableFocusRing?: boolean
+    onKeyDown?: (event: NativeSyntheticEvent<WindowsKeyboardEvent>) => void
+    onKeyUp?: (event: NativeSyntheticEvent<WindowsKeyboardEvent>) => void
+    keyDownEvents?: WindowsHandledKeyboardEvent[]
+    keyUpEvents?: WindowsHandledKeyboardEvent[]
+  }
+
+  interface ViewProps extends WindowsViewProps {
     className?: string
   }
 
-  interface PressableProps {
+  interface PressableProps extends WindowsViewProps {
     className?: string
   }
 

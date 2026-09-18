@@ -1,4 +1,4 @@
-// Catalyst.cpp : Defines the entry point for the application.
+﻿// Catalyst.cpp : Defines the entry point for the application.
 //
 
 #include "pch.h"
@@ -7,6 +7,7 @@
 #include "AutolinkedNativeModules.g.h"
 
 #include "NativeModules.h"
+#include "WindowManager.h"
 
 // A PackageProvider containing any turbo modules you define within this app project
 struct CompReactPackageProvider
@@ -71,7 +72,13 @@ _Use_decl_annotations_ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE, PSTR 
   // Get the AppWindow so we can configure its initial title and size
   auto appWindow{reactNativeWin32App.AppWindow()};
   appWindow.Title(L"Catalyst");
-  appWindow.Resize({1000, 1000});
+  Catalyst::ConfigureWindow(appWindow);
+  // 3 カラム (サイドバー + タイムライン + 右カラム) が収まるサイズを DIP で指定し、作業領域の中央に置く
+  Catalyst::PlaceWindow(appWindow, 1280, 820);
+
+  // 投稿や投稿作成を別ウィンドウで開くための WindowManager (WindowManager.h) に同じ ReactNativeHost を共有する
+  Catalyst::SceneWindows::Instance().Initialize(reactNativeWin32App.ReactNativeHost(), appWindow);
+  appWindow.Destroying([](auto const &, auto const &) { Catalyst::SceneWindows::Instance().CloseAll(); });
 
   // Get the ReactViewOptions so we can set the initial RN component to load
   auto viewOptions{reactNativeWin32App.ReactViewOptions()};

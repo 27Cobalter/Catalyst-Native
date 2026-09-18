@@ -13,22 +13,23 @@ const CATEGORIES: SegmentedTab<Category>[] = [
   { key: "users", label: "ユーザー" },
 ];
 
+// 検索欄が右カラムと重複するため、探索画面では右カラムを出さない
 export const ExplorerScreen = () => {
   const [category, setCategory] = useState<Category>("trending");
 
   return (
     <Page
       rightRail={false}
-      header={
-        <PageHeader title="探索">
+      header={({ compact }) => (
+        <PageHeader title="探索" compact={compact}>
           <View className="px-5 pb-2">
             <SearchField placeholder="キーワード・#タグ・@ユーザーで検索" />
           </View>
           <SegmentedTabs tabs={CATEGORIES} value={category} onChange={setCategory} />
         </PageHeader>
-      }
+      )}
     >
-      <TimelineSkeleton />
+      <TimelineSkeleton prefix={`explore-${category}`} />
     </Page>
   );
 };

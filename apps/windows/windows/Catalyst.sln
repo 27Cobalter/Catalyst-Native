@@ -7,7 +7,7 @@ Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "Catalyst.Package", "Catalys
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Catalyst", "Catalyst\Catalyst.vcxproj", "{375EC6D5-9C7B-466D-977B-78DF53DB9CEF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DesktopNavigation", "..\..\..\node_modules\@natsuneko-laboratory\react-native-desktop-navigation\windows\DesktopNavigation\DesktopNavigation.vcxproj", "{D772993C-4468-49C9-9EBD-C0646B679CAD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DesktopNavigation", "..\node_modules\@natsuneko-laboratory\react-native-desktop-navigation\windows\DesktopNavigation\DesktopNavigation.vcxproj", "{D772993C-4468-49C9-9EBD-C0646B679CAD}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RNSVG", "..\..\..\node_modules\react-native-svg\windows\RNSVG\RNSVG.vcxproj", "{7ACF84EC-EFBA-4043-8E14-40B159508902}"
 EndProject
