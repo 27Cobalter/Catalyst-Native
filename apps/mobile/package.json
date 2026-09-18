@@ -29,7 +29,7 @@
     "submit:android:production": "eas submit --platform android --profile production",
     "submit:ios:preview": "eas submit --platform ios --profile preview",
     "submit:ios:production": "eas submit --platform ios --profile production",
-    "lint": "expo lint",
+    "lint": "pnpm -w run lint:mobile",
     "expo": "expo",
     "with-env": "dotenv -e .env.local --",
     "with-op": "cross-env FORCE_COLOR=true op run --env-file=./.env --",
