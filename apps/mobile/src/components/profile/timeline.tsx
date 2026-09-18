@@ -47,12 +47,12 @@ const ThumbnailCell = memo(({ status, cellSize }: { status: CatalystStatus; cell
               onLoadEnd={() => setIsImageLoading(false)}
             />
             {status.medias.some((w) => w.metadata?.isSensitive) && (
-              <View className="absolute inset-0 flex items-center justify-center bg-light-skeleton dark:bg-dark-skeleton bg-opacity-50">
+              <View className="absolute inset-0 flex items-center justify-center  bg-light-skeleton dark:bg-dark-skeleton">
                 <Text className="text-light-text dark:text-dark-text">Sensitive Content</Text>
               </View>
             )}
             {status.medias.some((w) => w.metadata?.isSpoiler) && (
-              <View className="absolute inset-0 flex items-center justify-center bg-light-skeleton dark:bg-dark-skeleton bg-opacity-50">
+              <View className="absolute inset-0 flex items-center justify-center bg-light-skeleton dark:bg-dark-skeleton">
                 <Text className="text-light-text dark:text-dark-text">Spoiler Content</Text>
               </View>
             )}
