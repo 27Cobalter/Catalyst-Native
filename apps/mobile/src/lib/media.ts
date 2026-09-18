@@ -37,9 +37,14 @@ type GetCdnUrlArgs = {
   aspect?: { w: number; h: number };
   width: number;
   mode?: "fill" | "crop";
+  /**
+   * 配信フォーマットの指定。既定の `auto` は Accept ヘッダ次第で返すものが変わるため、
+   * 保存時のように何が返るかを決めたい場合に指定する
+   */
+  format?: "webp";
 };
 
-export const getCdnUrl = ({ src, variant, width, aspect, mode }: GetCdnUrlArgs) => {
+export const getCdnUrl = ({ src, variant, width, aspect, mode, format }: GetCdnUrlArgs) => {
   if (!src) {
     return "";
   }
@@ -49,10 +54,8 @@ export const getCdnUrl = ({ src, variant, width, aspect, mode }: GetCdnUrlArgs) 
     src.startsWith("https://cdn.natsuneko.com") ||
     src.startsWith("https://citlali.natsuneko.com")
   ) {
-    let additional = "";
-    if (src.includes("citlali")) {
-      additional = "?format=auto";
-    }
+    // citlali のみ既定で auto を付ける。他ホストは従来どおりクエリ無し
+    const additional = format ? `?format=${format}` : src.includes("citlali") ? "?format=auto" : "";
 
     return `${src}/${MEDIA_VARIANTS[variant ?? "original"]}${additional}`;
   }
@@ -69,6 +72,10 @@ export const getCdnUrl = ({ src, variant, width, aspect, mode }: GetCdnUrlArgs) 
   }
   cdn.searchParams.set("quality", "85");
   cdn.searchParams.set("width", width.toString());
+
+  if (format) {
+    cdn.searchParams.set("format", format);
+  }
 
   if (aspect) {
     if (aspect.h > aspect.w) {
@@ -87,4 +94,16 @@ export const getCdnUrl = ({ src, variant, width, aspect, mode }: GetCdnUrlArgs) 
   }
 
   return cdn.toString();
+};
+
+/**
+ * URL が実際に返すフォーマットを問い合わせる。`format` を指定しても CDN は 8K 程度の大きな画像では
+ * 変換せず JPEG を返すため、保存時の拡張子は要求ではなく実際のレスポンスに合わせる必要がある。
+ */
+export const resolveDeliveredImageType = async (url: string) => {
+  const response = await fetch(url, { method: "HEAD" });
+
+  return response.headers.get("content-type") === "image/webp"
+    ? { extension: ".webp", mimeType: "image/webp" }
+    : { extension: ".jpg", mimeType: "image/jpeg" };
 };

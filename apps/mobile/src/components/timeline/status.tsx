@@ -242,7 +242,7 @@ export const TimelineStatus = memo(({ status, renderingMode = "twtr" }: Props) =
 
       {medias.length > 0 ? (
         <View className="mt-3">
-          <MediaCarousel key={status.id} medias={medias} />
+          <MediaCarousel key={status.id} medias={medias} createdAt={status.createdAt} />
         </View>
       ) : null}
 

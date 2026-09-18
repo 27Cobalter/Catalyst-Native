@@ -45,6 +45,9 @@ app-example
 /ios
 /android
 
+# ローカルネイティブモジュールのビルド成果物
+/modules/*/android/build
+
 .env.local
 
 # build output
