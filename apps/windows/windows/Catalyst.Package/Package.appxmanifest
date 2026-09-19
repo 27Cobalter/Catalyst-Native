@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
@@ -8,12 +8,12 @@
 
   <Identity
     Name="Catalyst"
-    Publisher="CN=natsuneko"
+    Publisher="CN=4B89ED43-2C38-4903-9436-87B359C3677D"
     Version="1.0.0.0" />
 
   <Properties>
     <DisplayName>Catalyst</DisplayName>
-    <PublisherDisplayName>natsuneko</PublisherDisplayName>
+    <PublisherDisplayName>Natsuneko</PublisherDisplayName>
     <Logo>Images\StoreLogo.png</Logo>
   </Properties>
 
@@ -32,12 +32,21 @@
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
         DisplayName="Catalyst"
-        Description="Catalyst"
+        Description="Catalyst は、 VR-SNS 向けのフォトシェアリングサービスです。写真の投稿はもちろん、アルバムの作成や、ハッシュタグを自動でまとめてくれるスマートアルバム、24時間で消えるデコレーションできる投稿 Fleet、楽しいリアクション機能やいいね機能を使って、みんなで写真を共有しましょう！"
         BackgroundColor="transparent"
         Square150x150Logo="Images\Square150x150Logo.png"
         Square44x44Logo="Images\Square44x44Logo.png">
-        <uap:DefaultTile Wide310x150Logo="Images\Wide310x150Logo.png" />
+        <uap:DefaultTile Wide310x150Logo="Images\Wide310x150Logo.png"  Square71x71Logo="Images\Square71x71Logo.png" Square310x310Logo="Images\Square310x310Logo.png" ShortName="Catalyst">
+          <uap:ShowNameOnTiles>
+            <uap:ShowOn Tile="square310x310Logo"/>
+          </uap:ShowNameOnTiles>
+        </uap:DefaultTile >
         <uap:SplashScreen Image="Images\SplashScreen.png" />
+        <uap:InitialRotationPreference>
+          <uap:Rotation Preference="landscape"/>
+          <uap:Rotation Preference="landscapeFlipped"/>
+          <uap:Rotation Preference="portraitFlipped"/>
+          <uap:Rotation Preference="portrait"/></uap:InitialRotationPreference>
       </uap:VisualElements>
     </Application>
   </Applications>
