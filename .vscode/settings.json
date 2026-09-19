@@ -10,7 +10,8 @@
     "source.sortMembers": "explicit"
   },
   "files.associations": {
-    "*.css": "tailwindcss"
+    "*.css": "tailwindcss",
+    "*.easignore": "ignore"
   },
   "tailwindCSS.classAttributes": [
     "class",
