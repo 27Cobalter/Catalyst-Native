@@ -15,6 +15,7 @@
     "@natsuneko-laboratory/react-native-carousel-viewer": "workspace:*",
     "@natsuneko-laboratory/react-native-credential-store": "catalog:",
     "@natsuneko-laboratory/react-native-desktop-navigation": "catalog:",
+    "@natsuneko-laboratory/react-native-desktop-window-size": "catalog:",
     "@natsuneko-laboratory/react-native-twitter-text": "catalog:",
     "@natsuneko-laboratory/react-native-webcrypto-digest": "catalog:",
     "@react-native-async-storage/async-storage": "^3.1.1",

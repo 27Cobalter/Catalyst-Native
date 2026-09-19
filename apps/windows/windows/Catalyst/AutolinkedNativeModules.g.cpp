@@ -3,8 +3,17 @@
 #include "pch.h"
 #include "AutolinkedNativeModules.g.h"
 
+// Includes from @natsuneko-laboratory/react-native-credential-store
+#include <winrt/RNSecureStore.h>
+
 // Includes from @natsuneko-laboratory/react-native-desktop-navigation
 #include <winrt/DesktopNavigation.h>
+
+// Includes from @natsuneko-laboratory/react-native-desktop-window-size
+#include <winrt/DesktopWindowSize.h>
+
+// Includes from @natsuneko-laboratory/react-native-webcrypto-digest
+#include <winrt/RNWebCryptoDigest.h>
 
 // Includes from react-native-svg
 #include <winrt/RNSVG.h>
@@ -14,8 +23,14 @@ namespace winrt::Microsoft::ReactNative
 
 void RegisterAutolinkedNativeModulePackages(winrt::Windows::Foundation::Collections::IVector<winrt::Microsoft::ReactNative::IReactPackageProvider> const& packageProviders)
 { 
+    // IReactPackageProviders from @natsuneko-laboratory/react-native-credential-store
+    packageProviders.Append(winrt::RNSecureStore::ReactPackageProvider());
     // IReactPackageProviders from @natsuneko-laboratory/react-native-desktop-navigation
     packageProviders.Append(winrt::DesktopNavigation::ReactPackageProvider());
+    // IReactPackageProviders from @natsuneko-laboratory/react-native-desktop-window-size
+    packageProviders.Append(winrt::DesktopWindowSize::ReactPackageProvider());
+    // IReactPackageProviders from @natsuneko-laboratory/react-native-webcrypto-digest
+    packageProviders.Append(winrt::RNWebCryptoDigest::ReactPackageProvider());
     // IReactPackageProviders from react-native-svg
     packageProviders.Append(winrt::RNSVG::ReactPackageProvider());
 }
