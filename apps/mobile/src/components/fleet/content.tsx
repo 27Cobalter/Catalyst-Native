@@ -31,7 +31,7 @@ const CatalystFleetImage = ({ uri, alt, style, contentFit, onLoad }: FleetImageP
 const resolveMediaUri = (media: FleetMediaEntity, containerWidth: number) =>
   getCdnUrl({ src: media.url, width: containerWidth, variant: "medium" });
 
-const resolveStickerImageUrl = (sticker: FleetStickerLike) =>
+export const resolveStickerImageUrl = (sticker: FleetStickerLike) =>
   sticker.imageUrl ??
   (sticker.emoji ? `https://static.natsuneko.com/images/reactions/${sticker.emoji}.png` : undefined);
 
