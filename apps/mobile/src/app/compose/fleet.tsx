@@ -927,8 +927,10 @@ export default function FleetComposerScreen() {
           <View className="flex-1" onLayout={(e) => setPreviewArea(e.nativeEvent.layout)}>
             {/* ポップアップぶんの余白はマージンで与える (親の実測値を動かさないため) */}
             <View className="flex-1 items-center justify-center" style={{ marginBottom: previewPaddingBottom }}>
+              {/* 投稿結果 (FleetCanvas) は角丸を付けないので、プレビューも付けない。
+                  overflow-hidden ははみ出したレイヤーを切るために残す */}
               <View
-                className="overflow-hidden rounded-2xl"
+                className="overflow-hidden"
                 style={{ width: canvasWidth, height: canvasHeight, transform: [{ scale: previewScale }] }}
               >
                 <Animated.View pointerEvents="none" className="absolute inset-0" style={previewBackgroundStyle} />
