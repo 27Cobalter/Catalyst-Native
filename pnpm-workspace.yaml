@@ -10,6 +10,7 @@ patchedDependencies:
   "@likashefqet/react-native-image-zoom": patches/@likashefqet__react-native-image-zoom.patch
   react-native@0.86.2: patches/react-native@0.86.2.patch
   react-native-image-crop-picker@0.51.1: patches/react-native-image-crop-picker@0.51.1.patch
+  react-native-config@1.7.2: patches/react-native-config@1.7.2.patch
 
 # catalog
 catalog:

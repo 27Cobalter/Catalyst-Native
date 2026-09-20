@@ -17,6 +17,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RNWebCryptoDigest", "..\..\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DesktopWindowSize", "..\..\..\node_modules\@natsuneko-laboratory\react-native-desktop-window-size\windows\DesktopWindowSize\DesktopWindowSize.vcxproj", "{A9E65F3F-4675-4BC8-8E7A-04624E796234}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RNCConfig", "..\..\..\node_modules\react-native-config\windows\RNCConfig\RNCConfig.vcxproj", "{F1F427C9-66A2-4ED5-B482-3D583B6B20C7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -123,6 +125,18 @@ Global
 		{A9E65F3F-4675-4BC8-8E7A-04624E796234}.Release|x86.Build.0 = Release|Win32
 		{A9E65F3F-4675-4BC8-8E7A-04624E796234}.Release|ARM64.ActiveCfg = Release|ARM64
 		{A9E65F3F-4675-4BC8-8E7A-04624E796234}.Release|ARM64.Build.0 = Release|ARM64
+		{F1F427C9-66A2-4ED5-B482-3D583B6B20C7}.Debug|x64.ActiveCfg = Debug|x64
+		{F1F427C9-66A2-4ED5-B482-3D583B6B20C7}.Debug|x64.Build.0 = Debug|x64
+		{F1F427C9-66A2-4ED5-B482-3D583B6B20C7}.Debug|x86.ActiveCfg = Debug|Win32
+		{F1F427C9-66A2-4ED5-B482-3D583B6B20C7}.Debug|x86.Build.0 = Debug|Win32
+		{F1F427C9-66A2-4ED5-B482-3D583B6B20C7}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{F1F427C9-66A2-4ED5-B482-3D583B6B20C7}.Debug|ARM64.Build.0 = Debug|ARM64
+		{F1F427C9-66A2-4ED5-B482-3D583B6B20C7}.Release|x64.ActiveCfg = Release|x64
+		{F1F427C9-66A2-4ED5-B482-3D583B6B20C7}.Release|x64.Build.0 = Release|x64
+		{F1F427C9-66A2-4ED5-B482-3D583B6B20C7}.Release|x86.ActiveCfg = Release|Win32
+		{F1F427C9-66A2-4ED5-B482-3D583B6B20C7}.Release|x86.Build.0 = Release|Win32
+		{F1F427C9-66A2-4ED5-B482-3D583B6B20C7}.Release|ARM64.ActiveCfg = Release|ARM64
+		{F1F427C9-66A2-4ED5-B482-3D583B6B20C7}.Release|ARM64.Build.0 = Release|ARM64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

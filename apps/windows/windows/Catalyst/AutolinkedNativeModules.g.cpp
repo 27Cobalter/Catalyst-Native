@@ -15,6 +15,9 @@
 // Includes from @natsuneko-laboratory/react-native-webcrypto-digest
 #include <winrt/RNWebCryptoDigest.h>
 
+// Includes from react-native-config
+#include <winrt/RNCConfig.h>
+
 // Includes from react-native-svg
 #include <winrt/RNSVG.h>
 
@@ -31,6 +34,8 @@ void RegisterAutolinkedNativeModulePackages(winrt::Windows::Foundation::Collecti
     packageProviders.Append(winrt::DesktopWindowSize::ReactPackageProvider());
     // IReactPackageProviders from @natsuneko-laboratory/react-native-webcrypto-digest
     packageProviders.Append(winrt::RNWebCryptoDigest::ReactPackageProvider());
+    // IReactPackageProviders from react-native-config
+    packageProviders.Append(winrt::RNCConfig::ReactPackageProvider());
     // IReactPackageProviders from react-native-svg
     packageProviders.Append(winrt::RNSVG::ReactPackageProvider());
 }

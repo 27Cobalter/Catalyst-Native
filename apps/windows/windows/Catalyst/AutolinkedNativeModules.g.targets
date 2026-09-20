@@ -18,6 +18,10 @@
     <ProjectReference Include="$(ProjectDir)..\..\..\..\node_modules\@natsuneko-laboratory\react-native-webcrypto-digest\windows\RNWebCryptoDigest\RNWebCryptoDigest.vcxproj">
       <Project>{7D0EA1E8-FF66-4C58-BBA2-BE90CE9C9A45}</Project>
     </ProjectReference>
+    <!-- Projects from react-native-config -->
+    <ProjectReference Include="$(ProjectDir)..\..\..\..\node_modules\react-native-config\windows\RNCConfig\RNCConfig.vcxproj">
+      <Project>{f1f427c9-66a2-4ed5-b482-3d583b6b20c7}</Project>
+    </ProjectReference>
     <!-- Projects from react-native-svg -->
     <ProjectReference Include="$(ProjectDir)..\..\..\..\node_modules\react-native-svg\windows\RNSVG\RNSVG.vcxproj">
       <Project>{7acf84ec-efba-4043-8e14-40b159508902}</Project>

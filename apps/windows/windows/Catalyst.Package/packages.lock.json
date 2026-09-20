@@ -151,6 +151,7 @@
           "Microsoft.ReactNative.Cxx": "[0.84.0, )",
           "Microsoft.VCRTForwarders.140": "[1.0.2-rc, )",
           "Microsoft.WindowsAppSDK": "[2.0.0-experimental3, )",
+          "RNCConfig": "[1.0.0, )",
           "RNSVG": "[1.0.0, )",
           "RNSecureStore": "[1.0.0, )",
           "RNWebCryptoDigest": "[1.0.0, )",
@@ -168,6 +169,16 @@
         }
       },
       "desktopwindowsize": {
+        "type": "Project",
+        "dependencies": {
+          "Microsoft.ReactNative": "[0.84.0, )",
+          "Microsoft.ReactNative.Cxx": "[0.84.0, )",
+          "Microsoft.VCRTForwarders.140": "[1.0.2-rc, )",
+          "Microsoft.WindowsAppSDK": "[2.0.0-experimental3, )",
+          "boost": "[1.84.0, )"
+        }
+      },
+      "rncconfig": {
         "type": "Project",
         "dependencies": {
           "Microsoft.ReactNative": "[0.84.0, )",
