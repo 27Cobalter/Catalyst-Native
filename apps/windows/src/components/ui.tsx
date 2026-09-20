@@ -12,6 +12,7 @@ type PressableProps = React.ComponentProps<typeof Pressable> & {
 };
 
 // マウス操作ではホバーが主要なフィードバックになるため、ホバー状態を className に反映できるようにする
+/** @deprecated */
 export const useHover = () => {
   const [hovered, setHovered] = useState(false);
   return {
@@ -95,7 +96,7 @@ export const Button = ({
         size === "lg" && "h-10 rounded-md px-4",
         tone === "accent" && "bg-light-accent dark:bg-dark-accent",
         tone === "secondary" &&
-          "border-hairline border-light-border bg-light-surface dark:border-dark-border dark:bg-dark-surface-elevated",
+        "border-hairline border-light-border bg-light-surface dark:border-dark-border dark:bg-dark-surface-elevated",
         tone === "subtle" && hovered && "bg-light-overlay dark:bg-dark-overlay",
         tone !== "subtle" && hovered && !disabled && "opacity-90",
         "active:opacity-75",
@@ -289,6 +290,7 @@ type CardProps = {
 };
 
 // Fluent のカード: 角丸 8px + hairline の枠
+/** @deprecated */
 export const Card = ({ children, className }: CardProps) => {
   return (
     <View

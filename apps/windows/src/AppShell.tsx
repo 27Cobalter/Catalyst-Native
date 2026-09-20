@@ -9,13 +9,18 @@ import {
   type NavigationRoute,
   type RootNavigationState,
 } from "@natsuneko-laboratory/react-native-desktop-navigation/native";
+import { useAtomValue, useSetAtom } from "jotai";
 import { Bell, CalendarDays, GalleryHorizontal, Home, Search, Trophy } from "lucide-react-native";
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useColorScheme, View } from "react-native";
+import { clientAtom } from "./atoms/credential";
 import { ContextMenuHost } from "./components/context-menu";
 import { ShortcutScope } from "./components/shortcut-scope";
 import { SidebarFooter, type SidebarAccount } from "./components/sidebar-footer";
+import { useInterval } from "./hooks/use-interval";
 import { useContainerWidth, useWindowClass, WindowWidthContext } from "./layout/breakpoints";
+import { CatalystTrend } from "./models/sdk-types";
+import { trendsAtom } from "./models/trends";
 import type { RootParams, SidebarParams } from "./navigation";
 import { getSceneTitle, type Scene } from "./scenes/scene";
 import { SceneHostContext } from "./scenes/scene-host";
@@ -71,7 +76,7 @@ const MainNavigator = () => {
 
   const icon =
     (Icon: typeof Home) =>
-    ({ focused }: { focused: boolean }) => <Icon size={16} stroke={focused ? colors.accent : colors.text} />;
+      ({ focused }: { focused: boolean }) => <Icon size={16} stroke={focused ? colors.accent : colors.text} />;
 
   return (
     <SidebarNavigator.Navigator
@@ -181,6 +186,22 @@ export const AppShell = ({
   const [navigationRef] = useState(() => createNavigationRef<RootParams>());
   const initial = sceneToRoute(scene);
   const { width, onLayout } = useContainerWidth();
+  const client = useAtomValue(clientAtom);
+  const setTrends = useSetAtom(trendsAtom);
+
+  useInterval(async () => {
+    // メインウィンドウでだけ実行する
+    if (windowId) {
+      return;
+    }
+
+    const [trends] = await Promise.all([
+      // trends
+      client.catalyst.v1.trend.get({ query: { format: "rich" } }).then(w => w.data).catch(() => [] as CatalystTrend[]),
+    ]);
+
+    setTrends(trends ?? []);
+  }, 1000 * 60 * 5);
 
   return (
     <View className="flex-1" onLayout={onLayout}>
