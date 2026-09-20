@@ -157,6 +157,8 @@ export const FleetViewer = ({ username, usernames, visible, onClose, onMarkRead 
   const [isReactionPanelOpen, setIsReactionPanelOpen] = useState(false);
   const [reactionSymbols, setReactionSymbols] = useState<CatalystCustomReaction[] | null>(null);
   const [isReacting, setIsReacting] = useState(false);
+  // 確認ダイアログ表示中に自動送りが進むと、消す対象と画面の Fleet がずれる
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const activeUsernameRef = useRef(activeUsername);
   const usernamesRef = useRef(usernames);
   const fleetsRef = useRef(fleets);
@@ -336,6 +338,48 @@ export const FleetViewer = ({ username, usernames, visible, onClose, onMarkRead 
     router.push(`/fleet/${fleetId}/reactions`);
   }, [currentFleet, onClose, router]);
 
+  /** 自分の Fleet を削除する。Web 版と同じく確認してから消す。 */
+  const handleDelete = useCallback(() => {
+    if (!client || !currentFleet) return;
+    const fleetId = currentFleet.id;
+
+    setIsConfirmingDelete(true);
+    Alert.alert("Fleet を削除しますか？", "この操作は取り消せません。表示中の Fleet を削除しますか？", [
+      { text: "キャンセル", style: "cancel", onPress: () => setIsConfirmingDelete(false) },
+      {
+        text: "削除",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await client.catalyst.v1.fleet.id.delete({ path: { id: fleetId }, throwOnError: true });
+          } catch (error) {
+            console.error("Failed to delete fleet:", error);
+            Alert.alert("エラー", "Fleet を削除できませんでした");
+            setIsConfirmingDelete(false);
+            return;
+          }
+
+          // 表示中の一覧からも取り除く。残りが無ければビューアーごと閉じる
+          const remaining = fleetsRef.current.filter((fleet) => fleet.id !== fleetId);
+          if (remaining.length === 0) {
+            onClose();
+            setIsConfirmingDelete(false);
+            return;
+          }
+
+          // 削除前のインデックスを前提にした自動送りが走らないようにする
+          navEpochRef.current += 1;
+          setFleets(remaining);
+          // 先頭を消した場合はインデックスが変わらないので、切り替え時のリセットを自分で行う
+          setCurrentIndex((prev) => Math.min(prev, remaining.length - 1));
+          setIsMediaLoaded(false);
+          setIsReactionPanelOpen(false);
+          setIsConfirmingDelete(false);
+        },
+      },
+    ]);
+  }, [client, currentFleet, onClose]);
+
   const handleReport = useCallback(() => {
     if (!currentFleet) return;
     const fleetId = currentFleet.id;
@@ -356,7 +400,7 @@ export const FleetViewer = ({ username, usernames, visible, onClose, onMarkRead 
     ? getCdnUrl({ src: currentFleet.user.profile.iconUrl, variant: "icon", width: 64 })
     : getIdenticonUrl(currentFleet?.user.id);
 
-  const isPaused = !!(currentFleet?.media && !isMediaLoaded) || isReactionPanelOpen;
+  const isPaused = !!(currentFleet?.media && !isMediaLoaded) || isReactionPanelOpen || isConfirmingDelete;
   const fleetDuration = FLEET_PACE_DURATIONS[fleetPace];
 
   const getProgressBarState = (index: number): ProgressBarState => {
@@ -395,9 +439,9 @@ export const FleetViewer = ({ username, usernames, visible, onClose, onMarkRead 
         {!isLoading && fleets.length > 0 && (
           <View className="absolute left-0 right-0 z-10" style={{ top: insets.top + 8 }} pointerEvents="none">
             <View className="flex-row gap-1 px-3 pb-2">
-              {fleets.map((_, i) => (
+              {fleets.map((fleet, i) => (
                 <ProgressBar
-                  key={i}
+                  key={fleet.id}
                   state={getProgressBarState(i)}
                   paused={i === currentIndex ? isPaused : false}
                   duration={fleetDuration}
@@ -422,10 +466,11 @@ export const FleetViewer = ({ username, usernames, visible, onClose, onMarkRead 
           <Pressable className="flex-1" onPress={goNext} />
         </View>
 
-        {/* Report button */}
-        {!isLoading && currentFleet && account && !isMyFleet && (
+        {/* More menu — 自分の Fleet なら削除、他人の Fleet なら報告 */}
+        {!isLoading && currentFleet && account && (
           <Pressable
-            onPress={handleReport}
+            accessibilityLabel={isMyFleet ? "Fleet を削除" : "Fleet を報告"}
+            onPress={isMyFleet ? handleDelete : handleReport}
             className="absolute right-24 z-20 w-8 h-8 justify-center items-center"
             style={{ top: insets.top + 48 }}
             hitSlop={8}
