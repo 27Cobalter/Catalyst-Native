@@ -12,13 +12,15 @@ import Animated, {
 import { scheduleOnRN } from "react-native-worklets";
 import { useMotion } from "./animation";
 import { ImageContent } from "./ImageContent";
-import { clamp, getPagingTarget, rubberBand } from "./math";
+import { clamp, getPagingTarget, resolveSwipeAxis, rubberBand } from "./math";
 import { PageIndicator } from "./PageIndicator";
 import { styles } from "./styles";
 import type { PagerProps } from "./types";
 
 // Fraction of the width a slow drag needs to change pages; flicks page by velocity.
 const CAROUSEL_PAGING_DISTANCE = 0.1;
+// How far a touch may wander and still open Detail.
+const TAP_SLOP = 8;
 
 type Props = PagerProps & { onOpenDetail: (index: number) => void };
 
@@ -28,12 +30,16 @@ function CarouselPages({
   offset,
   ...props
 }: Props & { width: number; height: number; offset: SharedValue<number> }) {
-  const { images, index, onIndexChange, onOpenDetail, renderImage, detailEnabled = true } = props;
+  const { images, index, onIndexChange, onOpenDetail, renderImage, detailEnabled = true, debugLabel } = props;
   const { reduced, spring } = useMotion(props.reduceMotion);
   // Page the track is at or springing to. Gestures read this instead of `index`, which lags behind until re-render.
   const page = useSharedValue(index);
   const settling = useSharedValue(false);
   const dragStart = useSharedValue(0);
+  // Where the finger went down, and whether this touch has already been ruled horizontal or not.
+  const touchX = useSharedValue(0);
+  const touchY = useSharedValue(0);
+  const decided = useSharedValue(false);
   const count = images.length;
   const previous = useRef({ index, width });
   // Page the animation starts from, so pages in between stay mounted while jumping several pages.
@@ -70,8 +76,45 @@ function CarouselPages({
 
   const pan = Gesture.Pan()
     .maxPointers(1)
-    .activeOffsetX([-8, 8])
-    .failOffsetY([-12, 12])
+    // The parent pager (if any) may not take the swipe until this one has failed.
+    .blocksExternalGesture(...(props.blockedExternalGestures ?? []))
+    // `activeOffsetX` + `failOffsetY` cannot express this: RNGH tests the fail offsets before the
+    // active ones, so a fast diagonal flick crossing both in one frame failed the swipe and handed
+    // it to the pager. Decide from which axis dominates instead.
+    .manualActivation(true)
+    .onTouchesDown((e) => {
+      const touch = e.allTouches[0];
+      if (!touch) return;
+      touchX.value = touch.absoluteX;
+      touchY.value = touch.absoluteY;
+      decided.value = false;
+      if (debugLabel)
+        console.log(
+          `[flick] carousel(${debugLabel}) down at (${Math.round(touch.absoluteX)}, ${Math.round(touch.absoluteY)}) images=${count} page=${page.value}`,
+        );
+    })
+    .onTouchesMove((e, manager) => {
+      if (decided.value) return;
+      const touch = e.allTouches[0];
+      if (!touch) return;
+      const dx = touch.absoluteX - touchX.value;
+      const dy = touch.absoluteY - touchY.value;
+      const axis = resolveSwipeAxis(dx, dy);
+      if (axis === "undecided") return;
+      decided.value = true;
+      if (axis === "horizontal") manager.activate();
+      else manager.fail();
+      if (debugLabel)
+        console.log(
+          `[flick] carousel(${debugLabel}) ${axis === "horizontal" ? "took" : "released"} the swipe: ${axis} d=(${Math.round(dx)}, ${Math.round(dy)})`,
+        );
+    })
+    .onTouchesUp((e, manager) => {
+      // Nothing moved far enough to decide: fail now so the tap (and anything waiting on us) is not held up.
+      if (decided.value || e.numberOfTouches > 0) return;
+      decided.value = true;
+      manager.fail();
+    })
     .onStart(() => {
       // Grab the track where it is, even mid-spring, so consecutive swipes are never dropped.
       cancelAnimation(offset);
@@ -104,20 +147,31 @@ function CarouselPages({
       });
       // Report immediately so the next swipe and the indicator do not wait for the spring to rest.
       if (target !== from) scheduleOnRN(onIndexChange, target);
+      if (debugLabel)
+        console.log(
+          `[flick] carousel(${debugLabel}) swipe end: dx=${Math.round(e.translationX)} vx=${Math.round(e.velocityX)} page ${from} -> ${target}`,
+        );
     })
     .onFinalize((_e, success) => {
       if (!success && !settling.value && offset.value !== -page.value * width)
         offset.value = withSpring(-page.value * width, spring);
     });
 
-  const tap = Gesture.Tap().onEnd((_e, success) => {
-    if (success && detailEnabled && !settling.value) scheduleOnRN(onOpenDetail, page.value);
-  });
+  const tap = Gesture.Tap()
+    // Without a distance limit any drag that ends counts as a tap, which for a single image (where no
+    // pan competes for the touch) opened Detail on every swipe meant for whatever is behind the carousel.
+    .maxDistance(TAP_SLOP)
+    .onEnd((_e, success) => {
+      if (debugLabel) console.log(`[flick] carousel(${debugLabel}) tap success=${success} page=${page.value}`);
+      if (success && detailEnabled && !settling.value) scheduleOnRN(onOpenDetail, page.value);
+    });
 
   const animated = useAnimatedStyle(() => ({ transform: [{ translateX: offset.value }] }));
 
   return (
-    <GestureDetector gesture={Gesture.Exclusive(pan, tap)}>
+    // A single image has nothing to page between, so the swipe stays with whatever is behind the
+    // carousel (the tab pager); only the tap is ours.
+    <GestureDetector gesture={count > 1 ? Gesture.Exclusive(pan, tap) : tap}>
       <Animated.View
         style={styles.viewport}
         accessible

@@ -1,7 +1,10 @@
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import type { StyleProp, ViewStyle } from "react-native";
+import type { GestureType } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 
+/** A gesture, or a ref to one, that RNGH gesture relations can resolve to a handler tag. */
+export type ExternalGestureRef = GestureType | RefObject<GestureType | undefined>;
 export type GalleryImage = { id: string; uri: string; width?: number; height?: number; alt?: string };
 export type GalleryState = { mode: "carousel" | "detail"; index: number };
 export type ViewerGestureState = "idle" | "undecided" | "pinching" | "panning" | "paging" | "dismissing" | "settling";
@@ -26,6 +29,17 @@ export type ImageGalleryProps = {
   reduceMotion?: boolean;
   /** When false, tapping the carousel does not open Detail. */
   detailEnabled?: boolean;
+  /**
+   * Gestures outside the gallery that must wait for the carousel swipe to fail before they can
+   * activate — typically the horizontal pager the carousel is embedded in. Only consulted when
+   * there is more than one image, since a single image never claims the swipe.
+   */
+  blockedExternalGestures?: ExternalGestureRef[];
+  /**
+   * When set, the carousel logs every swipe decision (position, direction, winner) with this label.
+   * Development aid only; leave unset in release builds.
+   */
+  debugLabel?: string;
   onIndexChange?: (index: number) => void;
   onOpenDetail?: (index: number) => void;
   onCloseDetail?: (index: number) => void;

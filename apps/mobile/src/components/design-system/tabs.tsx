@@ -1,5 +1,6 @@
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import React, { useMemo, useRef, useState } from "react";
+import { flickLog } from "@/lib/flick-debug";
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   FlatList,
@@ -10,12 +11,21 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { runOnJS } from "react-native-reanimated";
+import { Gesture, GestureDetector, type GestureType } from "react-native-gesture-handler";
 import { CatalystDivider } from "./divider";
 import { CatalystText } from "./text";
 
 const AnimatedFlatList = Animated.FlatList as unknown as typeof FlatList;
+
+const NO_GESTURES: GestureType[] = [];
+
+/**
+ * タブページャが持つ横方向のジェスチャ。シーンの中で横フリックを取りたい UI（画像カルーセルなど）が
+ * `blocksExternalGesture` の相手として参照し、自分が横フリックを取る間はタブ切り替えを止める。
+ */
+const PagerGesturesContext = createContext<GestureType[]>(NO_GESTURES);
+
+export const usePagerGestures = () => useContext(PagerGesturesContext);
 
 export type CatalystTab = {
   key: string;
@@ -56,6 +66,7 @@ export function CatalystTabs({
   });
 
   const handleTabPress = (index: number) => {
+    flickLog("tab-pager", `tab press index=${index}`);
     isScrollingProgrammatically.current = true;
     setActiveIndex(index);
     onTabChange?.(tabs[index]!, index);
@@ -74,11 +85,19 @@ export function CatalystTabs({
     { useNativeDriver: false },
   );
 
+  const handleScrollBeginDrag = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    flickLog(
+      "tab-pager",
+      `took the swipe: activeIndex=${activeIndex} offsetX=${Math.round(e.nativeEvent.contentOffset.x)}`,
+    );
+  };
+
   const handleMomentumScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (isScrollingProgrammatically.current) return;
     const offsetX = e.nativeEvent.contentOffset.x;
     const index = Math.round(offsetX / screenWidth);
     const clampedIndex = Math.max(0, Math.min(index, tabs.length - 1));
+    flickLog("tab-pager", `settled on index=${clampedIndex} (was ${activeIndex})`);
     if (clampedIndex !== activeIndex) {
       setActiveIndex(clampedIndex);
       onTabChange?.(tabs[clampedIndex]!, clampedIndex);
@@ -87,22 +106,42 @@ export function CatalystTabs({
 
   const nativeScrollGesture = useMemo(() => Gesture.Native(), []);
 
-  const swipeRightGesture = useMemo(() => {
-    const callback = onSwipeRightFromStart;
-    return Gesture.Pan()
-      .enabled(activeIndex === 0 && !!callback)
-      .activeOffsetX(20)
-      .failOffsetX(-20)
-      .onEnd((e) => {
-        if (callback && e.translationX > swipeRightThreshold && e.velocityX >= 0) {
-          runOnJS(callback)();
-        }
-      });
+  // シーン側が blocksExternalGesture でハンドラタグを参照するので、ジェスチャ自体は作り直さず、
+  // 有効条件とコールバックだけを ref 経由で読む（作り直すと参照が切れてタブ切り替えを止められない）
+  const swipeRightConfig = useRef({ activeIndex, onSwipeRightFromStart, swipeRightThreshold });
+  useEffect(() => {
+    swipeRightConfig.current = { activeIndex, onSwipeRightFromStart, swipeRightThreshold };
   }, [activeIndex, onSwipeRightFromStart, swipeRightThreshold]);
+
+  const swipeRightGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        // 設定を ref から読むのでコールバックは JS スレッドで動かす
+        .runOnJS(true)
+        .activeOffsetX(20)
+        .failOffsetX(-20)
+        .onEnd((e) => {
+          const {
+            activeIndex: index,
+            onSwipeRightFromStart: callback,
+            swipeRightThreshold: threshold,
+          } = swipeRightConfig.current;
+          if (index !== 0 || !callback) return;
+          if (e.translationX <= threshold || e.velocityX < 0) return;
+          flickLog("tab-pager", `took the swipe: drawer open dx=${Math.round(e.translationX)}`);
+          callback();
+        }),
+    [],
+  );
 
   const composedGesture = useMemo(
     () => Gesture.Simultaneous(swipeRightGesture, nativeScrollGesture),
     [swipeRightGesture, nativeScrollGesture],
+  );
+
+  const pagerGestures = useMemo(
+    () => [nativeScrollGesture, swipeRightGesture],
+    [nativeScrollGesture, swipeRightGesture],
   );
 
   const renderItem: ListRenderItem<CatalystTab> = ({ item }) => (
@@ -144,26 +183,29 @@ export function CatalystTabs({
         />
       </View>
 
-      <GestureDetector gesture={composedGesture}>
-        <AnimatedFlatList
-          ref={flatListRef}
-          data={tabs}
-          horizontal
-          pagingEnabled
-          scrollEnabled
-          bounces={false}
-          overScrollMode="never"
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(item) => item.key}
-          renderItem={renderItem}
-          getItemLayout={(_, index) => ({ length: screenWidth, offset: screenWidth * index, index })}
-          initialScrollIndex={defaultIndex}
-          scrollEventThrottle={16}
-          onScroll={handleScroll}
-          onMomentumScrollEnd={handleMomentumScrollEnd}
-          className="flex-1"
-        />
-      </GestureDetector>
+      <PagerGesturesContext.Provider value={pagerGestures}>
+        <GestureDetector gesture={composedGesture}>
+          <AnimatedFlatList
+            ref={flatListRef}
+            data={tabs}
+            horizontal
+            pagingEnabled
+            scrollEnabled
+            bounces={false}
+            overScrollMode="never"
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(item) => item.key}
+            renderItem={renderItem}
+            getItemLayout={(_, index) => ({ length: screenWidth, offset: screenWidth * index, index })}
+            initialScrollIndex={defaultIndex}
+            scrollEventThrottle={16}
+            onScroll={handleScroll}
+            onScrollBeginDrag={handleScrollBeginDrag}
+            onMomentumScrollEnd={handleMomentumScrollEnd}
+            className="flex-1"
+          />
+        </GestureDetector>
+      </PagerGesturesContext.Provider>
     </View>
   );
 }

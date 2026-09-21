@@ -12,7 +12,7 @@ export { CatalystSegmentedControl, type CatalystSegmentedControlOption, type Cat
 export { CatalystSkeleton, type CatalystSkeletonProps } from "./skeleton";
 export { CatalystSurface, type CatalystSurfaceProps } from "./surface";
 export { CatalystSwitch, type CatalystSwitchProps } from "./switch";
-export { CatalystTabs, type CatalystTab, type CatalystTabsProps } from "./tabs";
+export { CatalystTabs, usePagerGestures, type CatalystTab, type CatalystTabsProps } from "./tabs";
 export { CatalystText, type CatalystTextProps } from "./text";
 export { CatalystTextField, type CatalystTextFieldProps } from "./text-field";
 export { catalystLinkClassName } from "./shared";

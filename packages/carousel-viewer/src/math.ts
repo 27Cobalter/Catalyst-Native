@@ -61,3 +61,20 @@ export function lockDirection(x: number, y: number): "undecided" | "paging" | "d
   if (Math.abs(y) > Math.abs(x) * 1.2) return "dismissing";
   return "undecided";
 }
+
+// Distance past which a drag that is neither clearly horizontal nor vertical still has to pick an axis.
+const AXIS_COMMIT_DISTANCE = 24;
+
+/**
+ * Which axis a carousel drag belongs to. `lockDirection` needs one axis to clearly dominate, which a
+ * near-45° drag never satisfies; past `AXIS_COMMIT_DISTANCE` take the larger axis so a gesture
+ * waiting on this one (e.g. a parent pager) is not held for the whole touch.
+ */
+export function resolveSwipeAxis(x: number, y: number): "undecided" | "horizontal" | "vertical" {
+  "worklet";
+  const direction = lockDirection(x, y);
+  if (direction === "paging") return "horizontal";
+  if (direction === "dismissing") return "vertical";
+  if (Math.max(Math.abs(x), Math.abs(y)) < AXIS_COMMIT_DISTANCE) return "undecided";
+  return Math.abs(x) >= Math.abs(y) ? "horizontal" : "vertical";
+}

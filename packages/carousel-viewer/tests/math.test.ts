@@ -7,6 +7,7 @@ import {
   getPagingTarget,
   getZoomTranslationForFocalPoint,
   lockDirection,
+  resolveSwipeAxis,
   rubberBand,
   shouldDismiss,
 } from "../src/math.ts";
@@ -58,6 +59,15 @@ test("direction detection waits for distance and dominance", () => {
   assert.equal(lockDirection(40, 40), "undecided");
   assert.equal(lockDirection(-20, 10), "paging");
   assert.equal(lockDirection(10, -20), "dismissing");
+});
+test("swipe axis waits for dominance, then commits on a sustained diagonal", () => {
+  assert.equal(resolveSwipeAxis(7, 0), "undecided");
+  assert.equal(resolveSwipeAxis(-20, 10), "horizontal");
+  assert.equal(resolveSwipeAxis(10, -20), "vertical");
+  // A near-45° drag has no dominant axis: undecided until it is long enough to have to pick one.
+  assert.equal(resolveSwipeAxis(20, 20), "undecided");
+  assert.equal(resolveSwipeAxis(24, 24), "horizontal");
+  assert.equal(resolveSwipeAxis(-24, -25), "vertical");
 });
 test("dismiss recognizes both directions, short flicks, and cancellation", () => {
   assert.ok(shouldDismiss(121, 0, 800));

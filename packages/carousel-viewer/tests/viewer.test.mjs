@@ -20,6 +20,9 @@ function builder(manual = false) {
     "maxPointers",
     "activeOffsetX",
     "failOffsetY",
+    "manualActivation",
+    "blocksExternalGesture",
+    "maxDistance",
     "onStart",
     "onUpdate",
     "onEnd",
@@ -223,6 +226,54 @@ test("carousel keeps intermediate pages mounted while springing to a distant ind
   );
   await act(() => renderer.update(React.createElement(ImageCarousel, { ...props, index: 3 })));
   for (const index of [0, 1, 2, 3]) assert.ok(imageNode(renderer, index), `page ${index} is mounted`);
+  await act(() => renderer.unmount());
+});
+
+test("a single image leaves the horizontal swipe to whatever is behind the carousel", async () => {
+  let renderer;
+  await act(() => {
+    renderer = create(React.createElement(ImageCarousel, { ...props, images: images.slice(0, 1) }));
+  });
+  await act(() =>
+    renderer.root
+      .find((node) => typeof node.props.onLayout === "function")
+      .props.onLayout({ nativeEvent: { layout: { width: 400, height: 400 } } }),
+  );
+  // Only the tap is attached: no `Gesture.Exclusive` array, and nothing that could page.
+  const { gesture } = renderer.root.findByType("GestureDetector").props;
+  assert.ok(!Array.isArray(gesture));
+  for (const name of ["onStart", "onUpdate", "onTouchesDown", "onTouchesMove"])
+    assert.equal(gesture.callbacks[name], undefined, name);
+  await act(() => renderer.unmount());
+});
+
+test("a multi-image carousel takes horizontal drags and releases vertical ones", async () => {
+  let renderer;
+  await act(() => {
+    renderer = create(React.createElement(ImageCarousel, props));
+  });
+  await act(() =>
+    renderer.root
+      .find((node) => typeof node.props.onLayout === "function")
+      .props.onLayout({ nativeEvent: { layout: { width: 400, height: 400 } } }),
+  );
+  const [pan] = renderer.root.findByType("GestureDetector").props.gesture;
+  const drag = (dx, dy) => {
+    const decisions = [];
+    const manager = { activate: () => decisions.push("activate"), fail: () => decisions.push("fail") };
+    pan.callbacks.onTouchesDown({ allTouches: [{ absoluteX: 200, absoluteY: 300 }] }, manager);
+    pan.callbacks.onTouchesMove({ allTouches: [{ absoluteX: 200 + dx, absoluteY: 300 + dy }] }, manager);
+    return decisions;
+  };
+  assert.deepEqual(drag(-40, 4), ["activate"]);
+  assert.deepEqual(drag(4, -40), ["fail"]);
+  // The diagonal flick that used to be handed to the parent pager mid-gesture.
+  assert.deepEqual(drag(30, 20), ["activate"]);
+  // A tap must not leave anything waiting on an undecided swipe.
+  const taps = [];
+  pan.callbacks.onTouchesDown({ allTouches: [{ absoluteX: 200, absoluteY: 300 }] }, {});
+  pan.callbacks.onTouchesUp({ numberOfTouches: 0 }, { fail: () => taps.push("fail") });
+  assert.deepEqual(taps, ["fail"]);
   await act(() => renderer.unmount());
 });
 

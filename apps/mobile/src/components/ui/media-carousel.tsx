@@ -1,7 +1,8 @@
-import { CatalystActionSheetItem, CatalystDivider } from "@/components/design-system";
+import { CatalystActionSheetItem, CatalystDivider, usePagerGestures } from "@/components/design-system";
 import { MediaPinOverlay } from "@/components/status/media-pin-overlay";
 import { useHaptics } from "@/hooks/use-haptics";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { FLICK_DEBUG } from "@/lib/flick-debug";
 import { getCdnUrl, resolveDeliveredImageType } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import { timelineImageQualityAtom, timelineWifiUpgradeAtom } from "@/models/atoms/image-quality";
@@ -106,6 +107,8 @@ export const MediaCarousel = memo(({ medias, createdAt, onIndexChange, pins }: P
   const wifiUpgrade = useAtomValue(timelineWifiUpgradeAtom);
   const haptics = useHaptics();
   const reducedMotion = useReducedMotion();
+  // タイムラインが横タブページャの中にある場合、複数枚画像の横フリックはページャより先にこちらが取る
+  const pagerGestures = usePagerGestures();
   const [isWifi, setIsWifi] = useState(false);
 
   useEffect(() => {
@@ -417,6 +420,8 @@ export const MediaCarousel = memo(({ medias, createdAt, onIndexChange, pins }: P
       longPressDuration={600}
       reduceMotion={reducedMotion}
       detailEnabled={!isBlurred}
+      blockedExternalGestures={pagerGestures}
+      debugLabel={FLICK_DEBUG ? `media:${firstMedia.id}` : undefined}
       style={{ height: carouselHeight, aspectRatio: undefined }}
       onIndexChange={handleIndexChange}
       onOpenDetail={setDetailIndex}
