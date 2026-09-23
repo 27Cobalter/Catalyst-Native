@@ -173,6 +173,7 @@ module.exports = ({ config }) => {
         "expo-build-properties",
         {
           ios: {
+            enableSceneSupport: true,
             forceStaticLinking: ["RNFBApp", "RNFBMessaging"],
             useFrameworks: "static",
             ccacheEnabled: true,
