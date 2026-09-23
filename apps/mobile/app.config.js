@@ -147,7 +147,6 @@ module.exports = ({ config }) => {
         {
           assets: [
             //
-            "assets/images/emoji-test.txt",
             "assets/images/ui",
           ],
         },

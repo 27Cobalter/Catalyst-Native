@@ -1,9 +1,7 @@
 /* eslint-disable react-hooks/immutability, react-hooks/refs, react-hooks/set-state-in-effect */
 import { CatalystButton, CatalystButtonText, CatalystText, CatalystTextField } from "@/components/design-system";
 import { EmojiPickerView } from "@/components/emoji-verse";
-import { getFilteredCategories, useDefaultCategories } from "@/components/emoji-verse/emoji-data";
-import type { EmojiCategory, EmojiItem } from "@/components/emoji-verse/types";
-import { emojiToCodepoints } from "@/components/emoji-verse/unicode";
+import { useDefaultCategories } from "@/components/emoji-verse/emoji-data";
 import { FleetColorPickerButton, FleetColorPickerModal } from "@/components/fleet/color-picker-modal";
 import { resolveStickerImageUrl } from "@/components/fleet/content";
 import { cn } from "@/lib/utils";
@@ -29,6 +27,7 @@ import {
   type FleetTextStyle,
   type ResolvedFleetTextLayer,
 } from "@natsuneko-laboratory/fleet-renderer-react-native";
+import { type EmojiCategory, type EmojiItem, emojiToCodepoints } from "@natsuneko-laboratory/react-native-emoji-verse";
 import * as FileSystem from "expo-file-system";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
@@ -519,7 +518,7 @@ export default function FleetComposerScreen() {
   const [previewArea, setPreviewArea] = useState({ width: 0, height: 0 });
   const [availableReactions, setAvailableReactions] = useState<ReactionItem[]>([]);
   const [isLoadingReactions, setIsLoadingReactions] = useState(false);
-  const { categories: defaultEmojiCategories, isLoading: isLoadingDefaultEmojis } = useDefaultCategories();
+  const defaultEmojiCategories = useDefaultCategories();
 
   const textRefsMap = useRef<Map<string, TransformHandle | null>>(new Map());
   const stickerRefsMap = useRef<Map<string, TransformHandle | null>>(new Map());
@@ -582,7 +581,7 @@ export default function FleetComposerScreen() {
   );
 
   useEffect(() => {
-    if (stickerEditor === null || availableReactions.length > 0 || isLoadingDefaultEmojis) return;
+    if (stickerEditor === null || availableReactions.length > 0) return;
 
     let active = true;
     setIsLoadingReactions(true);
@@ -608,7 +607,7 @@ export default function FleetComposerScreen() {
     return () => {
       active = false;
     };
-  }, [stickerEditor, availableReactions.length, isLoadingDefaultEmojis]);
+  }, [stickerEditor, availableReactions.length]);
 
   const stickerCategories = useMemo<EmojiCategory[]>(() => {
     const categories: EmojiCategory[] = [];
@@ -626,7 +625,7 @@ export default function FleetComposerScreen() {
       });
     }
 
-    categories.push(...getFilteredCategories(["flags", "smileys_and_people"], defaultEmojiCategories));
+    categories.push(...defaultEmojiCategories);
 
     return categories;
   }, [availableReactions, defaultEmojiCategories]);
@@ -1348,7 +1347,7 @@ export default function FleetComposerScreen() {
               ステッカーを選択
             </CatalystText>
             <View className="h-56 overflow-hidden rounded-2xl border border-light-border dark:border-dark-border">
-              {isLoadingReactions || isLoadingDefaultEmojis ? (
+              {isLoadingReactions ? (
                 <View className="flex-1 items-center justify-center py-6">
                   <ActivityIndicator />
                 </View>

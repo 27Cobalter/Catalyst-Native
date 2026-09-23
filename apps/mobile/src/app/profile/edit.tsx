@@ -1,5 +1,5 @@
 import { EmojiPickerSheet, type EmojiPickerSheetRef } from "@/components/emoji-verse";
-import type { EmojiItem } from "@/components/emoji-verse/types";
+import type { EmojiItem } from "@natsuneko-laboratory/react-native-emoji-verse";
 import {
   CatalystButton,
   CatalystButtonIcon,
