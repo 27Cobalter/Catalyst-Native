@@ -29,6 +29,7 @@ import { openUrlWithBrowser } from "@/models/browser-settings";
 import {
   EPICLESE_ITEM_TYPE_LABELS,
   getEpicleseItemUrl,
+  getEpicleseWorld,
   type EpicleseMetadata,
   type EpicleseReference,
 } from "@/models/epiclese";
@@ -51,6 +52,7 @@ import {
   ExternalLink,
   FileQuestion,
   Flag,
+  Globe,
   MoreHorizontal,
   Pencil,
   Send,
@@ -75,7 +77,8 @@ import { withUniwind } from "uniwind";
 import { ContestBanner } from "@/components/contest/banner";
 import { WeeklyThemeBanner } from "@/components/theme/banner";
 import "@/global.css";
-import { buildShareText } from "@/lib/share";
+import { buildShareText, buildWorldShareText, type ShareWorld } from "@/lib/share";
+import { fetchVRChatWorldAuthorName } from "@/lib/vrchat-world";
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
@@ -92,7 +95,8 @@ type MenuAction =
   | "openInBrowser"
   | "copyUrl"
   | "copyPost"
-  | "share";
+  | "share"
+  | "shareWithWorld";
 
 const UniArrowLeft = withUniwind(ArrowLeft);
 const UniBookmark = withUniwind(Bookmark);
@@ -106,6 +110,7 @@ const UniMoreHorizontal = withUniwind(MoreHorizontal);
 const UniPencil = withUniwind(Pencil);
 const UniSafeAreaView = withUniwind(SafeAreaView);
 const UniSend = withUniwind(Send);
+const UniGlobe = withUniwind(Globe);
 const UniTrash2 = withUniwind(Trash2);
 
 // レスポンスの status.contest は SDK 上 unknown 型のため、参加先コンテストを特定できる slug の有無だけを安全に確認する
@@ -153,6 +158,7 @@ export default function StatusDetailsPage() {
   const [weeklyTheme, setWeeklyTheme] = useState<Pick<CatalystWeeklyTheme, "slug" | "title" | "weekKey" | "sponsor"> | null>(null);
   const [metadata, setMetadata] = useState<EpicleseMetadata>({});
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [worldAuthor, setWorldAuthor] = useState<string | null>(null);
   const [reactions, setReactions] = useState<Record<string, CatalystReaction>>({});
   const [editingCaption, setEditingCaption] = useState("");
   const [isEditSheetVisible, setIsEditSheetVisible] = useState(false);
@@ -174,6 +180,28 @@ export default function StatusDetailsPage() {
     }
     return pins;
   }, [metadata]);
+
+  // 共有テキストに載せるワールド。X などのカードに出る先頭の写真に合わせ、ワールドの分かる最初の写真から取る
+  const firstWorld = useMemo(
+    () =>
+      status?.medias.map((media) => metadata[media.id] && getEpicleseWorld(metadata[media.id])).find((world) => world) ??
+      null,
+    [status, metadata],
+  );
+
+  // 制作者の問い合わせ中に共有されても、ワールド名だけは載せられる
+  const shareWorld: ShareWorld | null = firstWorld && { name: firstWorld.name, author: worldAuthor };
+
+  useEffect(() => {
+    setWorldAuthor(null);
+    if (!firstWorld) return;
+
+    let cancelled = false;
+    fetchVRChatWorldAuthorName(firstWorld.platformIdentifier).then((author) => !cancelled && setWorldAuthor(author));
+    return () => {
+      cancelled = true;
+    };
+  }, [firstWorld]);
 
   const isMyself = account?.user?.id === status?.user?.id;
   const isLoggedIn = account !== null;
@@ -387,9 +415,17 @@ export default function StatusDetailsPage() {
             });
           }
           break;
+        case "shareWithWorld": {
+          // 自分の投稿は自分のツイートにぶら下げて共有することが多いので、投稿者を省いてワールドを主役にする
+          const username = isMyself ? "" : (status?.user?.displayName ?? "");
+          if (!shareWorld) break;
+          const build = (url: string) => buildWorldShareText(status?.body ?? "", username, url, shareWorld);
+          Share.share(Platform.OS === "ios" ? { message: build(""), url: statusUrl } : { message: build(statusUrl) });
+          break;
+        }
       }
     },
-    [status, statusUrl, handleDeleteStatus, id, router],
+    [status, statusUrl, isMyself, shareWorld, handleDeleteStatus, id, router],
   );
 
   const showMenu = useCallback(() => {
@@ -835,6 +871,17 @@ export default function StatusDetailsPage() {
               onPress={() => handleMenuItemPress("share")}
               tone="accent"
             />
+            {shareWorld && (
+              <>
+                <CatalystDivider className="ml-14 w-auto" />
+                <CatalystActionSheetItem
+                  icon={UniGlobe}
+                  title="ワールド情報を付けて共有"
+                  onPress={() => handleMenuItemPress("shareWithWorld")}
+                  tone="accent"
+                />
+              </>
+            )}
           </View>
         </BottomSheetView>
       </BottomSheetModal>

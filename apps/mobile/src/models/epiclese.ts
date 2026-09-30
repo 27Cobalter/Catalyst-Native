@@ -61,4 +61,15 @@ export type EpicleseMediaMetadata = {
 
 export type EpicleseMetadata = Record<string, EpicleseMediaMetadata>;
 
+/**
+ * 写真の撮影ワールドを返す。VRChat の写真は `world` が空で、ワールド名は `additionalData.World` に、
+ * ワールド ID は `additionalData2.World.ref` に入っていることが多いので、そちらも見る
+ */
+export const getEpicleseWorld = (meta: EpicleseMediaMetadata): EpicleseWorld | null => {
+  if (meta.world) return meta.world;
+
+  const name = meta.additionalData?.World;
+  return name ? { name, platformIdentifier: meta.additionalData2?.World?.ref ?? "" } : null;
+};
+
 export const getEpicleseItemUrl = (id: string) => `https://epiclese.natsuneko.com/item/${id}`;
