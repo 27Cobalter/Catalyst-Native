@@ -82,10 +82,20 @@ export async function getAuthorizationStatus(): Promise<AppAuthorizationStatus> 
   return mapAuthorizationStatus(status);
 }
 
-export async function requestAuthorization(): Promise<boolean> {
-  if (Platform.OS === "android" && Platform.Version >= 33) {
+// granted: 許可された / denied: 拒否された / blocked: ダイアログを出せないため端末の設定から許可してもらう必要がある
+export type AuthorizationRequestResult = "granted" | "denied" | "blocked";
+
+export async function requestAuthorization(): Promise<AuthorizationRequestResult> {
+  if (Platform.OS === "android") {
+    // Android 12 以下は実行時パーミッションが無く、オフなら設定から戻してもらうしかない
+    if (Platform.Version < 33) return "blocked";
+
+    // Android 13+ は未要求でも「拒否」扱いになるため、まずダイアログを出す。
+    // 2 回拒否されるとダイアログを出さずに never_ask_again が返る
     const result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
-    return result === PermissionsAndroid.RESULTS.GRANTED;
+    if (result === PermissionsAndroid.RESULTS.GRANTED) return "granted";
+    if (result === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) return "blocked";
+    return "denied";
   }
 
   const status = await requestPermission(getMessaging(), {
@@ -94,7 +104,9 @@ export async function requestAuthorization(): Promise<boolean> {
     badge: true,
   });
 
-  return status === AuthorizationStatus.AUTHORIZED || status === AuthorizationStatus.PROVISIONAL;
+  return status === AuthorizationStatus.AUTHORIZED || status === AuthorizationStatus.PROVISIONAL
+    ? "granted"
+    : "denied";
 }
 
 export async function getFcmToken(): Promise<string | null> {
@@ -198,6 +210,10 @@ export async function registerTokenToBackend(
   if (__DEV__) {
     console.log(`FCM register response: ${response.status}`);
   }
+
+  if (!response.ok) {
+    throw new Error(`FCM registration failed: ${response.status}`);
+  }
 }
 
 export async function unregisterTokenFromBackend(token: string, accessToken: string): Promise<void> {
@@ -223,7 +239,7 @@ export function openSystemSettings(): void {
   }
 }
 
-export function showPermissionDeniedAlert(): void {
+export function showPermissionDeniedAlert(onOpenSettings?: () => void): void {
   const message =
     Platform.OS === "ios"
       ? "通知を受け取るには、iOSの設定でCatalystの通知を許可してください。"
@@ -232,8 +248,15 @@ export function showPermissionDeniedAlert(): void {
   Alert.alert("通知がオフになっています", message, [
     {
       text: "設定を開く",
-      onPress: () => openSystemSettings(),
+      onPress: () => {
+        onOpenSettings?.();
+        openSystemSettings();
+      },
     },
     { text: "キャンセル", style: "cancel" },
   ]);
+}
+
+export function showEnableFailedAlert(): void {
+  Alert.alert("通知を有効にできませんでした", "通信環境を確認して、もう一度お試しください。");
 }

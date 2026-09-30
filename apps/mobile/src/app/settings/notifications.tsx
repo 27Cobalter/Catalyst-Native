@@ -16,19 +16,19 @@ import {
   loadPushEnabled,
   loadSavedFcmToken,
   onTokenRefresh,
-  openSystemSettings,
   registerTokenToBackend,
   requestAuthorization,
   saveEnabledTypes,
   saveFcmToken,
   savePushEnabled,
+  showEnableFailedAlert,
   showPermissionDeniedAlert,
   unregisterTokenFromBackend,
 } from "@/models/notification-settings";
 import { saveStreamingEnabled } from "@/models/streaming-settings";
 import { useAtom, useAtomValue } from "jotai";
-import { useCallback, useEffect, useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AppState, Platform, Pressable, ScrollView, View } from "react-native";
 
 type WeeklyThemeSubscription = {
   notifyOnOpen: boolean;
@@ -115,7 +115,11 @@ export default function NotificationSettingsPage() {
       setFcmToken(token);
       await saveFcmToken(token);
       if (isPushEnabled && account && client?.accessToken) {
-        await registerTokenToBackend(token, client.accessToken);
+        await registerTokenToBackend(token, client.accessToken).catch((error) => {
+          if (__DEV__) {
+            console.warn("FCM token refresh registration failed", error);
+          }
+        });
       }
     }).then((unsub) => {
       unsubscribe = unsub;
@@ -152,46 +156,89 @@ export default function NotificationSettingsPage() {
     isPushEnabled &&
     (authStatus === "authorized" || authStatus === "provisional");
 
+  // 登録に失敗したときに ON だけが残らないよう、バックエンドへの登録後に有効化する
+  const enablePush = useCallback(async () => {
+    const token = await getFcmToken();
+    if (token && account && client.accessToken) {
+      await registerTokenToBackend(token, client.accessToken);
+      setFcmToken(token);
+      await saveFcmToken(token);
+    }
+    setIsPushEnabled(true);
+    await savePushEnabled(true);
+  }, [account, client]);
+
+  // 端末の設定へ誘導した後、戻ってきたときに許可されていれば Push通知 を有効にする
+  const pendingEnableFromSettingsRef = useRef(false);
+  const showSettingsAlert = useCallback(() => {
+    showPermissionDeniedAlert(() => {
+      pendingEnableFromSettingsRef.current = true;
+    });
+  }, []);
+
+  // 許可ダイアログを優先し、出せない場合のみ端末の設定へ誘導する
+  const requestPermissionAndEnable = useCallback(async () => {
+    try {
+      if (authStatus === "authorized" || authStatus === "provisional") {
+        await enablePush();
+        return;
+      }
+
+      if (Platform.OS === "ios" && authStatus === "denied") {
+        // iOS は一度拒否されると再度ダイアログを出せない
+        showSettingsAlert();
+        return;
+      }
+
+      const result = await requestAuthorization();
+      setAuthStatus(await getAuthorizationStatus());
+
+      if (result === "granted") {
+        await enablePush();
+      } else if (result === "blocked") {
+        showSettingsAlert();
+      }
+    } catch (error) {
+      if (__DEV__) {
+        console.warn("Enabling push notifications failed", error);
+      }
+      showEnableFailedAlert();
+    }
+  }, [authStatus, enablePush, showSettingsAlert]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state !== "active") return;
+
+      const shouldEnable = pendingEnableFromSettingsRef.current;
+      pendingEnableFromSettingsRef.current = false;
+
+      const refresh = async () => {
+        const status = await getAuthorizationStatus();
+        setAuthStatus(status);
+        if (shouldEnable && (status === "authorized" || status === "provisional")) {
+          await enablePush();
+        }
+      };
+
+      refresh().catch((error) => {
+        if (__DEV__) {
+          console.warn("Notification permission refresh failed", error);
+        }
+        if (shouldEnable) showEnableFailedAlert();
+      });
+    });
+
+    return () => subscription.remove();
+  }, [enablePush]);
+
   // Push通知トグル
   const handlePushToggle = useCallback(
     async (newValue: boolean) => {
       if (!isLoggedIn) return;
 
       if (newValue) {
-        // ONにする場合
-        if (authStatus === "authorized" || authStatus === "provisional") {
-          // 既に許可済み
-          setIsPushEnabled(true);
-          await savePushEnabled(true);
-          const token = await getFcmToken();
-          if (token && account && client.accessToken) {
-            setFcmToken(token);
-            await saveFcmToken(token);
-            await registerTokenToBackend(token, client.accessToken);
-          }
-        } else if (authStatus === "denied") {
-          // 拒否済み → 設定画面へ誘導
-          showPermissionDeniedAlert();
-        } else {
-          // 未決定 → 許可リクエスト
-          const granted = await requestAuthorization();
-          const newStatus = await getAuthorizationStatus();
-          setAuthStatus(newStatus);
-
-          if (granted) {
-            setIsPushEnabled(true);
-            await savePushEnabled(true);
-            const token = await getFcmToken();
-            if (token && account && client.accessToken) {
-              setFcmToken(token);
-              await saveFcmToken(token);
-              await registerTokenToBackend(
-                token,
-                client.accessToken,
-              );
-            }
-          }
-        }
+        await requestPermissionAndEnable();
       } else {
         // OFFにする場合
         setIsPushEnabled(false);
@@ -205,7 +252,7 @@ export default function NotificationSettingsPage() {
         }
       }
     },
-    [isLoggedIn, authStatus, account, client],
+    [isLoggedIn, account, client, requestPermissionAndEnable],
   );
 
   // 通知タイプのトグル
@@ -310,9 +357,9 @@ export default function NotificationSettingsPage() {
         {/* フッター */}
         {authStatus === "denied" && isLoggedIn ? (
           <View className="px-5 pt-2">
-            <Pressable onPress={openSystemSettings}>
+            <Pressable onPress={requestPermissionAndEnable}>
               <CatalystText variant="label" tone="tint">
-                設定を開く
+                通知を許可する
               </CatalystText>
             </Pressable>
             <CatalystText
@@ -320,7 +367,7 @@ export default function NotificationSettingsPage() {
               tone="danger"
               className="mt-1 leading-4"
             >
-              通知がオフになっています。端末の設定から通知を有効にしてください。
+              通知が許可されていません。
             </CatalystText>
           </View>
         ) : footerText ? (

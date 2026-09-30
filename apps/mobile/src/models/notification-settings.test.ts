@@ -100,4 +100,12 @@ describe("notification settings (backend)", () => {
       }),
     );
   });
+
+  it("FCM トークンの登録が失敗したらエラーにする", async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 500 });
+
+    await expect(registerTokenToBackend("fcm-token", "access-token")).rejects.toThrow(
+      "FCM registration failed: 500",
+    );
+  });
 });
