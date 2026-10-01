@@ -77,7 +77,7 @@ import { withUniwind } from "uniwind";
 import { ContestBanner } from "@/components/contest/banner";
 import { WeeklyThemeBanner } from "@/components/theme/banner";
 import "@/global.css";
-import { buildShareText, buildWorldShareText, type ShareWorld } from "@/lib/share";
+import { buildShareText, buildWorldShareText } from "@/lib/share";
 import { fetchVRChatWorldAuthorName } from "@/lib/vrchat-world";
 import {
   BottomSheetBackdrop,
@@ -158,7 +158,6 @@ export default function StatusDetailsPage() {
   const [weeklyTheme, setWeeklyTheme] = useState<Pick<CatalystWeeklyTheme, "slug" | "title" | "weekKey" | "sponsor"> | null>(null);
   const [metadata, setMetadata] = useState<EpicleseMetadata>({});
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
-  const [worldAuthor, setWorldAuthor] = useState<string | null>(null);
   const [reactions, setReactions] = useState<Record<string, CatalystReaction>>({});
   const [editingCaption, setEditingCaption] = useState("");
   const [isEditSheetVisible, setIsEditSheetVisible] = useState(false);
@@ -188,20 +187,6 @@ export default function StatusDetailsPage() {
       null,
     [status, metadata],
   );
-
-  // 制作者の問い合わせ中に共有されても、ワールド名だけは載せられる
-  const shareWorld: ShareWorld | null = firstWorld && { name: firstWorld.name, author: worldAuthor };
-
-  useEffect(() => {
-    setWorldAuthor(null);
-    if (!firstWorld) return;
-
-    let cancelled = false;
-    fetchVRChatWorldAuthorName(firstWorld.platformIdentifier).then((author) => !cancelled && setWorldAuthor(author));
-    return () => {
-      cancelled = true;
-    };
-  }, [firstWorld]);
 
   const isMyself = account?.user?.id === status?.user?.id;
   const isLoggedIn = account !== null;
@@ -418,14 +403,18 @@ export default function StatusDetailsPage() {
         case "shareWithWorld": {
           // 自分の投稿は自分のツイートにぶら下げて共有することが多いので、投稿者を省いてワールドを主役にする
           const username = isMyself ? "" : (status?.user?.displayName ?? "");
-          if (!shareWorld) break;
-          const build = (url: string) => buildWorldShareText(status?.body ?? "", username, url, shareWorld);
-          Share.share(Platform.OS === "ios" ? { message: build(""), url: statusUrl } : { message: build(statusUrl) });
+          if (!firstWorld) break;
+          // 投稿を開く回数に比べて共有は少ないので、制作者は共有するときに初めて問い合わせる
+          fetchVRChatWorldAuthorName(firstWorld.platformIdentifier).then((author) => {
+            const build = (url: string) =>
+              buildWorldShareText(status?.body ?? "", username, url, { name: firstWorld.name, author });
+            Share.share(Platform.OS === "ios" ? { message: build(""), url: statusUrl } : { message: build(statusUrl) });
+          });
           break;
         }
       }
     },
-    [status, statusUrl, isMyself, shareWorld, handleDeleteStatus, id, router],
+    [status, statusUrl, isMyself, firstWorld, handleDeleteStatus, id, router],
   );
 
   const showMenu = useCallback(() => {
@@ -871,7 +860,7 @@ export default function StatusDetailsPage() {
               onPress={() => handleMenuItemPress("share")}
               tone="accent"
             />
-            {shareWorld && (
+            {firstWorld && (
               <>
                 <CatalystDivider className="ml-14 w-auto" />
                 <CatalystActionSheetItem

@@ -55,33 +55,34 @@ export type ShareWorld = {
 };
 
 // 自分のツイートにぶら下げて撮影ワールドを紹介する用途なので、Web 版とは揃えず読みやすさを優先して行を分ける。
+// ワールドは VRChat のプリントと同じ「ワールド名 by 制作者」で書くので、投稿者は by を使わず誘導の行に入れる。
 // Catalyst を知らない人にもリンク先が分かるよう、サービス名には肩書きを添える
-const WORLD_SHARE_LINK_LABEL = "📷 VR 写真共有サービス Catalyst で見る";
+const CATALYST_LABEL = "VR 写真共有サービス Catalyst で見る";
 
 /**
  * 撮影ワールドを添えた共有テキストを組み立てる。
  *
  * ```
- * 本文 by 投稿者
- * 🌐 ワールド名 (ワールド制作: 制作者)
- * 📷 VR 写真共有サービス Catalyst で見る
+ * 本文
+ * 🌐 ワールド名 by 制作者
+ * 📷 投稿者 さんの投稿を VR 写真共有サービス Catalyst で見る
  * URL
  * ```
  *
- * 本文も投稿者も無ければ 1 行目ごと省く。`url` の扱いと長さの見積もりは `buildShareText` と同じ。
+ * 本文が無ければ 1 行目ごと、投稿者が無ければ「投稿者 さんの投稿を」を省く。
+ * `url` の扱いと長さの見積もりは `buildShareText` と同じ。
  */
 export const buildWorldShareText = (text: string, username: string, url: string, world: ShareWorld): string => {
-  const author = username ? `by ${username}` : "";
-  const worldLine = `🌐 ${world.name}${world.author ? ` (ワールド制作: ${world.author})` : ""}`;
-  const tail = `${worldLine}\n${WORLD_SHARE_LINK_LABEL}`;
-  // 本文と投稿者の間の空白と、tail の前後の改行
-  const reserved = twtr.getTweetLength(author) + twtr.getTweetLength(tail) + TWITTER_URL_LENGTH + (author ? 3 : 2);
+  const worldLine = `🌐 ${world.name}${world.author ? ` by ${world.author}` : ""}`;
+  const linkLine = `📷 ${username ? `${username} さんの投稿を ` : ""}${CATALYST_LABEL}`;
+  const tail = `${worldLine}\n${linkLine}`;
+  // tail の前後の改行
+  const reserved = twtr.getTweetLength(tail) + TWITTER_URL_LENGTH + 2;
 
   const body =
     twtr.getTweetLength(text) + reserved <= TWEET_MAX_LENGTH
       ? text
       : `${sliceByTweetLength(text, TWEET_MAX_LENGTH - reserved - twtr.getTweetLength(ELLIPSIS))}${ELLIPSIS}`;
 
-  const head = [body, author].filter(Boolean).join(" ");
-  return [head, tail, url].filter(Boolean).join("\n");
+  return [body, tail, url].filter(Boolean).join("\n");
 };
