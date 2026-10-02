@@ -23,6 +23,7 @@ import {
   underlineLinksAtom,
 } from "@/models/atoms/accessibility";
 import { accountAtom } from "@/models/atoms/account";
+import { emojiSkinToneAtom } from "@/models/atoms/emoji-skin-tone";
 import {
   timelineImageQualityAtom,
   timelineWifiUpgradeAtom,
@@ -30,6 +31,7 @@ import {
 import { hideSensitiveContentAtom } from "@/models/atoms/sensitive-content";
 import { streamingEnabledAtom } from "@/models/atoms/streaming";
 import * as Credential from "@/models/credential";
+import { loadEmojiSkinTone } from "@/models/emoji-skin-tone-settings";
 import {
   loadTimelineImageQuality,
   loadWifiUpgrade,
@@ -108,6 +110,7 @@ export default Sentry.wrap(function RootLayout() {
   const setUnderlineLinks = useSetAtom(underlineLinksAtom);
   const setBoostTextContrast = useSetAtom(boostTextContrastAtom);
   const setHapticsEnabled = useSetAtom(hapticsEnabledAtom);
+  const setEmojiSkinTone = useSetAtom(emojiSkinToneAtom);
   useSystemReducedMotionSync();
   const [loaded, error] = useFonts({
     "Noto Sans JP Regular": require("@/assets/fonts/NotoSansJP-Regular.ttf"),
@@ -127,6 +130,7 @@ export default Sentry.wrap(function RootLayout() {
       loadUnderlineLinks(),
       loadBoostTextContrast(),
       loadHapticsEnabled(),
+      loadEmojiSkinTone(),
     ]).then(
       ([
         quality,
@@ -138,6 +142,7 @@ export default Sentry.wrap(function RootLayout() {
         underlineLinks,
         boostTextContrast,
         hapticsEnabled,
+        emojiSkinTone,
       ]) => {
         setTimelineImageQuality(quality);
         setTimelineWifiUpgrade(wifiUpgrade);
@@ -148,10 +153,12 @@ export default Sentry.wrap(function RootLayout() {
         setUnderlineLinks(underlineLinks);
         setBoostTextContrast(boostTextContrast);
         setHapticsEnabled(hapticsEnabled);
+        setEmojiSkinTone(emojiSkinTone);
       },
     );
   }, [
     setBoostTextContrast,
+    setEmojiSkinTone,
     setFleetPace,
     setHapticsEnabled,
     setHideSensitiveContent,

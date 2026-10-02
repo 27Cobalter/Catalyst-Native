@@ -1,34 +1,21 @@
 import { accountAtom } from "@/models/atoms/account";
+import type { CatalystCustomReaction, CatalystCustomReactionList } from "@/models/sdk-types";
 import {
-  BottomSheetBackdrop,
-  BottomSheetFlatList,
-  BottomSheetModal,
-  type BottomSheetBackdropProps,
-} from "@gorhom/bottom-sheet";
-import type {
-  CatalystCustomReaction,
-  CatalystCustomReactionList,
-} from "@/models/sdk-types";
+  emojiToCodepoints,
+  type EmojiCategory,
+  type EmojiItem,
+} from "@natsuneko-laboratory/react-native-emoji-verse";
+import {
+  EmojiPickerSheet as BaseEmojiPickerSheet,
+  type EmojiPickerSheetRef,
+} from "@natsuneko-laboratory/react-native-emoji-verse/sheet";
 import { useAtomValue } from "jotai";
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
-import { StyleSheet, Text, View, useColorScheme } from "react-native";
-import { getFilteredCategories, useDefaultCategories } from "./emoji-data";
-import { EmojiPickerView } from "./emoji-picker-view";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { useDefaultCategories } from "./emoji-data";
+import { useEmojiPickerDefaults } from "./emoji-picker-view";
 import { recordUnicodeUsage, recordUrlUsage } from "./frequency-manager";
-import type { EmojiCategory, EmojiItem } from "./types";
-import { emojiToCodepoints } from "./unicode";
 
-export type EmojiPickerSheetRef = {
-  open: () => void;
-  close: () => void;
-};
+export type { EmojiPickerSheetRef };
 
 type Props = {
   onReact?: (symbol: string, url?: string, customReactionId?: string) => void;
@@ -38,27 +25,26 @@ type Props = {
 
 export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
   function EmojiPickerSheet({ onReact, onEmojiSelected, includeCatalystReactions = true }, ref) {
-    const theme = useColorScheme() ?? "light";
     const account = useAtomValue(accountAtom);
     const [categories, setCategories] = useState<EmojiCategory[]>([]);
     const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
     const [isPresented, setIsPresented] = useState(false);
-    const bottomSheetRef = useRef<BottomSheetModal>(null);
-    const { categories: defaultCategories, isLoading: isEmojiDataLoading } =
-      useDefaultCategories();
+    const sheetRef = useRef<EmojiPickerSheetRef>(null);
+    const defaultCategories = useDefaultCategories();
+    const pickerDefaults = useEmojiPickerDefaults();
 
     useImperativeHandle(ref, () => ({
       open: () => {
         setIsPresented(true);
-        bottomSheetRef.current?.present();
+        sheetRef.current?.open();
       },
       close: () => {
-        bottomSheetRef.current?.dismiss();
+        sheetRef.current?.close();
       },
     }));
 
     useEffect(() => {
-      if (!isPresented || isEmojiDataLoading) return;
+      if (!isPresented) return;
 
       setIsCategoriesLoading(true);
       let cancelled = false;
@@ -112,22 +98,13 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
             });
           }
 
-          const filtered = getFilteredCategories(
-            ["flags", "smileys_and_people"],
-            defaultCategories,
-          );
-          builtCategories.push(...filtered);
+          builtCategories.push(...defaultCategories);
 
           setCategories(builtCategories);
         } catch (e) {
           if (cancelled) return;
           console.error("Failed to load emoji data:", e);
-          setCategories(
-            getFilteredCategories(
-              ["flags", "smileys_and_people"],
-              defaultCategories,
-            ),
-          );
+          setCategories(defaultCategories);
         } finally {
           if (!cancelled) {
             setIsCategoriesLoading(false);
@@ -140,14 +117,15 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
       return () => {
         cancelled = true;
       };
-    }, [isPresented, account, isEmojiDataLoading, defaultCategories, includeCatalystReactions]);
+    }, [isPresented, account, defaultCategories, includeCatalystReactions]);
 
     const handleDismiss = useCallback(() => {
       setIsPresented(false);
     }, []);
 
+    // シートは選択後に自動で閉じる
     const handleEmojiSelected = useCallback(
-      async (emoji: EmojiItem) => {
+      (emoji: EmojiItem) => {
         onEmojiSelected?.(emoji);
 
         if (emoji.type.kind === "unicode") {
@@ -158,81 +136,20 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
           onReact?.(emoji.id, emoji.type.url, emoji.type.customReactionId);
           recordUrlUsage(emoji.id, emoji.type.url).catch(() => {});
         }
-        bottomSheetRef.current?.dismiss();
       },
       [onReact, onEmojiSelected],
     );
 
-    const renderBackdrop = useCallback(
-      (props: BottomSheetBackdropProps) => (
-        <BottomSheetBackdrop
-          {...props}
-          disappearsOnIndex={-1}
-          appearsOnIndex={0}
-        />
-      ),
-      [],
-    );
-
-    // BottomSheetFlatList を直接 BottomSheetModal の子にするためのヘッダー
-    // BottomSheetView でラップすると position:absolute で height が未定義になり、
-    // FlatList の高さが正しく制約されずスクロールできなくなる
-    const listHeaderPrepend = (
-      <>
-        <Text
-          style={[
-            styles.title,
-            { color: theme === "dark" ? "#FFFFFF" : "#000000" },
-          ]}
-        >
-          リアクションを追加
-        </Text>
-        <View
-          style={[
-            styles.headerDivider,
-            { backgroundColor: theme === "dark" ? "#38383A" : "#E5E5EA" },
-          ]}
-        />
-      </>
-    );
-
     return (
-      <BottomSheetModal
-        ref={bottomSheetRef}
-        enableDynamicSizing={false}
-        snapPoints={["75%"]}
-        enablePanDownToClose
-        backdropComponent={renderBackdrop}
+      <BaseEmojiPickerSheet
+        {...pickerDefaults}
+        ref={sheetRef}
+        title="リアクションを追加"
+        categories={categories}
+        isLoading={isCategoriesLoading}
+        onEmojiSelected={handleEmojiSelected}
         onDismiss={handleDismiss}
-        backgroundStyle={{
-          backgroundColor: theme === "dark" ? "#1C1C1E" : "#FFFFFF",
-        }}
-        handleIndicatorStyle={{
-          backgroundColor: theme === "dark" ? "#48484A" : "#C7C7CC",
-        }}
-      >
-        {/* BottomSheetFlatList を BottomSheetModal の直接の子にすることで、
-            snapPoints が高さの上限として正しく機能しスクロールが有効になる */}
-        <EmojiPickerView
-          categories={categories}
-          onEmojiSelected={handleEmojiSelected}
-          isLoading={isCategoriesLoading}
-          listHeaderPrepend={listHeaderPrepend}
-          FlatListComponent={BottomSheetFlatList}
-        />
-      </BottomSheetModal>
+      />
     );
   },
 );
-
-const styles = StyleSheet.create({
-  title: {
-    fontSize: 17,
-    fontWeight: "600",
-    textAlign: "center",
-    paddingVertical: 8,
-  },
-  headerDivider: {
-    height: StyleSheet.hairlineWidth,
-  },
-});

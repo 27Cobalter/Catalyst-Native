@@ -147,7 +147,6 @@ module.exports = ({ config }) => {
         {
           assets: [
             //
-            "assets/images/emoji-test.txt",
             "assets/images/ui",
           ],
         },
@@ -173,6 +172,7 @@ module.exports = ({ config }) => {
         "expo-build-properties",
         {
           ios: {
+            enableSceneSupport: true,
             forceStaticLinking: ["RNFBApp", "RNFBMessaging"],
             useFrameworks: "static",
             ccacheEnabled: true,
