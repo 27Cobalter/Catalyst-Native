@@ -401,20 +401,19 @@ export default function StatusDetailsPage() {
           }
           break;
         case "shareWithWorld": {
-          // 自分の投稿は自分のツイートにぶら下げて共有することが多いので、投稿者を省いてワールドを主役にする
-          const username = isMyself ? "" : (status?.user?.displayName ?? "");
           if (!firstWorld) break;
           // 投稿を開く回数に比べて共有は少ないので、制作者は共有するときに初めて問い合わせる
           fetchVRChatWorldAuthorName(firstWorld.platformIdentifier).then((author) => {
+            const world = { name: firstWorld.name, author };
             const build = (url: string) =>
-              buildWorldShareText(status?.body ?? "", username, url, { name: firstWorld.name, author });
+              buildWorldShareText(status?.body ?? "", status?.user?.displayName ?? "", url, world);
             Share.share(Platform.OS === "ios" ? { message: build(""), url: statusUrl } : { message: build(statusUrl) });
           });
           break;
         }
       }
     },
-    [status, statusUrl, isMyself, firstWorld, handleDeleteStatus, id, router],
+    [status, statusUrl, firstWorld, handleDeleteStatus, id, router],
   );
 
   const showMenu = useCallback(() => {

@@ -55,7 +55,7 @@ export type ShareWorld = {
 };
 
 // 自分のツイートにぶら下げて撮影ワールドを紹介する用途なので、Web 版とは揃えず読みやすさを優先して行を分ける。
-// ワールドは VRChat のプリントと同じ「ワールド名 by 制作者」で書くので、投稿者は by を使わず誘導の行に入れる。
+// 投稿者は「〇〇 さんの投稿を」として誘導の行に入れ、ワールド制作者は Created by で書き分ける。
 // Catalyst を知らない人にもリンク先が分かるよう、サービス名には肩書きを添える
 const CATALYST_LABEL = "VR 写真共有サービス Catalyst で見る";
 
@@ -64,7 +64,7 @@ const CATALYST_LABEL = "VR 写真共有サービス Catalyst で見る";
  *
  * ```
  * 本文
- * 🌐 ワールド名 by 制作者
+ * 🌐 ワールド名 (Created by 制作者)
  * 📷 投稿者 さんの投稿を VR 写真共有サービス Catalyst で見る
  * URL
  * ```
@@ -73,7 +73,7 @@ const CATALYST_LABEL = "VR 写真共有サービス Catalyst で見る";
  * `url` の扱いと長さの見積もりは `buildShareText` と同じ。
  */
 export const buildWorldShareText = (text: string, username: string, url: string, world: ShareWorld): string => {
-  const worldLine = `🌐 ${world.name}${world.author ? ` by ${world.author}` : ""}`;
+  const worldLine = `🌐 ${world.name}${world.author ? ` (Created by ${world.author})` : ""}`;
   const linkLine = `📷 ${username ? `${username} さんの投稿を ` : ""}${CATALYST_LABEL}`;
   const tail = `${worldLine}\n${linkLine}`;
   // tail の前後の改行
