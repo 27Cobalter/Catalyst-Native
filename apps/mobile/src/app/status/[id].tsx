@@ -180,13 +180,13 @@ export default function StatusDetailsPage() {
     return pins;
   }, [metadata]);
 
-  // 共有テキストに載せるワールド。X などのカードに出る先頭の写真に合わせ、ワールドの分かる最初の写真から取る
-  const firstWorld = useMemo(
-    () =>
-      status?.medias.map((media) => metadata[media.id] && getEpicleseWorld(metadata[media.id])).find((world) => world) ??
-      null,
-    [status, metadata],
-  );
+  // 共有テキストに載せるワールド。X などのカードには 1 枚目の写真が出るので、1 枚目のワールドだけを使う。
+  // ワールド名と ID がそろっていなければ (非公開ワールドは ID だけで名前が無い) ワールド付き共有は出さない
+  const firstWorld = useMemo(() => {
+    const meta = status?.medias[0] && metadata[status.medias[0].id];
+    const world = meta ? getEpicleseWorld(meta) : null;
+    return world?.name && world.platformIdentifier ? world : null;
+  }, [status, metadata]);
 
   const isMyself = account?.user?.id === status?.user?.id;
   const isLoggedIn = account !== null;
