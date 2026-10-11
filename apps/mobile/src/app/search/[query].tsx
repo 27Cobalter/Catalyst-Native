@@ -37,6 +37,8 @@ export default function SearchPage() {
     const platform = extractSearchQualifier(hashtag, "platform");
     const name = extractSearchQualifier(hashtag, "world");
 
+    // 検索語が変わったら、前のワールドのカードを残さない
+    setWorld(null);
     if (!client || !platform || !name) {
       return;
     }
