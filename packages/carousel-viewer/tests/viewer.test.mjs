@@ -290,7 +290,10 @@ test("carousel commits to one axis and hands steeper drags to the scroll view", 
   assert.deepEqual(decide(60, 0), ["activate"]);
   assert.deepEqual(decide(-60, 0), ["activate"]);
   assert.deepEqual(decide(0, 60), ["fail"]);
-  // ~45 degrees scrolls the timeline; the old activeOffsetX/failOffsetY boxes made it a swipe.
+  // The dominant axis wins: ~34 degrees is a swipe, ~56 degrees scrolls the timeline (the old
+  // activeOffsetX/failOffsetY boxes made it a swipe), and exactly 45 degrees goes to the list.
+  assert.deepEqual(decide(60, 40), ["activate"]);
+  assert.deepEqual(decide(40, 60), ["fail"]);
   assert.deepEqual(decide(60, 60), ["fail"]);
   assert.deepEqual(decide(-60, -60), ["fail"]);
   // Decided once and only once: a drag that starts horizontal stays the carousel's even when it
@@ -321,7 +324,7 @@ test("worklets run from their serialized form with only __closure in scope", () 
   assert.equal(run(math.lockDirection, 20, 0), "paging");
 });
 
-test("competing gestures are blocked and a vertical drag holds the touch instead of failing", async () => {
+test("competing gestures are blocked and a vertical drag still fails to the list", async () => {
   const pager = { name: "pagerScroll" },
     drawer = { name: "drawerSwipe" };
   let renderer;
@@ -335,11 +338,33 @@ test("competing gestures are blocked and a vertical drag holds the touch instead
   );
   const [pan] = renderer.root.findByType("GestureDetector").props.gesture;
   assert.deepEqual(pan.callbacks.blocksExternalGesture, [pager, drawer]);
-  // Horizontal still pages the carousel.
+  // Every drag whose horizontal component dominates is the carousel's, so none is left for the pager.
   assert.deepEqual(drag(pan, 60, 0), ["activate"]);
-  // Steeper drags no longer fail: failing would let the pager take a drag whose horizontal
-  // component still dominates, which is the tab-switch symptom. Holding leaves it in BEGAN.
-  assert.deepEqual(drag(pan, 60, 60), []);
-  assert.deepEqual(drag(pan, 0, 60), []);
+  assert.deepEqual(drag(pan, 60, 40), ["activate"]);
+  // Vertical drags must fail, not hold the touch in BEGAN: on iOS holding it froze the timeline
+  // under the carousel.
+  assert.deepEqual(drag(pan, 60, 60), ["fail"]);
+  assert.deepEqual(drag(pan, 0, 60), ["fail"]);
+  await act(() => renderer.unmount());
+});
+
+test("a single image under a pager still lets vertical drags reach the list", async () => {
+  const pager = { name: "pagerScroll" };
+  let renderer;
+  await act(() => {
+    renderer = create(
+      React.createElement(ImageCarousel, { ...props, images: images.slice(0, 1), competingGestures: [pager] }),
+    );
+  });
+  await act(() =>
+    renderer.root
+      .find((node) => typeof node.props.onLayout === "function")
+      .props.onLayout({ nativeEvent: { layout: { width: 400, height: 400 } } }),
+  );
+  const [pan] = renderer.root.findByType("GestureDetector").props.gesture;
+  assert.deepEqual(drag(pan, 0, 60), ["fail"]);
+  assert.deepEqual(drag(pan, 40, 60), ["fail"]);
+  // A horizontal drag is still claimed (rubber band) so it never switches tabs.
+  assert.deepEqual(drag(pan, 60, 0), ["activate"]);
   await act(() => renderer.unmount());
 });
