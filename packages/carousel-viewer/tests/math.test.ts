@@ -76,11 +76,12 @@ test("pan axis stays undecided until either component clears the threshold", () 
   assert.equal(decidePanAxis(0, 11), "vertical");
 });
 test("pan axis commits by angle and ignores direction signs", () => {
-  // ~30 degrees off horizontal is the cutoff: tan(30) = 0.577 < 1 / 1.7 = 0.588.
-  assert.equal(decidePanAxis(100, 57), "horizontal");
-  assert.equal(decidePanAxis(100, 60), "vertical");
-  // A 45 degree drag scrolls the timeline; the old per-axis boxes made it a swipe up to ~56 degrees.
+  // The dominant axis wins: 45 degrees is the cutoff, and an exact tie scrolls the timeline.
+  assert.equal(decidePanAxis(100, 60), "horizontal");
+  assert.equal(decidePanAxis(100, 99), "horizontal");
   assert.equal(decidePanAxis(100, 100), "vertical");
+  // ~56 degrees scrolls the timeline; the old per-axis boxes made it a swipe.
+  assert.equal(decidePanAxis(100, 150), "vertical");
   for (const [x, y] of [
     [100, 20],
     [100, 80],

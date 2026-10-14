@@ -64,13 +64,15 @@ export function lockDirection(x: number, y: number): "undecided" | "paging" | "d
 
 // Distance either axis must travel before the drag commits to an axis.
 export const DIRECTION_THRESHOLD = 10;
-// 1.7 ≒ tan(60°): drags within ~30° of horizontal stay swipes, steeper ones go to the scroll view.
-export const HORIZONTAL_RATIO = 1.7;
 
 /**
  * Decides once, from the first few pixels of a drag, whether it belongs to the carousel or to the
- * scroll view behind it. Mirrors a UIPanGestureRecognizer that sets `state = .failed` in
+ * scroll views behind it. Mirrors a UIPanGestureRecognizer that sets `state = .failed` in
  * `touchesMoved` when the vertical component wins, which hands the touch back to the scroll view.
+ *
+ * The dominant axis wins (a 45° split, ties going to the scroll view). A narrower horizontal zone
+ * leaves a band of diagonals the carousel lets go while their horizontal component still dominates,
+ * and a horizontal pager around the list takes exactly those instead of the list (#45).
  */
 export function decidePanAxis(dx: number, dy: number): "undecided" | "horizontal" | "vertical" {
   "worklet";
@@ -80,5 +82,5 @@ export function decidePanAxis(dx: number, dy: number): "undecided" | "horizontal
   const x = Math.abs(dx),
     y = Math.abs(dy);
   if (x <= DIRECTION_THRESHOLD && y <= DIRECTION_THRESHOLD) return "undecided";
-  return y > x / HORIZONTAL_RATIO ? "vertical" : "horizontal";
+  return x > y ? "horizontal" : "vertical";
 }

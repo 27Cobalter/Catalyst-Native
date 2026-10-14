@@ -107,7 +107,7 @@ export const MediaCarousel = memo(({ medias, createdAt, onIndexChange, pins }: P
   const haptics = useHaptics();
   const reducedMotion = useReducedMotion();
   // Inside the home tabs the carousel shares the horizontal axis with the tab pager. Block the
-  // pager's gestures so a drag starting on an image can never turn into a tab change (#45).
+  // pager's gestures so a horizontal drag starting on an image never turns into a tab change (#45).
   const pagerGestures = usePagerGestures();
   const [isWifi, setIsWifi] = useState(false);
 

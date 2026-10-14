@@ -29,9 +29,7 @@ function CarouselPages({
   ...props
 }: Props & { width: number; height: number; offset: SharedValue<number> }) {
   const { images, index, onIndexChange, onOpenDetail, renderImage, detailEnabled = true } = props;
-  // Only the boolean crosses into the worklet: Gesture objects are not serializable to the UI thread.
   const competing = props.competingGestures ?? [];
-  const holdsTouch = competing.length > 0;
   const { reduced, spring } = useMotion(props.reduceMotion);
   // Page the track is at or springing to. Gestures read this instead of `index`, which lags behind until re-render.
   const page = useSharedValue(index);
@@ -80,7 +78,7 @@ function CarouselPages({
     .maxPointers(1)
     // activeOffsetX/failOffsetY are independent per-axis boxes: with 8/12 a drag up to ~56 degrees
     // off horizontal still crossed the x box first and stole the touch, so the timeline felt stuck
-    // under any diagonal. Commit to one axis by angle instead, the way a UIPanGestureRecognizer
+    // under any diagonal. Commit to the dominant axis instead, the way a UIPanGestureRecognizer
     // that fails itself in touchesMoved does.
     .manualActivation(true)
     .onTouchesDown((e) => {
@@ -95,12 +93,11 @@ function CarouselPages({
       const axis = decidePanAxis(e.allTouches[0].x - touchStartX.value, e.allTouches[0].y - touchStartY.value);
       if (axis === "undecided") return;
       decided.value = true;
+      // Failing releases the touch to the enclosing scroll view for the rest of the drag. Never hold
+      // a vertical drag in BEGAN instead: on iOS the timeline was observed not to scroll at all
+      // while this pan was held.
       if (axis === "horizontal") manager.activate();
-      // A vertical drag normally fails so the surrounding scroll view takes over. With competing
-      // gestures we instead stay in BEGAN for the rest of the drag: failing would release the touch
-      // to them, and a pager wins a 30-50 degree drag because its horizontal component still
-      // dominates. Holding keeps them waiting while a plain scroll view is free to scroll.
-      else if (!holdsTouch) manager.fail();
+      else manager.fail();
     })
     .onStart(() => {
       // Grab the track where it is, even mid-spring, so consecutive swipes are never dropped.
@@ -142,7 +139,7 @@ function CarouselPages({
       if (!success && !settling.value && offset.value !== -page.value * width)
         offset.value = withSpring(-page.value * width, spring);
     });
-  if (holdsTouch) pan.blocksExternalGesture(...competing);
+  if (competing.length > 0) pan.blocksExternalGesture(...competing);
 
   // Tap has no distance limit of its own, and Exclusive lets it through whenever the pan fails,
   // so without this a drag the pan handed to the scroll view would also open the detail view.

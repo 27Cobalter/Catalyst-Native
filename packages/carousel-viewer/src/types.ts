@@ -28,10 +28,9 @@ export type ImageGalleryProps = {
   /** When false, tapping the carousel does not open Detail. */
   detailEnabled?: boolean;
   /**
-   * Gestures outside the carousel that must never receive a drag that started on it -- typically a
-   * horizontal pager the carousel sits inside. They are made to wait for the carousel's pan, and the
-   * carousel stops failing on a vertical drag so the touch is never handed to them. Scroll views that
-   * do not take part in gesture arbitration (a plain vertical list, say) still scroll either way.
+   * Gestures outside the carousel that must not take a horizontal drag that started on it --
+   * typically a horizontal pager the carousel sits inside. They are made to wait for the carousel's
+   * pan, so a drag it claims never reaches them; a vertical drag it lets go goes to the list.
    */
   competingGestures?: GestureType[];
   onIndexChange?: (index: number) => void;
