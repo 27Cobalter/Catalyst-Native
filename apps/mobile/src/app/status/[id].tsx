@@ -113,6 +113,9 @@ const UniSend = withUniwind(Send);
 const UniGlobe = withUniwind(Globe);
 const UniTrash2 = withUniwind(Trash2);
 
+// ワールド付き共有で、作成者の取得を待つ時間。これを過ぎたら作成者なしで共有する
+const WORLD_AUTHOR_TIMEOUT_MS = 10_000;
+
 // レスポンスの status.contest は SDK 上 unknown 型のため、参加先コンテストを特定できる slug の有無だけを安全に確認する
 const getContestSlug = (contest: unknown): string | null => {
   if (typeof contest === "string") return contest.length > 0 ? contest : null;
@@ -180,12 +183,17 @@ export default function StatusDetailsPage() {
     return pins;
   }, [metadata]);
 
-  // 共有テキストに載せるワールド。X などのカードには 1 枚目の写真が出るので、1 枚目のワールドだけを使う。
+  // 共有テキストに載せるワールド。X などのカードには 1 枚目の写真が出るので、1 枚目のワールドを代表にする。
   // ワールド名と ID がそろっていなければ (非公開ワールドは ID だけで名前が無い) ワールド付き共有は出さない
   const firstWorld = useMemo(() => {
-    const meta = status?.medias[0] && metadata[status.medias[0].id];
-    const world = meta ? getEpicleseWorld(meta) : null;
-    return world?.name && world.platformIdentifier ? world : null;
+    const worlds = (status?.medias ?? []).map((media) => metadata[media.id] && getEpicleseWorld(metadata[media.id]));
+    const [world] = worlds;
+    if (!world?.name || !world.platformIdentifier) return null;
+
+    // 2 枚目以降にある、1 枚目とは別のワールドを数える。ID が無い写真もあるので、読む人が目にするワールド名で見分ける
+    const others = new Set(worlds.slice(1).flatMap((other) => (other ? [other.name] : [])));
+    others.delete(world.name);
+    return { ...world, otherWorldCount: others.size };
   }, [status, metadata]);
 
   const isMyself = account?.user?.id === status?.user?.id;
@@ -400,21 +408,47 @@ export default function StatusDetailsPage() {
             });
           }
           break;
-        case "shareWithWorld": {
-          if (!firstWorld) break;
-          // 投稿を開く回数に比べて共有は少ないので、制作者は共有するときに初めて問い合わせる
-          fetchVRChatWorldAuthorName(firstWorld.platformIdentifier).then((author) => {
-            const world = { name: firstWorld.name, author };
-            const build = (url: string) =>
-              buildWorldShareText(status?.body ?? "", status?.user?.displayName ?? "", url, world);
-            Share.share(Platform.OS === "ios" ? { message: build(""), url: statusUrl } : { message: build(statusUrl) });
-          });
-          break;
-        }
       }
     },
-    [status, statusUrl, firstWorld, handleDeleteStatus, id, router],
+    [status, statusUrl, handleDeleteStatus, id, router],
   );
+
+  // ワールド付き共有で作成者を取っている途中のリクエスト。取り終えるまではメニューを開いたままにし、
+  // 項目を「取得中」にして二度押しを防ぐ (メニューが画面を覆うので、取得中に別の画面へ移ることもない)
+  const worldAuthorRequestRef = useRef<AbortController | null>(null);
+  const [isFetchingWorldAuthor, setIsFetchingWorldAuthor] = useState(false);
+
+  // メニューを閉じられたり画面を離れたりしたら、取得をやめて共有もしない
+  const cancelWorldAuthorRequest = useCallback(() => {
+    worldAuthorRequestRef.current?.abort();
+    worldAuthorRequestRef.current = null;
+  }, []);
+
+  useEffect(() => cancelWorldAuthorRequest, [cancelWorldAuthorRequest]);
+
+  const shareWithWorld = useCallback(async () => {
+    if (!firstWorld || worldAuthorRequestRef.current) return;
+
+    // 投稿を開く回数に比べて共有は少ないので、作成者は共有するときに初めて問い合わせる
+    const controller = new AbortController();
+    worldAuthorRequestRef.current = controller;
+    setIsFetchingWorldAuthor(true);
+    const timer = setTimeout(() => controller.abort(), WORLD_AUTHOR_TIMEOUT_MS);
+    const author = await fetchVRChatWorldAuthorName(firstWorld.platformIdentifier, controller.signal);
+    clearTimeout(timer);
+    setIsFetchingWorldAuthor(false);
+
+    // 取得中に cancelWorldAuthorRequest で外されていたら共有しない。タイムアウトなら作成者なしで共有する
+    if (worldAuthorRequestRef.current !== controller) return;
+    worldAuthorRequestRef.current = null;
+    menuSheetRef.current?.dismiss();
+
+    const world = { ...firstWorld, author };
+    const build = (url: string) => buildWorldShareText(status?.body ?? "", status?.user?.displayName ?? "", url, world);
+    Share.share(Platform.OS === "ios" ? { message: build(""), url: statusUrl } : { message: build(statusUrl) }).catch(
+      () => {},
+    );
+  }, [firstWorld, status, statusUrl]);
 
   const showMenu = useCallback(() => {
     menuSheetRef.current?.present();
@@ -422,10 +456,16 @@ export default function StatusDetailsPage() {
 
   const handleMenuItemPress = useCallback(
     (action: MenuAction) => {
+      // ワールド付き共有は、作成者を取り終えるまでメニューを閉じない
+      if (action === "shareWithWorld") {
+        shareWithWorld();
+        return;
+      }
+
       menuSheetRef.current?.dismiss();
       handleMenuAction(action);
     },
-    [handleMenuAction],
+    [handleMenuAction, shareWithWorld],
   );
 
   const renderMenuBackdrop = useCallback(
@@ -785,6 +825,7 @@ export default function StatusDetailsPage() {
       {/* Action menu */}
       <BottomSheetModal
         ref={menuSheetRef}
+        onDismiss={cancelWorldAuthorRequest}
         enableDynamicSizing
         enablePanDownToClose
         backdropComponent={renderMenuBackdrop}
@@ -864,7 +905,9 @@ export default function StatusDetailsPage() {
                 <CatalystDivider className="ml-14 w-auto" />
                 <CatalystActionSheetItem
                   icon={UniGlobe}
-                  title="ワールド情報を付けて共有"
+                  title={isFetchingWorldAuthor ? "ワールド情報を取得中…" : "ワールド情報を付けて共有"}
+                  disabled={isFetchingWorldAuthor}
+                  className={isFetchingWorldAuthor ? "opacity-60" : undefined}
                   onPress={() => handleMenuItemPress("shareWithWorld")}
                   tone="accent"
                 />

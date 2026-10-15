@@ -1,4 +1,5 @@
 import { CatalystSurface, CatalystText } from "@/components/design-system";
+import { fetchVRChatWorldAuthorName, vrchatWorldThumbnailUrl } from "@/lib/vrchat-world";
 import { openUrlWithBrowser } from "@/models/browser-settings";
 import { Image } from "expo-image";
 import { ExternalLink, Globe } from "lucide-react-native";
@@ -9,9 +10,6 @@ import { withUniwind } from "uniwind";
 const UniImage = withUniwind(Image);
 const UniExternalLink = withUniwind(ExternalLink);
 const UniGlobe = withUniwind(Globe);
-
-// Web 版と同じく、VRChat API を中継する miliastra からワールド情報とサムネイルを取る
-const MILIASTRA_WORLDS = "https://miliastra.natsuneko.com/vrchat/v1/worlds";
 
 type Props = {
   name: string;
@@ -25,16 +23,12 @@ type Props = {
  * サムネイルは読み込めなかったら地球儀に、作成者は取れなかったら空行にする。
  */
 export const SearchWorldCard = ({ name, platformIdentifier }: Props) => {
-  const worldId = encodeURIComponent(platformIdentifier);
   const [authorName, setAuthorName] = useState<string | null>(null);
   const [isThumbnailBroken, setIsThumbnailBroken] = useState(false);
 
   useEffect(() => {
-    fetch(`${MILIASTRA_WORLDS}/${worldId}`)
-      .then(async (res) => (res.ok ? ((await res.json()) as { authorName?: unknown }).authorName : null))
-      .then((value) => setAuthorName(typeof value === "string" && value ? value : null))
-      .catch(() => {});
-  }, [worldId]);
+    fetchVRChatWorldAuthorName(platformIdentifier).then(setAuthorName);
+  }, [platformIdentifier]);
 
   return (
     <View className="border-b border-light-divider bg-light-background p-3 dark:border-dark-divider dark:bg-dark-background">
@@ -43,7 +37,7 @@ export const SearchWorldCard = ({ name, platformIdentifier }: Props) => {
           accessibilityRole="link"
           accessibilityLabel={`${name} を VRChat 公式サイトで開く`}
           className="flex-row active:opacity-75"
-          onPress={() => openUrlWithBrowser(`https://vrchat.com/home/world/${worldId}`)}
+          onPress={() => openUrlWithBrowser(`https://vrchat.com/home/world/${encodeURIComponent(platformIdentifier)}`)}
         >
           {/* 読み込みの前後でカードがずれないよう、サムネイルの枠は最初から確保しておく。
               幅を高さから決めると、文字の折り返しと幅が互いに影響して最後の行がはみ出すので幅は固定にする */}
@@ -52,7 +46,7 @@ export const SearchWorldCard = ({ name, platformIdentifier }: Props) => {
               <UniGlobe size={24} className="text-light-text-subtle dark:text-dark-text-subtle" />
             ) : (
               <UniImage
-                source={`${MILIASTRA_WORLDS}/${worldId}/thumbnail?variant=card`}
+                source={vrchatWorldThumbnailUrl(platformIdentifier)}
                 contentFit="cover"
                 className="absolute inset-0"
                 onError={() => setIsThumbnailBroken(true)}

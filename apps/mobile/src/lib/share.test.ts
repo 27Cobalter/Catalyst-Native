@@ -66,7 +66,7 @@ describe("buildShareText", () => {
 });
 
 describe("buildWorldShareText", () => {
-  const WORLD = { name: "星映しの湖", author: "Nekopyo" };
+  const WORLD = { name: "星映しの湖", author: "Nekopyo", otherWorldCount: 0 };
   const LINK = "📷 VR 写真共有サービス Catalyst で見る";
   const USER_LINK = "📷 27Cobalter さんの投稿を VR 写真共有サービス Catalyst で見る";
 
@@ -77,9 +77,21 @@ describe("buildWorldShareText", () => {
   });
 
   it("制作者が取れないときはワールド名だけにする", () => {
-    const result = buildWorldShareText("#Eku3D", "27Cobalter", URL, { name: "星映しの湖", author: null });
+    const result = buildWorldShareText("#Eku3D", "27Cobalter", URL, { ...WORLD, author: null });
 
     expect(result).toBe(`#Eku3D\n🌐 星映しの湖\n${USER_LINK}\n${URL}`);
+  });
+
+  it("2 枚目以降にほかのワールドがあれば「ほか N ワールド」を添える", () => {
+    const result = buildWorldShareText("#Eku3D", "27Cobalter", URL, { ...WORLD, otherWorldCount: 2 });
+
+    expect(result).toBe(`#Eku3D\n🌐 星映しの湖 (Created by Nekopyo) ほか 2 ワールド\n${USER_LINK}\n${URL}`);
+  });
+
+  it("制作者が取れなくても「ほか N ワールド」は添える", () => {
+    const result = buildWorldShareText("#Eku3D", "27Cobalter", URL, { ...WORLD, author: null, otherWorldCount: 1 });
+
+    expect(result).toBe(`#Eku3D\n🌐 星映しの湖 ほか 1 ワールド\n${USER_LINK}\n${URL}`);
   });
 
   it("投稿者が無いときは誘導の行から投稿者を省く", () => {
@@ -101,20 +113,35 @@ describe("buildWorldShareText", () => {
     expect(result).toBe(`#Eku3D\n🌐 星映しの湖 (Created by Nekopyo)\n${LINK}`);
   });
 
-  it("長い本文は 280 文字 (twitter-text 換算) に収まるよう切り詰め、ワールドと誘導は残す", () => {
-    const result = buildWorldShareText("あ".repeat(200), "27Cobalter", URL, WORLD);
+  it("280 文字 (twitter-text 換算) を超えても本文を切り詰めない", () => {
+    const text = "あ".repeat(200);
+    const result = buildWorldShareText(text, "27Cobalter", URL, WORLD);
 
-    expect(result).toContain("...");
-    expect(result).toContain("🌐 星映しの湖 (Created by Nekopyo)");
-    expect(result).toContain(USER_LINK);
-    expect(twtr.getTweetLength(result)).toBeLessThanOrEqual(280);
+    expect(result).toBe(`${text}\n🌐 星映しの湖 (Created by Nekopyo)\n${USER_LINK}\n${URL}`);
+    expect(twtr.getTweetLength(result)).toBeGreaterThan(280);
   });
 
-  it("収まる本文ならちょうど 280 文字でも切り詰めない", () => {
-    const fixed = buildWorldShareText("", "u", URL, WORLD);
-    const room = 280 - twtr.getTweetLength(fixed) - "\n".length;
-    const text = "a".repeat(room);
+  describe("メンションにならないようにする", () => {
+    const WJ = "\u2060";
 
-    expect(buildWorldShareText(text, "u", URL, WORLD)).toBe(`${text}\n${fixed}`);
+    it("表示名の @xxx は @ の直後に U+2060 を挟む", () => {
+      const result = buildWorldShareText("", "コバルト@foo", URL, WORLD);
+
+      expect(result).toContain(`📷 コバルト@${WJ}foo さんの投稿を`);
+      expect(twtr.extractMentions(result)).toEqual([]);
+    });
+
+    it("本文の半角・全角の @xxx にも挟む", () => {
+      const result = buildWorldShareText("@foo と ＠bar に感謝", "", URL, WORLD);
+
+      expect(result.split("\n")[0]).toBe(`@${WJ}foo と ＠${WJ}bar に感謝`);
+      expect(twtr.extractMentions(result)).toEqual([]);
+    });
+
+    it("メンションにならない @ (メールアドレスなど) には挟まない", () => {
+      const result = buildWorldShareText("連絡は foo@example.com まで", "", URL, WORLD);
+
+      expect(result).not.toContain(WJ);
+    });
   });
 });

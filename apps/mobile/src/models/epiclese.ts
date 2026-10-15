@@ -66,10 +66,10 @@ export type EpicleseMetadata = Record<string, EpicleseMediaMetadata>;
  * ワールド ID は `additionalData2.World.ref` に入っていることが多いので、そちらも見る
  */
 export const getEpicleseWorld = (meta: EpicleseMediaMetadata): EpicleseWorld | null => {
-  if (meta.world) return meta.world;
-
-  const name = meta.additionalData?.World;
-  return name ? { name, platformIdentifier: meta.additionalData2?.World?.ref ?? "" } : null;
+  // `world` があっても ID が空のことがあるので、名前と ID はそれぞれ足りない方を additionalData から補う
+  const name = meta.world?.name || meta.additionalData?.World;
+  const platformIdentifier = meta.world?.platformIdentifier || meta.additionalData2?.World?.ref || "";
+  return name ? { name, platformIdentifier } : null;
 };
 
 export const getEpicleseItemUrl = (id: string) => `https://epiclese.natsuneko.com/item/${id}`;
