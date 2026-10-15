@@ -47,3 +47,54 @@ export const buildShareText = (text: string, username: string, url: string): str
 
   return url ? `${head}\n${url}` : head;
 };
+
+export type ShareWorld = {
+  name: string;
+  /** ワールド制作者。取れなかったときは null */
+  author: string | null;
+  /** 2 枚目以降に写っている、このワールド以外のワールドの数 */
+  otherWorldCount: number;
+};
+
+// 自分のツイートにぶら下げて撮影ワールドを紹介する用途なので、Web 版とは揃えず読みやすさを優先して行を分ける。
+// 投稿者は「〇〇 さんの投稿を」として誘導の行に入れ、ワールド制作者は Created by で書き分ける。
+// Catalyst を知らない人にもリンク先が分かるよう、サービス名には肩書きを添える
+const CATALYST_LABEL = "VR 写真共有サービス Catalyst で見る";
+
+// X に流したとき、本文や表示名、ワールド名に含まれる `@xxx` が、同じ ID の X ユーザーへのメンションにならないようにする。
+// 全角の `＠` や直前が日本語の `@` もメンションになるので、置き換えでは防げない。そこで twitter-text が
+// メンションと判定した `@` の直後にだけ、見えない文字の U+2060 (WORD JOINER) を挟む。メールアドレスなどには入れない
+const WORD_JOINER = "\u2060";
+
+const preventMentions = (text: string): string =>
+  // 後ろから挟んでいけば、まだ処理していない前の位置はずれない
+  twtr
+    .extractMentionsWithIndices(text)
+    .reduceRight(
+      (result, { indices: [start] }) => `${result.slice(0, start + 1)}${WORD_JOINER}${result.slice(start + 1)}`,
+      text,
+    );
+
+/**
+ * 撮影ワールドを添えた共有テキストを組み立てる。
+ *
+ * ```
+ * 本文
+ * 🌐 ワールド名 (Created by 制作者) ほか N ワールド
+ * 📷 投稿者 さんの投稿を VR 写真共有サービス Catalyst で見る
+ * URL
+ * ```
+ *
+ * 本文が無ければ 1 行目ごと、制作者が無ければ「(Created by 制作者)」を、ほかのワールドが無ければ
+ * 「ほか N ワールド」を、投稿者が無ければ「投稿者 さんの投稿を」を省く。
+ * `buildShareText` と違い、280 文字を超えても切り詰めない (ワールド情報を載せるときは超えてもよい、という方針)。
+ * `url` は `buildShareText` と同じく空文字でもよい。
+ * メンションになる `@` には U+2060 を挟む (preventMentions)。
+ */
+export const buildWorldShareText = (text: string, username: string, url: string, world: ShareWorld): string => {
+  const author = world.author ? ` (Created by ${world.author})` : "";
+  const others = world.otherWorldCount > 0 ? ` ほか ${world.otherWorldCount} ワールド` : "";
+  const linkLine = `📷 ${username ? `${username} さんの投稿を ` : ""}${CATALYST_LABEL}`;
+
+  return preventMentions([text, `🌐 ${world.name}${author}${others}`, linkLine, url].filter(Boolean).join("\n"));
+};
