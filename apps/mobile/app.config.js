@@ -171,6 +171,10 @@ module.exports = ({ config }) => {
       [
         "expo-build-properties",
         {
+          android: {
+            enableMinifyInReleaseBuilds: true,
+            enableShrinkResourcesInReleaseBuilds: true,
+          },
           ios: {
             enableSceneSupport: true,
             forceStaticLinking: ["RNFBApp", "RNFBMessaging"],
