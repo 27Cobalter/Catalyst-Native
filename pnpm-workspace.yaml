@@ -9,7 +9,6 @@ patchedDependencies:
   "@likashefqet/react-native-image-zoom": patches/@likashefqet__react-native-image-zoom.patch
   react-native-image-crop-picker@0.51.1: patches/react-native-image-crop-picker@0.51.1.patch
   react-native-config@1.7.2: patches/react-native-config@1.7.2.patch
-  uniwind@1.12.0: patches/uniwind@1.12.0.patch
 
 # catalog
 catalog:
@@ -27,7 +26,7 @@ catalog:
   cn: 0.2.6
   tailwind-merge: 3.6.0
   tailwindcss: 4.3.3
-  uniwind: 1.12.0
+  uniwind: 1.13.0
 
 # security
 allowBuilds:
@@ -87,3 +86,4 @@ minimumReleaseAgeExclude:
   - expo-media-library@58.0.11
   - expo-router@58.0.24
   - expo-splash-screen@58.0.10
+  - uniwind@1.13.0
