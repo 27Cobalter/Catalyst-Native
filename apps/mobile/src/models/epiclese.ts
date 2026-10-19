@@ -61,13 +61,17 @@ export type EpicleseMediaMetadata = {
 
 export type EpicleseMetadata = Record<string, EpicleseMediaMetadata>;
 
+// VRChat は非公開ワールドの名前を書き込まないので、名前の代わりにこの文字列が入っていることがある
+const withoutPlaceholder = (name?: string) => (name === "<Private World>" ? undefined : name);
+
 /**
  * 写真の撮影ワールドを返す。VRChat の写真は `world` が空で、ワールド名は `additionalData.World` に、
  * ワールド ID は `additionalData2.World.ref` に入っていることが多いので、そちらも見る
  */
 export const getEpicleseWorld = (meta: EpicleseMediaMetadata): EpicleseWorld | null => {
   // `world` があっても ID が空のことがあるので、名前と ID はそれぞれ足りない方を additionalData から補う
-  const name = meta.world?.name || meta.additionalData?.World;
+  // 非公開ワールドの仮の名前は名前が無いものとして扱い、もう片方に本当の名前があればそちらを使う
+  const name = withoutPlaceholder(meta.world?.name) || withoutPlaceholder(meta.additionalData?.World);
   const platformIdentifier = meta.world?.platformIdentifier || meta.additionalData2?.World?.ref || "";
   return name ? { name, platformIdentifier } : null;
 };
