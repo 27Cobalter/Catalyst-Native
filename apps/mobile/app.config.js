@@ -176,7 +176,6 @@ module.exports = ({ config }) => {
             enableShrinkResourcesInReleaseBuilds: true,
           },
           ios: {
-            enableSceneSupport: true,
             forceStaticLinking: ["RNFBApp", "RNFBMessaging"],
             useFrameworks: "static",
             ccacheEnabled: true,

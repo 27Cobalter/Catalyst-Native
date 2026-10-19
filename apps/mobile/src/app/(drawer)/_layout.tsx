@@ -61,6 +61,9 @@ export default function DrawerLayout() {
         },
       })}
       drawerContent={({ navigation }) => <DrawerContent navigation={navigation} />}
-    />
+    >
+      {/* Expo Router 58 以降、Drawer はレイアウトで宣言したスクリーンしか表示しない */}
+      <Drawer.Screen name="(tabs)" />
+    </Drawer>
   );
 }
