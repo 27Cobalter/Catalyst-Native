@@ -78,7 +78,7 @@ import { ContestBanner } from "@/components/contest/banner";
 import { WeeklyThemeBanner } from "@/components/theme/banner";
 import "@/global.css";
 import { buildShareText, buildWorldShareText } from "@/lib/share";
-import { fetchVRChatWorldAuthorName } from "@/lib/vrchat-world";
+import { fetchVRChatWorldAuthorName, isVRChatWorldId } from "@/lib/vrchat-world";
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
@@ -184,11 +184,11 @@ export default function StatusDetailsPage() {
   }, [metadata]);
 
   // 共有テキストに載せるワールド。X などのカードには 1 枚目の写真が出るので、1 枚目のワールドを代表にする。
-  // ワールド名と ID がそろっていなければ (非公開ワールドは ID だけで名前が無い) ワールド付き共有は出さない
+  // ワールド名が無ければ (非公開ワールドは ID だけで名前が無い) ワールド付き共有は出さない。ID が無くても名前だけで共有する
   const firstWorld = useMemo(() => {
     const worlds = (status?.medias ?? []).map((media) => metadata[media.id] && getEpicleseWorld(metadata[media.id]));
     const [world] = worlds;
-    if (!world?.name || !world.platformIdentifier) return null;
+    if (!world) return null;
 
     // 2 枚目以降にある、1 枚目とは別のワールドを数える。ID が無い写真もあるので、読む人が目にするワールド名で見分ける
     const others = new Set(worlds.slice(1).flatMap((other) => (other ? [other.name] : [])));
@@ -429,18 +429,22 @@ export default function StatusDetailsPage() {
   const shareWithWorld = useCallback(async () => {
     if (!firstWorld || worldAuthorRequestRef.current) return;
 
-    // 投稿を開く回数に比べて共有は少ないので、作成者は共有するときに初めて問い合わせる
-    const controller = new AbortController();
-    worldAuthorRequestRef.current = controller;
-    setIsFetchingWorldAuthor(true);
-    const timer = setTimeout(() => controller.abort(), WORLD_AUTHOR_TIMEOUT_MS);
-    const author = await fetchVRChatWorldAuthorName(firstWorld.platformIdentifier, controller.signal);
-    clearTimeout(timer);
-    setIsFetchingWorldAuthor(false);
+    // 作成者を問い合わせられるのは VRChat のワールドだけ。それ以外 (ID が無い・他のプラットフォーム) は名前だけで共有する
+    let author: string | null = null;
+    if (isVRChatWorldId(firstWorld.platformIdentifier)) {
+      // 投稿を開く回数に比べて共有は少ないので、作成者は共有するときに初めて問い合わせる
+      const controller = new AbortController();
+      worldAuthorRequestRef.current = controller;
+      setIsFetchingWorldAuthor(true);
+      const timer = setTimeout(() => controller.abort(), WORLD_AUTHOR_TIMEOUT_MS);
+      author = await fetchVRChatWorldAuthorName(firstWorld.platformIdentifier, controller.signal);
+      clearTimeout(timer);
+      setIsFetchingWorldAuthor(false);
 
-    // 取得中に cancelWorldAuthorRequest で外されていたら共有しない。タイムアウトなら作成者なしで共有する
-    if (worldAuthorRequestRef.current !== controller) return;
-    worldAuthorRequestRef.current = null;
+      // 取得中に cancelWorldAuthorRequest で外されていたら共有しない。タイムアウトなら作成者なしで共有する
+      if (worldAuthorRequestRef.current !== controller) return;
+      worldAuthorRequestRef.current = null;
+    }
     menuSheetRef.current?.dismiss();
 
     const world = { ...firstWorld, author };
@@ -607,7 +611,7 @@ export default function StatusDetailsPage() {
             if (!meta) return null;
             const hasContent =
               meta.platform ||
-              meta.world ||
+              meta.world?.name ||
               meta.users.length > 0 ||
               meta.reference.length > 0 ||
               Object.keys(meta.additionalData ?? {}).length > 0;
@@ -633,7 +637,7 @@ export default function StatusDetailsPage() {
                     </CatalystText>
                   </View>
                 ) : null}
-                {meta.world ? (
+                {meta.world?.name ? (
                   <View className="flex-row border-b border-light-divider py-2 dark:border-dark-divider">
                     <CatalystText variant="caption" tone="muted" className="w-32">
                       撮影ワールド
@@ -703,7 +707,7 @@ export default function StatusDetailsPage() {
                 ) : null}
                 {Object.entries(meta.additionalData ?? {}).map(([key, value]) => {
                   const ref = meta.additionalData2?.[key]?.ref ?? "";
-                  const isWorldLink = key === "World" && ref.startsWith("wrld_");
+                  const isWorldLink = key === "World" && isVRChatWorldId(ref);
                   const isAuthorLink = ref.startsWith("usr_");
                   const searchQuery = isWorldLink
                     ? `platform:VRChat world:${quoteSearchQualifier(value)}`

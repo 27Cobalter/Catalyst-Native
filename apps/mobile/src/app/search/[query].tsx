@@ -1,6 +1,7 @@
 import { SearchWorldCard } from "@/components/search/world-card";
 import { TimelineBase } from "@/components/timeline/base";
 import { extractSearchQualifier } from "@/lib/search-query";
+import { isVRChatWorldId } from "@/lib/vrchat-world";
 import { clientAtom } from "@/models/atoms/credential";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useAtomValue } from "jotai";
@@ -52,7 +53,7 @@ export default function SearchPage() {
   // 公式サイトの URL を組み立てられるのは今のところ VRChat のワールド (`wrld_` 始まり) だけ
   const ListHeaderComponent = useCallback(
     () =>
-      world?.platformIdentifier.startsWith("wrld_") ? (
+      world && isVRChatWorldId(world.platformIdentifier) ? (
         <SearchWorldCard name={world.name} platformIdentifier={world.platformIdentifier} />
       ) : null,
     [world],

@@ -5,6 +5,9 @@
 
 const MILIASTRA_VRCHAT_WORLDS = "https://miliastra.natsuneko.com/vrchat/v1/worlds";
 
+/** VRChat のワールド ID か。ほかのプラットフォームの ID を VRChat へ問い合わせないよう、形で見分ける */
+export const isVRChatWorldId = (id: string) => id.startsWith("wrld_");
+
 const worldUrl = (worldId: string) => `${MILIASTRA_VRCHAT_WORLDS}/${encodeURIComponent(worldId)}`;
 
 /** ワールドの作成者名を返す。非公開・削除済み・通信失敗・中断のときは null */
