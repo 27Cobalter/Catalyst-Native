@@ -45,6 +45,12 @@ function assertSerializable(value, seen = new Set()) {
   seen.add(value);
   for (const child of Object.values(value)) assertSerializable(child, seen);
 }
+// react-native-worklets 0.13+ captures __closure as an array that the worklet destructures by
+// position (`const [a, b] = this.__closure`), so resolve a captured variable by its name.
+function closureValue(worklet, name) {
+  const names = worklet.__initData.code.match(/const\s*\[([^\]]*)\]\s*=\s*this\.__closure/)[1].split(",");
+  return worklet.__closure[names.map((n) => n.trim()).indexOf(name)];
+}
 const mock = {
   View: "View",
   Text: "Text",
@@ -224,13 +230,13 @@ test("detail pinch uses serializable worklets and page changes reset zoom withou
   });
   callbacks.onTouchesDown(event(200), { activate() {} });
   callbacks.onTouchesMove(event(300));
-  assert.equal(callbacks.onTouchesDown.__closure.scale.value, 2);
+  assert.equal(closureValue(callbacks.onTouchesDown, "scale").value, 2);
   const second = imageNode(renderer, 1);
   await act(() => renderer.update(React.createElement(ImageDetailViewer, { ...props, index: 1 })));
   assert.equal(imageNode(renderer, 1), second);
   const next = renderer.root.findByType("GestureDetector").props.gesture.callbacks;
-  assert.equal(next.onTouchesDown.__closure.scale.value, 1);
-  assert.equal(next.onTouchesMove.__closure.pager.value, -400);
+  assert.equal(closureValue(next.onTouchesDown, "scale").value, 1);
+  assert.equal(closureValue(next.onTouchesMove, "pager").value, -400);
   await act(() => renderer.unmount());
 });
 

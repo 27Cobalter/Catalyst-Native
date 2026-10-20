@@ -10,6 +10,13 @@ patchedDependencies:
   react-native-image-crop-picker@0.51.1: patches/react-native-image-crop-picker@0.51.1.patch
   react-native-config@1.7.2: patches/react-native-config@1.7.2.patch
 
+# @react-native/jest-preset は require.resolve("react-native") するが依存に宣言していないため、
+# isolated リンカーだと別アプリ (apps/macos 等) の react-native が解決されてしまう
+packageExtensions:
+  "@react-native/jest-preset":
+    peerDependencies:
+      react-native: "*"
+
 # catalog
 catalog:
   "@natsuneko-laboratory/catalyst-sdk": 1.0.0-alpha.17

@@ -46,7 +46,7 @@ import {
   View,
   useColorScheme,
   useWindowDimensions,
-  type TextLayoutEventData,
+  type TextLayoutEvent,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
@@ -125,7 +125,7 @@ const AlbumHeader = ({ info }: { info: AlbumInfo }) => {
   const [isDescriptionTruncated, setIsDescriptionTruncated] = useState(false);
 
   const handleDescriptionTextLayout = useCallback(
-    (event: NativeSyntheticEvent<TextLayoutEventData>) => {
+    (event: TextLayoutEvent) => {
       if (isDescriptionExpanded) return;
 
       setIsDescriptionTruncated(event.nativeEvent.lines.length > COLLAPSED_DESCRIPTION_LINES);

@@ -125,7 +125,7 @@ export const WeeklyThemeSelectorSheet = ({ onSelect, ref }: Props) => {
         }
         contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
         ListEmptyComponent={
-          loading ? null : <CatalystEmptyState icon={<UniCalendarDays />} title="開催中のお題はありません" className="min-h-56" />
+          loading ? undefined : <CatalystEmptyState icon={<UniCalendarDays />} title="開催中のお題はありません" className="min-h-56" />
         }
         ItemSeparatorComponent={() => <CatalystDivider className="ml-5 w-auto" />}
       />
