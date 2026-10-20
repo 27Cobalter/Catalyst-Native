@@ -11,7 +11,7 @@ jest.mock("expo-web-browser", () => ({
   WebBrowserPresentationStyle: { AUTOMATIC: "automatic" },
 }));
 
-jest.spyOn(Linking, "openURL").mockResolvedValue(true);
+jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
 
 const URL = "https://catalyst.natsuneko.com/status/123";
 const EXTERNAL_URL = "https://docs.natsuneko.com/";
@@ -62,7 +62,7 @@ describe("openUrlWithBrowser (iOS)", () => {
   beforeEach(() => {
     resetAsyncStorageMock();
     jest.clearAllMocks();
-    jest.spyOn(Linking, "openURL").mockResolvedValue(true);
+    jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
     setPlatform("ios");
   });
 
@@ -128,7 +128,7 @@ describe("openUrlWithBrowser (Android)", () => {
   beforeEach(() => {
     resetAsyncStorageMock();
     jest.clearAllMocks();
-    jest.spyOn(Linking, "openURL").mockResolvedValue(true);
+    jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
     setPlatform("android");
     mockCustomTabs({
       browserPackages: ["com.android.chrome"],

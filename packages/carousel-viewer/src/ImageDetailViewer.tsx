@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { type ComponentRef, useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, findNodeHandle, Modal, Pressable, Text, View } from "react-native";
 import { GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from "react-native-reanimated";
@@ -91,7 +91,7 @@ function DetailPager({ width, height, ...props }: Props & { width: number; heigh
   }));
   const track = useAnimatedStyle(() => ({ transform: [{ translateX: pager.value }] }));
   const chrome = useAnimatedStyle(() => ({ opacity: 1 - Math.min(Math.abs(dismiss.value) / (height * 0.3), 1) }));
-  const closeRef = useRef<View>(null);
+  const closeRef = useRef<ComponentRef<typeof View>>(null);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {

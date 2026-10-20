@@ -16,5 +16,15 @@
     "react-native-reanimated": ">=4 <5",
     "react-native-safe-area-context": ">=5 <6",
     "react-native-worklets": ">=0.5 <1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.7",
+    "@babel/plugin-transform-react-jsx": "^7.29.7",
+    "@babel/preset-typescript": "^7.29.7",
+    "@types/node": "26.4.1",
+    "@types/react": "latest",
+    "react": "19.3.0",
+    "react-test-renderer": "19.3.0",
+    "typescript": "^6.0.3"
   }
 }

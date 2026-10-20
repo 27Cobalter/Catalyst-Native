@@ -20,7 +20,7 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
   RefreshControl,
-  ScrollView,
+  type ScrollViewInstance,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -84,7 +84,7 @@ export function ProfilePage({ screenName, showBackButton = true }: Props) {
       }
     });
 
-  const view = useRef<ScrollView>(null);
+  const view = useRef<ScrollViewInstance>(null);
   const scroller = useRef<{ scrollToTop: () => void }>(null);
   const scrollActiveTimelineToTopHandler = useMemo(() => {
     return {
