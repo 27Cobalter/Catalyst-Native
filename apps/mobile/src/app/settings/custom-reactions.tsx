@@ -21,13 +21,18 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
 const UniImage = withUniwind(Image);
+const UniSafeAreaView = withUniwind(SafeAreaView);
+
+const isAndroid = Platform.OS === "android";
 
 const FILE_SIZE_LIMIT = 1024 * 1024; // 1MB
 
@@ -329,33 +334,43 @@ export default function CustomReactionsSettingsPage() {
           resetForm();
         }}
       >
-        <View className="flex-1 bg-light-surface-muted dark:bg-dark-background">
+        {/* Android では formSheet が効かず全画面表示になり、edge-to-edge でステータスバーの裏まで描画されるのでセーフエリアを避ける。
+            iOS はシート表示なので避けない */}
+        <UniSafeAreaView
+          edges={isAndroid ? ["bottom", "left", "right"] : []}
+          className="flex-1 bg-light-surface-muted dark:bg-dark-background"
+        >
           {/* ナビゲーションバー */}
-          <View className="flex-row items-center justify-between border-b border-light-divider bg-light-background px-5 py-3 dark:border-dark-divider dark:bg-dark-surface">
-            <Pressable
-              onPress={() => {
-                setShowAddModal(false);
-                resetForm();
-              }}
-            >
-              <CatalystText variant="label" tone="tint">
-                キャンセル
-              </CatalystText>
-            </Pressable>
-            <CatalystText variant="subtitle">リアクションを追加</CatalystText>
-            <Pressable onPress={handleAdd} disabled={isAddDisabled}>
-              {isSubmitting ? (
-                <ActivityIndicator size="small" />
-              ) : (
-                <CatalystText
-                  variant="label"
-                  tone={isAddDisabled ? "subtle" : "tint"}
-                >
-                  追加
+          <UniSafeAreaView
+            edges={isAndroid ? ["top"] : []}
+            className="bg-light-background dark:bg-dark-surface"
+          >
+            <View className="flex-row items-center justify-between border-b border-light-divider bg-light-background px-5 py-3 dark:border-dark-divider dark:bg-dark-surface">
+              <Pressable
+                onPress={() => {
+                  setShowAddModal(false);
+                  resetForm();
+                }}
+              >
+                <CatalystText variant="label" tone="tint">
+                  キャンセル
                 </CatalystText>
-              )}
-            </Pressable>
-          </View>
+              </Pressable>
+              <CatalystText variant="subtitle">リアクションを追加</CatalystText>
+              <Pressable onPress={handleAdd} disabled={isAddDisabled}>
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" />
+                ) : (
+                  <CatalystText
+                    variant="label"
+                    tone={isAddDisabled ? "subtle" : "tint"}
+                  >
+                    追加
+                  </CatalystText>
+                )}
+              </Pressable>
+            </View>
+          </UniSafeAreaView>
 
           <ScrollView className="flex-1" contentContainerClassName="py-4">
             {/* 画像選択 */}
@@ -449,7 +464,7 @@ export default function CustomReactionsSettingsPage() {
               </View>
             </View>
           </ScrollView>
-        </View>
+        </UniSafeAreaView>
       </Modal>
     </>
   );
