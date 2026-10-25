@@ -19,6 +19,20 @@ for (const license of Object.keys(licenses)) {
   );
 }
 
+// assets/emoji/ にバンドルしている Twemoji の画像 (CC-BY 4.0) は依存パッケージではないため、個別に差し込む
+const TWEMOJI_LICENSE = "./assets/emoji/LICENSE-GRAPHICS";
+if (fs.existsSync(TWEMOJI_LICENSE)) {
+  const content = [
+    "Twemoji (https://github.com/jdecked/twemoji)",
+    "Copyright 2019 Twitter, Inc and other contributors",
+    "Copyright (c) 2022–present Jason Sofonia & Justine De Caires",
+    "Graphics licensed under CC-BY 4.0: https://creativecommons.org/licenses/by/4.0/",
+    "",
+    fs.readFileSync(TWEMOJI_LICENSE, "utf-8"),
+  ].join("\n");
+  source.push(`  "twemoji": { id: "twemoji", name: "Twemoji", content: \`${content.replaceAll("`", "\\`")}\` },`);
+}
+
 source.push("};");
 
 fs.writeFileSync("./src/lib/generated/licenses.ts", source.join("\n"));
