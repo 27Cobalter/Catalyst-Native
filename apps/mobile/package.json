@@ -9,6 +9,7 @@
     "reset-project": "node ./scripts/reset-project.js",
     "prebuilt": "run-s -c bin:*",
     "bin:emoji-gen": "tsx ./bin/emoji-gen.ts",
+    "emoji:fetch": "tsx ./bin/emoji-gen.ts --fetch",
     "bin:license-list": "tsx ./bin/license-list.ts",
     "clean:nix": "rm -rf node_modules && rm -fr $TMPDIR/haste-map-* && rm -fr $TMPDIR/metro-cache",
     "clean:win": "rmdir /s /q node_modules && del %LOCALAPPDATA%/Temp/haste-map-* && del %LOCALAPPDATA%/Temp/metro-cache",

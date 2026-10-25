@@ -1,6 +1,7 @@
+import { getEmojiImageSource } from "@/lib/emoji";
 import { getCdnUrl } from "@/lib/media";
 import type { CatalystFleet, Notification, NotificationGroup } from "@/models/sdk-types";
-import { Image } from "expo-image";
+import { Image, type ImageSource } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { memo } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
@@ -9,11 +10,11 @@ import { NotificationActorAvatar } from "./actor-avatar";
 
 const UniImage = withUniwind(Image);
 
-function getReactionImageUrl(entity: NotificationGroup): string {
+function getReactionImageSource(entity: NotificationGroup): number | ImageSource {
   if (entity.additionalContexts?.type === "custom-reaction") {
-    return entity.additionalContexts.url;
+    return { uri: entity.additionalContexts.url };
   }
-  return `https://static.natsuneko.com/images/reactions/${entity.body}.png`;
+  return getEmojiImageSource(entity.body);
 }
 
 type Props = {
@@ -64,7 +65,7 @@ export const FleetReactionNotification = memo(({ notification }: Props) => {
                 <View key={entity.id} className="relative">
                   <NotificationActorAvatar actor={user} size="sm" />
                   <UniImage
-                    source={{ uri: getReactionImageUrl(entity) }}
+                    source={getReactionImageSource(entity)}
                     className="w-4 h-4 absolute -bottom-0.5 -right-0.5"
                     contentFit="contain"
                   />

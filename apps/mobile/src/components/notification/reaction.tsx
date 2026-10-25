@@ -1,6 +1,7 @@
+import { getEmojiImageSource } from "@/lib/emoji";
 import { isActivityPubRemoteActor } from "@/lib/notification-actor";
 import type { CatalystStatus, Notification, NotificationGroup } from "@/models/sdk-types";
-import { Image } from "expo-image";
+import { Image, type ImageSource } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { memo } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
@@ -9,11 +10,11 @@ import { NotificationActorAvatar } from "./actor-avatar";
 
 const UniImage = withUniwind(Image);
 
-function getReactionImageUrl(entity: NotificationGroup): string {
+function getReactionImageSource(entity: NotificationGroup): number | ImageSource {
   if (entity.additionalContexts?.type === "custom-reaction") {
-    return entity.additionalContexts.url;
+    return { uri: entity.additionalContexts.url };
   }
-  return `https://static.natsuneko.com/images/reactions/${entity.body}.png`;
+  return getEmojiImageSource(entity.body);
 }
 
 const isRemoteUnicodeReaction = (entity: NotificationGroup): boolean =>
@@ -83,7 +84,7 @@ export const ReactionNotification = memo(({ notification }: Props) => {
                     <Text className="absolute -bottom-1 -right-1 text-base leading-none">{entity.body}</Text>
                   ) : (
                     <UniImage
-                      source={{ uri: getReactionImageUrl(entity) }}
+                      source={getReactionImageSource(entity)}
                       className="w-4 h-4 absolute -bottom-0.5 -right-0.5"
                       contentFit="contain"
                     />

@@ -1,4 +1,4 @@
-import { emojis } from "@/lib/generated/emojis";
+import { getEmojiImageSource, isBundledEmoji } from "@/lib/emoji";
 import { getCustomReactionId, getReactionClipboardValue } from "@/lib/reactions";
 import { cn } from "@/lib/utils";
 import { accountAtom } from "@/models/atoms/account";
@@ -14,10 +14,6 @@ import { withUniwind } from "uniwind";
 
 const UniPlus = withUniwind(Plus);
 const UniImage = withUniwind(Image);
-
-const isUnicodeCodepoint = (symbol: string): boolean => {
-  return /^[0-9a-f]+$/i.test(symbol) && symbol in emojis;
-};
 
 type Props = {
   reactions: Record<string, CatalystReaction>;
@@ -105,9 +101,9 @@ export const ReactionBar = ({ reactions, onReact, onUnreact, onAddReaction }: Pr
             >
               {reaction.emoji ? (
                 <Text className="text-lg leading-none">{reaction.emoji}</Text>
-              ) : isUnicodeCodepoint(reaction.symbol) ? (
+              ) : isBundledEmoji(reaction.symbol) ? (
                 <UniImage
-                  source={emojis[reaction.symbol as keyof typeof emojis]}
+                  source={getEmojiImageSource(reaction.symbol)}
                   className="size-5"
                   contentFit="contain"
                 />

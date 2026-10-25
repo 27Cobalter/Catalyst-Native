@@ -1,3 +1,4 @@
+import { getEmojiImageSource, getRemoteEmojiImageUrl, isBundledEmoji } from "@/lib/emoji";
 import { emojiSkinToneAtom } from "@/models/atoms/emoji-skin-tone";
 import { saveEmojiSkinTone } from "@/models/emoji-skin-tone-settings";
 import {
@@ -11,12 +12,22 @@ import { Image } from "expo-image";
 import { useAtom } from "jotai";
 import { useCallback } from "react";
 
+// EmojiPickerView は画像を { uri } でしか渡せないため、バンドル済みの絵文字は uri に Twemoji のキーを入れて引く
+// (カスタム絵文字の画像は URL のまま渡ってくる)
 function EmojiImage({ source, style }: EmojiImageProps) {
-  return <Image source={source} style={style} contentFit="contain" loading="lazy" />;
+  return (
+    <Image
+      source={isBundledEmoji(source.uri) ? getEmojiImageSource(source.uri) : source}
+      style={style}
+      contentFit="contain"
+      loading="lazy"
+    />
+  );
 }
 
 function getEmojiImageUrl(emoji: string) {
-  return `https://static.natsuneko.com/images/reactions/${emojiToTwemojiKey(emoji)}.png`;
+  const key = emojiToTwemojiKey(emoji);
+  return isBundledEmoji(key) ? key : getRemoteEmojiImageUrl(key);
 }
 
 /** Catalyst の絵文字画像・文言・肌の色の設定を EmojiPickerView / EmojiPickerSheet に渡すための props */
