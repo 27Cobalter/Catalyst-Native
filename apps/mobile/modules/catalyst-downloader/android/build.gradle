@@ -3,6 +3,9 @@ plugins {
   id 'expo-module-gradle-plugin'
 }
 
+group = 'com.natsuneko.catalyst.downloader'
+version = '1.0.0'
+
 android {
   namespace "com.natsuneko.catalyst.downloader"
   defaultConfig {

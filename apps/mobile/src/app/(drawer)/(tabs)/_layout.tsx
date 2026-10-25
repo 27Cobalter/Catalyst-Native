@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { accountAtom } from "@/models/atoms/account";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
-import { Tabs } from "expo-router";
+import { Tabs, type BottomTabBarProps } from "expo-router/js-tabs";
 import { useAtomValue } from "jotai";
 import { Bell, House, Search } from "lucide-react-native";
 import React from "react";
@@ -19,12 +19,10 @@ const UniBell = withUniwind(Bell);
 type TabItem = {
   key: string;
   label: string;
-  href: string;
   icon: (className: string) => React.ReactNode;
-  authRequired?: boolean;
 };
 
-function CustomTabBar({ state, navigation }: any) {
+function CustomTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
   const colorScheme = useColorScheme();
   const account = useAtomValue(accountAtom);
   const haptics = useHaptics();
@@ -34,13 +32,11 @@ function CustomTabBar({ state, navigation }: any) {
     {
       key: "index",
       label: "ホーム",
-      href: "/(drawer)/(tabs)/",
       icon: (className) => <UniHouse size={28} className={className} />,
     },
     {
       key: "explore",
       label: "検索",
-      href: "/(drawer)/(tabs)/explore",
       icon: (className) => <UniSearch size={28} className={className} />,
     },
     ...(account
@@ -48,13 +44,11 @@ function CustomTabBar({ state, navigation }: any) {
           {
             key: "notifications",
             label: "通知",
-            href: "/(drawer)/(tabs)/notifications",
             icon: (className: string) => <UniBell size={28} className={className} />,
           },
           {
             key: "profile",
             label: "プロフィール",
-            href: "/(drawer)/(tabs)/profile",
             icon: () => (
               <View className="overflow-hidden rounded-full">
                 <Image
@@ -71,11 +65,6 @@ function CustomTabBar({ state, navigation }: any) {
 
   const activeTabRoute = state.routes[state.index]?.name;
 
-  const getIsActive = (tab: TabItem) => {
-    if (tab.key === "index") return activeTabRoute === "index";
-    return activeTabRoute === tab.key;
-  };
-
   return (
     <View
       className="bg-light-background dark:bg-dark-background"
@@ -87,7 +76,7 @@ function CustomTabBar({ state, navigation }: any) {
       }}
     >
       {tabs.map((tab) => {
-        const isActive = getIsActive(tab);
+        const isActive = activeTabRoute === tab.key;
         const className = isActive ? "text-light-tint dark:text-dark-tint" : "text-light-icon dark:text-dark-icon";
 
         return (
@@ -99,24 +88,20 @@ function CustomTabBar({ state, navigation }: any) {
               }
             }}
             onPress={() => {
-              const route = state.routes.find((route: { name: string }) => route.name === tab.key);
+              const route = state.routes.find((route) => route.name === tab.key);
               if (!route) {
                 return;
               }
 
               const isFocused = state.routes[state.index]?.key === route.key;
-              const event = navigation.emit({
+              const event = emitter.emit({
                 type: "tabPress",
                 target: route.key,
                 canPreventDefault: true,
               });
 
-              if (isFocused && !event.defaultPrevented && tab.key === "index") {
-                //
-              }
-
               if (!isFocused && !event.defaultPrevented) {
-                navigation.navigate(route.name);
+                navigateToTab(route.key);
               }
             }}
             style={{
