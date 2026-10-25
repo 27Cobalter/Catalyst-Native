@@ -24,8 +24,9 @@ export type CatalystTab = {
 
 /**
  * The pager's own gestures, published to the scenes inside it. A horizontal drag that starts on a
- * scene's own horizontally-swipeable content (an image carousel) must not reach the pager, so that
- * content blocks these instead of letting the pager win by default. Empty outside CatalystTabs.
+ * scene's own horizontally-swipeable content (an image carousel with several images) must not reach
+ * the pager, so that content blocks these instead of letting the pager win by default. Empty outside
+ * CatalystTabs.
  */
 const PagerGesturesContext = React.createContext<GestureType[]>([]);
 export const usePagerGestures = () => React.useContext(PagerGesturesContext);

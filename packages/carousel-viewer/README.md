@@ -53,7 +53,7 @@ Metro が TypeScript ソースを処理する workspace 向けパッケージで
 - `onLongPress(index)` / `longPressDuration = 500`: Detail 画像の長押し。指が動く・二本目の指が触れると取り消します。
 - `reduceMotion`: 指定するとシステムの Reduce Motion 設定より優先します。
 - `detailEnabled = true`: false の場合、Carousel のタップで Detail を開きません。
-- `competingGestures`: Carousel の外側にあり、Carousel 上で始まった drag を絶対に受け取ってほしくない gesture の配列。典型的には Carousel を内包する横ページャです。渡した gesture は Carousel の pan を待つようになり（`blocksExternalGesture`）、Carousel が水平と判定した drag はそれらへ渡りません。垂直と判定した drag は従来どおり fail させ、縦のスクロールビューへ渡します。
+- `competingGestures`: Carousel の外側にあり、Carousel 上で始まった drag を絶対に受け取ってほしくない gesture の配列。典型的には Carousel を内包する横ページャです。渡した gesture は Carousel の pan を待つようになり（`blocksExternalGesture`）、Carousel が水平と判定した drag はそれらへ渡りません。垂直と判定した drag は従来どおり fail させ、縦のスクロールビューへ渡します。画像が 1 枚のときはページ送りの先がないため pan を付けずにブロックもせず、横の drag はそのまま渡した gesture が受け取ります。
 - `renderCarouselOverlay({ index, width, height })`: Carousel の画像領域の上に重ねる UI。gesture の外側に配置するため、overlay 上のタッチは Carousel の操作になりません。
 - `renderCarouselIndicator({ count, index, progress, setIndex })`: 既定の dot indicator を置き換えます。
 - `renderDetailForeground({ index, close })`: Detail の全画面・Safe Area 外に描画する UI（bottom sheet など）。dismiss 中もフェードしません。
@@ -67,7 +67,7 @@ Metro が TypeScript ソースを処理する workspace 向けパッケージで
 
 ## 操作
 
-Carousel は左右スワイプとタップに対応します。Detail は左右ページ送り、
+Carousel は左右スワイプとタップに対応します（画像が 1 枚のときはタップのみ）。Detail は左右ページ送り、
 上下 dismiss、focal point を維持するピンチと二本指移動、拡大中の pan に対応します。
 距離と速度でページ送り・dismiss を判断し、境界では非線形の抵抗を加えます。
 

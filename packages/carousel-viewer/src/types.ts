@@ -31,6 +31,7 @@ export type ImageGalleryProps = {
    * Gestures outside the carousel that must not take a horizontal drag that started on it --
    * typically a horizontal pager the carousel sits inside. They are made to wait for the carousel's
    * pan, so a drag it claims never reaches them; a vertical drag it lets go goes to the list.
+   * With a single image the carousel does not pan at all, so every drag reaches them.
    */
   competingGestures?: GestureType[];
   onIndexChange?: (index: number) => void;

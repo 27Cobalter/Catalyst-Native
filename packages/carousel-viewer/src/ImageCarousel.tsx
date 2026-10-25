@@ -139,7 +139,10 @@ function CarouselPages({
       if (!success && !settling.value && offset.value !== -page.value * width)
         offset.value = withSpring(-page.value * width, spring);
     });
-  if (competing.length > 0) pan.blocksExternalGesture(...competing);
+  // A single image has nowhere to page to, so leave horizontal drags to the competing gestures
+  // (e.g. the tab pager) instead of claiming them only to rubber-band in place.
+  const pageable = count > 1;
+  if (pageable && competing.length > 0) pan.blocksExternalGesture(...competing);
 
   // Tap has no distance limit of its own, and Exclusive lets it through whenever the pan fails,
   // so without this a drag the pan handed to the scroll view would also open the detail view.
@@ -152,16 +155,20 @@ function CarouselPages({
   const animated = useAnimatedStyle(() => ({ transform: [{ translateX: offset.value }] }));
 
   return (
-    <GestureDetector gesture={Gesture.Exclusive(pan, tap)}>
+    <GestureDetector gesture={pageable ? Gesture.Exclusive(pan, tap) : tap}>
       <Animated.View
         style={styles.viewport}
         accessible
-        accessibilityRole="adjustable"
+        accessibilityRole={pageable ? "adjustable" : "image"}
         accessibilityLabel={`${images[index].alt ?? "画像"}、画像 ${index + 1} / ${images.length}`}
         accessibilityActions={[
           ...(detailEnabled ? [{ name: "activate", label: "画像を開く" }] : []),
-          { name: "increment", label: "次の画像" },
-          { name: "decrement", label: "前の画像" },
+          ...(pageable
+            ? [
+                { name: "increment", label: "次の画像" },
+                { name: "decrement", label: "前の画像" },
+              ]
+            : []),
         ]}
         onAccessibilityAction={(e) => {
           const action = e.nativeEvent.actionName;
