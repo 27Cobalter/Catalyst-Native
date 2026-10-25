@@ -21,6 +21,7 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   View,
@@ -30,6 +31,8 @@ import { withUniwind } from "uniwind";
 
 const UniImage = withUniwind(Image);
 const UniSafeAreaView = withUniwind(SafeAreaView);
+
+const isAndroid = Platform.OS === "android";
 
 const FILE_SIZE_LIMIT = 1024 * 1024; // 1MB
 
@@ -331,14 +334,15 @@ export default function CustomReactionsSettingsPage() {
           resetForm();
         }}
       >
-        {/* Android では formSheet が効かず全画面表示になり、edge-to-edge でステータスバーの裏まで描画されるのでセーフエリアを避ける */}
+        {/* Android では formSheet が効かず全画面表示になり、edge-to-edge でステータスバーの裏まで描画されるのでセーフエリアを避ける。
+            iOS はシート表示なので避けない */}
         <UniSafeAreaView
-          edges={["bottom"]}
+          edges={isAndroid ? ["bottom", "left", "right"] : []}
           className="flex-1 bg-light-surface-muted dark:bg-dark-background"
         >
           {/* ナビゲーションバー */}
           <UniSafeAreaView
-            edges={["top"]}
+            edges={isAndroid ? ["top"] : []}
             className="bg-light-background dark:bg-dark-surface"
           >
             <View className="flex-row items-center justify-between border-b border-light-divider bg-light-background px-5 py-3 dark:border-dark-divider dark:bg-dark-surface">
