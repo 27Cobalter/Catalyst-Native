@@ -118,9 +118,10 @@ export const SystemNotificationList = ({ ref }: Props) => {
         new Promise((resolve) => setTimeout(resolve, 800)),
       ]);
       if (newItems.length > 0) {
-        const existingIds = new Set(items.map((i) => i.id));
-        const unique = newItems.filter((n) => !existingIds.has(n.id));
-        setItems((prev) => [...unique, ...prev]);
+        // グループ化された通知は、エンティティが増えると最新エンティティの id を持つ別の通知として返ってくる。
+        // 新しい通知と同じエンティティを含む既存の行は、古いグループとして取り除く
+        const newEntityIds = new Set(newItems.flatMap((n) => n.entities.map((e) => e.id)));
+        setItems((prev) => [...newItems, ...prev.filter((i) => !i.entities.some((e) => newEntityIds.has(e.id)))]);
       }
       await markAllAsRead();
     } finally {
