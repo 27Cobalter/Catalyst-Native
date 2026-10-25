@@ -354,12 +354,18 @@ test("competing gestures are blocked and a vertical drag still fails to the list
   await act(() => renderer.unmount());
 });
 
-test("a single image under a pager still lets vertical drags reach the list", async () => {
+test("a single image leaves every drag to the pager and the list", async () => {
   const pager = { name: "pagerScroll" };
+  const opened = [];
   let renderer;
   await act(() => {
     renderer = create(
-      React.createElement(ImageCarousel, { ...props, images: images.slice(0, 1), competingGestures: [pager] }),
+      React.createElement(ImageCarousel, {
+        ...props,
+        images: images.slice(0, 1),
+        competingGestures: [pager],
+        onOpenDetail: (i) => opened.push(i),
+      }),
     );
   });
   await act(() =>
@@ -367,10 +373,19 @@ test("a single image under a pager still lets vertical drags reach the list", as
       .find((node) => typeof node.props.onLayout === "function")
       .props.onLayout({ nativeEvent: { layout: { width: 400, height: 400 } } }),
   );
-  const [pan] = renderer.root.findByType("GestureDetector").props.gesture;
-  assert.deepEqual(drag(pan, 0, 60), ["fail"]);
-  assert.deepEqual(drag(pan, 40, 60), ["fail"]);
-  // A horizontal drag is still claimed (rubber band) so it never switches tabs.
-  assert.deepEqual(drag(pan, 60, 0), ["activate"]);
+  // Only the tap to open the detail view remains: there is no pan to claim a horizontal drag or block
+  // the pager, so a horizontal swipe on the image switches tabs instead of rubber-banding (#60).
+  const gesture = renderer.root.findByType("GestureDetector").props.gesture;
+  assert.ok(!Array.isArray(gesture));
+  assert.equal(typeof gesture.callbacks.maxDistance, "number");
+  gesture.callbacks.onEnd({}, true);
+  assert.deepEqual(opened, [0]);
+  // Nothing to page to, so screen readers must not offer next/previous either.
+  const viewport = renderer.root.find((node) => node.props.accessibilityActions);
+  assert.equal(viewport.props.accessibilityRole, "image");
+  assert.deepEqual(
+    viewport.props.accessibilityActions.map((a) => a.name),
+    ["activate"],
+  );
   await act(() => renderer.unmount());
 });
