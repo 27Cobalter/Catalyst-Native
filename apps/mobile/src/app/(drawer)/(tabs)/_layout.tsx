@@ -19,9 +19,7 @@ const UniBell = withUniwind(Bell);
 type TabItem = {
   key: string;
   label: string;
-  href: string;
   icon: (className: string) => React.ReactNode;
-  authRequired?: boolean;
 };
 
 function CustomTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
@@ -34,13 +32,11 @@ function CustomTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
     {
       key: "index",
       label: "ホーム",
-      href: "/(drawer)/(tabs)/",
       icon: (className) => <UniHouse size={28} className={className} />,
     },
     {
       key: "explore",
       label: "検索",
-      href: "/(drawer)/(tabs)/explore",
       icon: (className) => <UniSearch size={28} className={className} />,
     },
     ...(account
@@ -48,13 +44,11 @@ function CustomTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
           {
             key: "notifications",
             label: "通知",
-            href: "/(drawer)/(tabs)/notifications",
             icon: (className: string) => <UniBell size={28} className={className} />,
           },
           {
             key: "profile",
             label: "プロフィール",
-            href: "/(drawer)/(tabs)/profile",
             icon: () => (
               <View className="overflow-hidden rounded-full">
                 <Image
@@ -71,11 +65,6 @@ function CustomTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
 
   const activeTabRoute = state.routes[state.index]?.name;
 
-  const getIsActive = (tab: TabItem) => {
-    if (tab.key === "index") return activeTabRoute === "index";
-    return activeTabRoute === tab.key;
-  };
-
   return (
     <View
       className="bg-light-background dark:bg-dark-background"
@@ -87,7 +76,7 @@ function CustomTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
       }}
     >
       {tabs.map((tab) => {
-        const isActive = getIsActive(tab);
+        const isActive = activeTabRoute === tab.key;
         const className = isActive ? "text-light-tint dark:text-dark-tint" : "text-light-icon dark:text-dark-icon";
 
         return (
@@ -99,7 +88,7 @@ function CustomTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
               }
             }}
             onPress={() => {
-              const route = state.routes.find((route: { name: string }) => route.name === tab.key);
+              const route = state.routes.find((route) => route.name === tab.key);
               if (!route) {
                 return;
               }
@@ -110,10 +99,6 @@ function CustomTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
                 target: route.key,
                 canPreventDefault: true,
               });
-
-              if (isFocused && !event.defaultPrevented && tab.key === "index") {
-                //
-              }
 
               if (!isFocused && !event.defaultPrevented) {
                 navigateToTab(route.key);
