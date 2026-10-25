@@ -5,6 +5,7 @@ import { accountAtom } from "@/models/atoms/account";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { Tabs } from "expo-router";
+import type { BottomTabBarProps } from "expo-router/tabs";
 import { useAtomValue } from "jotai";
 import { Bell, House, Search } from "lucide-react-native";
 import React from "react";
@@ -24,7 +25,7 @@ type TabItem = {
   authRequired?: boolean;
 };
 
-function CustomTabBar({ state, navigation }: any) {
+function CustomTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
   const colorScheme = useColorScheme();
   const account = useAtomValue(accountAtom);
   const haptics = useHaptics();
@@ -105,7 +106,7 @@ function CustomTabBar({ state, navigation }: any) {
               }
 
               const isFocused = state.routes[state.index]?.key === route.key;
-              const event = navigation.emit({
+              const event = emitter.emit({
                 type: "tabPress",
                 target: route.key,
                 canPreventDefault: true,
@@ -116,7 +117,7 @@ function CustomTabBar({ state, navigation }: any) {
               }
 
               if (!isFocused && !event.defaultPrevented) {
-                navigation.navigate(route.name);
+                navigateToTab(route.key);
               }
             }}
             style={{
