@@ -94,6 +94,7 @@ export const UserMessageList = ({ ref }: Props) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const hasMore = useRef(true);
   const list = useRef<FlashListRef<Notification>>(null);
 
   const fetchMessages = useCallback(
@@ -152,6 +153,7 @@ export const UserMessageList = ({ ref }: Props) => {
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
+    hasMore.current = true;
     try {
       const since = items.length > 0 ? items[0].id : null;
       const [newItems] = await Promise.all([
@@ -170,16 +172,19 @@ export const UserMessageList = ({ ref }: Props) => {
   }, [items, fetchMessages, markAllAsRead]);
 
   const onLoadMore = useCallback(async () => {
-    if (isLoadingMore || isInitialLoading || items.length === 0) return;
+    if (!hasMore.current || isLoadingMore || isInitialLoading || items.length === 0) return;
     setIsLoadingMore(true);
     try {
       const until = items[items.length - 1].id;
       const newItems = await fetchMessages(null, until);
-      if (newItems.length > 0) {
-        const existingIds = new Set(items.map((i) => i.id));
-        const unique = newItems.filter((n) => !existingIds.has(n.id));
-        setItems((prev) => [...prev, ...unique]);
+      const existingIds = new Set(items.map((i) => i.id));
+      const unique = newItems.filter((n) => !existingIds.has(n.id));
+      if (unique.length === 0) {
+        // 同じ until で取り直しても結果は変わらないので、これ以上は読み込まない
+        hasMore.current = false;
+        return;
       }
+      setItems((prev) => [...prev, ...unique]);
     } finally {
       setIsLoadingMore(false);
     }
