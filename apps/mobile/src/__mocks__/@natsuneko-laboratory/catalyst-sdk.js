@@ -4,19 +4,18 @@
 // 明示的に opt-in したテストでのみ使われる。
 // 実際の HTTP 通信は行わず、コンストラクタに渡された値の検査と、
 // egeria/oauth/refresh の呼び出しをテストごとに差し替え可能にする。
-class MockCatalystTS {
+class MockCatalyst {
   constructor(opts) {
     this.opts = opts;
     this._accessToken = opts.accessToken;
     this._refreshToken = opts.refreshToken;
-    this.interceptors = opts.interceptors ?? [];
     this.refresh = jest.fn();
     this.oauth = {
       getAuthorizeURL: jest.fn(),
       getAccessTokenByCode: jest.fn(),
     };
     this.egeria = { v1: { me: { get: jest.fn() } } };
-    MockCatalystTS.instances.push(this);
+    MockCatalyst.instances.push(this);
   }
 
   get accessToken() {
@@ -27,7 +26,7 @@ class MockCatalystTS {
     return this._refreshToken;
   }
 }
-MockCatalystTS.instances = [];
+MockCatalyst.instances = [];
 
 class MockPKCE {}
 MockPKCE.create = jest.fn().mockResolvedValue({
@@ -37,6 +36,6 @@ MockPKCE.create = jest.fn().mockResolvedValue({
 });
 
 module.exports = {
-  CatalystTS: MockCatalystTS,
+  Catalyst: MockCatalyst,
   PKCE: MockPKCE,
 };

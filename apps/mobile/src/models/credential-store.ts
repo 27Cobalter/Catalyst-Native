@@ -1,6 +1,5 @@
 import { API_KEY } from "@/constants/apikey";
-import { CatalystTS } from "@natsuneko-laboratory/catalyst-sdk";
-import type { Interceptor } from "@natsuneko-laboratory/catalyst-sdk";
+import { Catalyst } from "@natsuneko-laboratory/catalyst-sdk";
 import * as SecureStore from "expo-secure-store";
 import { getDefaultStore } from "jotai";
 import { accountAtom } from "@/models/atoms/account";
@@ -8,13 +7,13 @@ import { accountAtom } from "@/models/atoms/account";
 export type Credential = {
   accessToken: string;
   refreshToken: string;
-  client: CatalystTS;
+  client: Catalyst;
 };
 
 export const EMPTY_CREDENTIAL = {
   accessToken: "",
   refreshToken: "",
-  client: new CatalystTS({
+  client: new Catalyst({
     clientId: API_KEY.clientId ?? "",
     clientSecret: API_KEY.clientSecret ?? "",
     accessToken: "",
@@ -30,45 +29,30 @@ export const getCredential = async (): Promise<Credential> => {
   const refreshToken = await SecureStore.getItemAsync(KEYCHAIN_KEY_REFRESH_TOKEN);
 
   if (accessToken && refreshToken) {
-    // CatalystTS は 401 を検知すると内部で自動的にトークンをリフレッシュして
+    // Catalyst は 401 を検知すると内部で自動的にトークンをリフレッシュして
     // リクエストをリトライする。ここでは、リフレッシュ後のトークンを
     // SecureStore と accountAtom に反映するだけでよい。
-    let client: CatalystTS;
-    let lastPersistedAccessToken = accessToken;
-
-    const persistTokensInterceptor: Interceptor = {
-      onResponse: async (response) => {
-        const newAccessToken = client.accessToken;
-        const newRefreshToken = client.refreshToken;
-
-        if (newAccessToken && newRefreshToken && newAccessToken !== lastPersistedAccessToken) {
-          lastPersistedAccessToken = newAccessToken;
-          await saveCredential({ accessToken: newAccessToken, refreshToken: newRefreshToken });
-
-          const store = getDefaultStore();
-          const account = store.get(accountAtom);
-          if (account) {
-            store.set(accountAtom, {
-              ...account,
-              credential: {
-                ...account.credential,
-                accessToken: newAccessToken,
-                refreshToken: newRefreshToken,
-              },
-            });
-          }
-        }
-
-        return response;
-      },
-    };
-
-    client = new CatalystTS({
+    const client = new Catalyst({
       accessToken,
       refreshToken,
       clientId: API_KEY.clientId ?? "",
       clientSecret: API_KEY.clientSecret ?? "",
-      interceptors: [persistTokensInterceptor],
+      onTokenRefreshed: async (token) => {
+        await saveCredential({ accessToken: token.accessToken, refreshToken: token.refreshToken });
+
+        const store = getDefaultStore();
+        const account = store.get(accountAtom);
+        if (account) {
+          store.set(accountAtom, {
+            ...account,
+            credential: {
+              ...account.credential,
+              accessToken: token.accessToken,
+              refreshToken: token.refreshToken,
+            },
+          });
+        }
+      },
     });
 
     return {

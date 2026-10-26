@@ -1,86 +1,95 @@
-import type { CatalystTS } from "@natsuneko-laboratory/catalyst-sdk";
-
-/**
- * CatalystSDK 1.0.0-alpha.5 は OpenAPI から生成されたクライアントのみを公開しており、
- * レスポンス/リクエストの型そのものはエクスポートされていない。
- * そのため、実際のクライアントメソッドのシグネチャから型を逆算して再エクスポートする。
- */
-type Client = InstanceType<typeof CatalystTS>;
-// biome-ignore lint: needs to accept any client method signature to infer its response type
-type ApiData<Fn extends (...args: any[]) => any> =
-  Awaited<ReturnType<Fn>> extends { data?: infer D } ? NonNullable<D> : never;
+import type {
+  GetCatalystV11StatusByIdResponse,
+  GetCatalystV12TimelineHomeResponse,
+  GetCatalystV1ActivitypubSettingsResponse,
+  GetCatalystV1AlbumByIdByIdResponse,
+  GetCatalystV1AlbumSearchResponse,
+  GetCatalystV1AnnouncementsResponse,
+  GetCatalystV1ContestBySlugBySlugResponse,
+  GetCatalystV1CustomReactionsResponse,
+  GetCatalystV1FleetByIdReactionsResponse,
+  GetCatalystV1FleetByIdResponse,
+  GetCatalystV1FleetRingResponse,
+  GetCatalystV1ProfileTagsByUserByIdResponse,
+  GetCatalystV1ProfileTagsSuggestionsResponse,
+  GetCatalystV1ReactionsResponse,
+  GetCatalystV1RelationshipsByIdResponse,
+  GetCatalystV1RelationshipsByUsernameByUsernameFollowersRemoteResponse,
+  GetCatalystV1RelationshipsByUsernameByUsernameFollowersResponse,
+  GetCatalystV1SmartAlbumByIdByIdResponse,
+  GetCatalystV1StatusByIdReactionsResponse,
+  GetCatalystV1TimelineHomeResponse,
+  GetCatalystV1UserByIdWatchResponse,
+  GetCatalystV1WeeklyThemesCurrentResponse,
+  GetEgeriaV1MeResponse,
+  GetSteambirdV1NotificationsResponse,
+  PatchEgeriaV1MeData,
+  PostCatalystV1StatusByIdReportData,
+} from "@natsuneko-laboratory/catalyst-sdk";
 
 // --- catalyst ---
 
-export type CatalystStatusV1_1 = ApiData<Client["catalyst"]["v11"]["status"]["id"]["get"]>["status"];
-export type CatalystStatus = ApiData<Client["catalyst"]["v1"]["timeline"]["home"]["get"]>["statuses"][number];
-export type CatalystStatusV1_2 = ApiData<Client["catalyst"]["v12"]["timeline"]["home"]["get"]>[number];
+export type CatalystStatusV1_1 = GetCatalystV11StatusByIdResponse["status"];
+export type CatalystStatus = GetCatalystV1TimelineHomeResponse["statuses"][number];
+export type CatalystStatusV1_2 = GetCatalystV12TimelineHomeResponse[number];
 export type CatalystStatusPrivacy = NonNullable<CatalystStatusV1_1["privacy"]>;
 export type Media = CatalystStatusV1_1["medias"][number];
 
-export type CatalystAlbum = ApiData<Client["catalyst"]["v1"]["album"]["by"]["id"]["id"]["get"]>;
-export type CatalystSmartAlbum = ApiData<Client["catalyst"]["v1"]["smartAlbum"]["by"]["id"]["id"]["get"]>;
-export type CatalystAlbumOrSmartAlbum = ApiData<Client["catalyst"]["v1"]["album"]["search"]["get"]>["albums"][number];
+export type CatalystAlbum = GetCatalystV1AlbumByIdByIdResponse;
+export type CatalystSmartAlbum = GetCatalystV1SmartAlbumByIdByIdResponse;
+export type CatalystAlbumOrSmartAlbum = GetCatalystV1AlbumSearchResponse["albums"][number];
 export type CatalystAlbumDisplayMode = CatalystAlbum["mode"];
 
-export type CatalystContest = ApiData<Client["catalyst"]["v1"]["contest"]["by"]["slug"]["slug"]["get"]>["contest"];
+export type CatalystContest = GetCatalystV1ContestBySlugBySlugResponse["contest"];
 
 export type CatalystWeeklyTheme = NonNullable<
-  ApiData<Client["catalyst"]["v1"]["weeklyThemes"]["current"]["get"]>["theme"]
+  GetCatalystV1WeeklyThemesCurrentResponse["theme"]
 >;
 
-export type CatalystAnnouncement = ApiData<Client["catalyst"]["v1"]["announcements"]["get"]>["announcements"][number];
+export type CatalystAnnouncement = GetCatalystV1AnnouncementsResponse["announcements"][number];
 
-export type CatalystCustomReactionList = ApiData<Client["catalyst"]["v1"]["customReactions"]["get"]>;
+export type CatalystCustomReactionList = GetCatalystV1CustomReactionsResponse;
 export type CatalystUserCustomReaction = CatalystCustomReactionList["items"][number];
 // GET /catalyst/v1/reactions — Catalyst 標準搭載のオリジナルリアクション一覧 (ユーザーがアップロードしたカスタムリアクションとは別物)
-export type CatalystCustomReaction = ApiData<Client["catalyst"]["v1"]["reactions"]["get"]>[number];
+export type CatalystCustomReaction = GetCatalystV1ReactionsResponse[number];
 
-export type CatalystReaction = ApiData<
-  Client["catalyst"]["v1"]["status"]["id"]["reactions"]["get"]
->["reactions"][string];
+export type CatalystReaction = GetCatalystV1StatusByIdReactionsResponse["reactions"][string];
 
-export type CatalystRelationships = ApiData<Client["catalyst"]["v1"]["relationships"]["id"]["get"]>;
+export type CatalystRelationships = GetCatalystV1RelationshipsByIdResponse;
 
-export type CatalystUserWatchMode = ApiData<Client["catalyst"]["v1"]["user"]["id"]["watch"]["get"]>["mode"];
+export type CatalystUserWatchMode = GetCatalystV1UserByIdWatchResponse["mode"];
 
-export type CatalystActivityPubSettings = ApiData<Client["catalyst"]["v1"]["activitypub"]["settings"]["get"]>;
+export type CatalystActivityPubSettings = GetCatalystV1ActivitypubSettingsResponse;
 
-export type CatalystFollowListItem = ApiData<
-  Client["catalyst"]["v1"]["relationships"]["by"]["username"]["username"]["followers"]["get"]
->["items"][number];
+export type CatalystFollowListItem = GetCatalystV1RelationshipsByUsernameByUsernameFollowersResponse["items"][number];
 
-export type CatalystRemoteFollower = ApiData<
-  Client["catalyst"]["v1"]["relationships"]["by"]["username"]["username"]["followers"]["remote"]["get"]
->["items"][number];
+export type CatalystRemoteFollower = GetCatalystV1RelationshipsByUsernameByUsernameFollowersRemoteResponse["items"][number];
 
-export type CatalystFleet = ApiData<Client["catalyst"]["v1"]["fleet"]["id"]["get"]>;
-export type CatalystFleetRing = ApiData<Client["catalyst"]["v1"]["fleet"]["ring"]["get"]>[number];
+export type CatalystFleet = GetCatalystV1FleetByIdResponse;
+export type CatalystFleetRing = GetCatalystV1FleetRingResponse[number];
 // GET /catalyst/v1/fleet/{id}/reactions — Fleet に付与されたリアクションの一覧（投稿者本人のみ取得可能）
-export type CatalystFleetReaction = ApiData<Client["catalyst"]["v1"]["fleet"]["id"]["reactions"]["get"]>[number];
+export type CatalystFleetReaction = GetCatalystV1FleetByIdReactionsResponse[number];
 
-export type ProfileTag = ApiData<Client["catalyst"]["v1"]["profileTags"]["by"]["user"]["id"]["get"]>["tags"][number];
-export type ProfileTagSuggestion = ApiData<
-  Client["catalyst"]["v1"]["profileTags"]["suggestions"]["get"]
->["tags"][number];
+export type ProfileTag = GetCatalystV1ProfileTagsByUserByIdResponse["tags"][number];
+export type ProfileTagSuggestion = GetCatalystV1ProfileTagsSuggestionsResponse["tags"][number];
 
 export type ReportRequest = NonNullable<
-  Parameters<Client["catalyst"]["v1"]["status"]["id"]["report"]["create"]>[0]["body"]
+  PostCatalystV1StatusByIdReportData["body"]
 >;
 export type ReportTargetType = "status" | "fleet" | "album" | "smartAlbum" | "user";
 
 // --- egeria ---
 
-export type EgeriaUser = ApiData<Client["egeria"]["v1"]["me"]["get"]>["user"];
+export type EgeriaUser = GetEgeriaV1MeResponse["user"];
 export type EgeriaUserProfile = NonNullable<EgeriaUser["profile"]>;
 export type ProfileEmoji = NonNullable<EgeriaUser["profileEmoji"]>;
 export type ProfileEmojiRequest = NonNullable<
-  NonNullable<Parameters<Client["egeria"]["v1"]["me"]["patch"]>[0]>["body"]
+  PatchEgeriaV1MeData["body"]
 >["profileEmoji"];
 
 // --- steambird ---
 
-export type Notification = ApiData<Client["steambird"]["v1"]["notifications"]["get"]>["notifications"][number];
+export type Notification = GetSteambirdV1NotificationsResponse["notifications"][number];
 export type NotificationGroup = Notification["entities"][number];
 export type NotificationActor = NotificationGroup["occurredBy"];
 export type ActivityPubRemoteActor = Extract<NotificationActor, { type: "activitypub-remote-actor" }>;

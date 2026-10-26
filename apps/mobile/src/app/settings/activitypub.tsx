@@ -30,7 +30,7 @@ const statePresentation: Record<
   retired: { label: "連合終了済み", tone: "danger" },
 };
 
-const eligibilityMessage: Record<CatalystActivityPubSettings["eligibilityReason"], string> = {
+const eligibilityMessage: Record<NonNullable<CatalystActivityPubSettings["eligibilityReason"]>, string> = {
   "screen-name-required": "先にアカウント設定でユーザー名を変更し、確定してください。",
   suspended: "凍結中のアカウントでは ActivityPub を有効化できません。",
   "account-deleted": "このアカウントでは ActivityPub を有効化できません。",
@@ -210,7 +210,7 @@ export default function ActivityPubSettingsPage() {
         ) : null}
         {settings.state === "unavailable" ? (
           <CatalystText tone="muted">
-            {eligibilityMessage[settings.eligibilityReason] ?? "このアカウントでは現在有効化できません。"}
+            {(settings.eligibilityReason && eligibilityMessage[settings.eligibilityReason]) ?? "このアカウントでは現在有効化できません。"}
           </CatalystText>
         ) : null}
         {settings.state === "retired" ? (
