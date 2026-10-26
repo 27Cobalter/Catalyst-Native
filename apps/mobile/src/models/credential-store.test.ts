@@ -1,7 +1,8 @@
 import { resetSecureStoreMock } from "@/test/helpers/secure-store";
 import { accountAtom } from "@/models/atoms/account";
 import type { EgeriaUser } from "@/models/sdk-types";
-import { CatalystTS } from "@natsuneko-laboratory/catalyst-sdk";
+import { Catalyst } from "@natsuneko-laboratory/catalyst-sdk";
+import type { CatalystOptions } from "@natsuneko-laboratory/catalyst-sdk";
 import AsyncStorage from "expo-secure-store";
 import { getDefaultStore } from "jotai";
 import { EMPTY_CREDENTIAL, clear, getCredential, saveCredential } from "./credential-store";
@@ -9,16 +10,13 @@ import { EMPTY_CREDENTIAL, clear, getCredential, saveCredential } from "./creden
 jest.mock("expo-secure-store");
 jest.mock("@natsuneko-laboratory/catalyst-sdk");
 
-type MockCatalystTSClass = typeof CatalystTS & {
-  instances: Array<{
-    opts: { accessToken?: string; refreshToken?: string; clientId: string; clientSecret: string };
-    interceptors: Array<{ onResponse?: (response: unknown) => Promise<unknown> }>;
-    _accessToken?: string;
-    _refreshToken?: string;
-  }>;
+type MockCatalystClass = typeof Catalyst & {
+  instances: Array<{ opts: CatalystOptions }>;
 };
 
-const MockedCatalystTS = CatalystTS as unknown as MockCatalystTSClass;
+const MockedCatalyst = Catalyst as unknown as MockCatalystClass;
+
+const REFRESHED_TOKEN = { accessToken: "refreshed-access", refreshToken: "refreshed-refresh", tokenType: "Bearer" };
 
 const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
@@ -26,7 +24,7 @@ const REFRESH_TOKEN_KEY = "refresh_token";
 describe("credential-store", () => {
   beforeEach(() => {
     resetSecureStoreMock();
-    MockedCatalystTS.instances = [];
+    MockedCatalyst.instances = [];
     getDefaultStore().set(accountAtom, null);
   });
 
@@ -37,7 +35,7 @@ describe("credential-store", () => {
       expect(credential).toBe(EMPTY_CREDENTIAL);
     });
 
-    it("トークンが保存済みなら SecureStore の値で CatalystTS を構築する", async () => {
+    it("トークンが保存済みなら SecureStore の値で Catalyst を構築する", async () => {
       await AsyncStorage.setItemAsync(ACCESS_TOKEN_KEY, "saved-access");
       await AsyncStorage.setItemAsync(REFRESH_TOKEN_KEY, "saved-refresh");
 
@@ -45,8 +43,8 @@ describe("credential-store", () => {
 
       expect(credential.accessToken).toBe("saved-access");
       expect(credential.refreshToken).toBe("saved-refresh");
-      expect(MockedCatalystTS.instances).toHaveLength(1);
-      expect(MockedCatalystTS.instances[0].opts).toMatchObject({
+      expect(MockedCatalyst.instances).toHaveLength(1);
+      expect(MockedCatalyst.instances[0].opts).toMatchObject({
         accessToken: "saved-access",
         refreshToken: "saved-refresh",
       });
@@ -66,31 +64,11 @@ describe("credential-store", () => {
 
       await getCredential();
 
-      const instance = MockedCatalystTS.instances[0];
-      expect(instance.interceptors).toHaveLength(1);
-
-      // CatalystTS が内部で 401 を検知し、自動的にトークンをリフレッシュしたことを模擬する
-      instance._accessToken = "refreshed-access";
-      instance._refreshToken = "refreshed-refresh";
-      await instance.interceptors[0].onResponse?.({});
+      // Catalyst が内部で 401 を検知し、自動的にトークンをリフレッシュしたことを模擬する
+      await MockedCatalyst.instances[0].opts.onTokenRefreshed?.(REFRESHED_TOKEN);
 
       expect(await AsyncStorage.getItemAsync(ACCESS_TOKEN_KEY)).toBe("refreshed-access");
       expect(await AsyncStorage.getItemAsync(REFRESH_TOKEN_KEY)).toBe("refreshed-refresh");
-    });
-
-    it("アクセストークンが変化していなければ再永続化しない", async () => {
-      await AsyncStorage.setItemAsync(ACCESS_TOKEN_KEY, "old-access");
-      await AsyncStorage.setItemAsync(REFRESH_TOKEN_KEY, "old-refresh");
-
-      await getCredential();
-
-      const instance = MockedCatalystTS.instances[0];
-      const setItemSpy = jest.spyOn(AsyncStorage, "setItemAsync");
-      setItemSpy.mockClear();
-
-      await instance.interceptors[0].onResponse?.({});
-
-      expect(setItemSpy).not.toHaveBeenCalled();
     });
 
     it("accountAtom にログイン中のユーザーがいれば新しいトークンを反映する", async () => {
@@ -104,10 +82,7 @@ describe("credential-store", () => {
         credential,
       });
 
-      const instance = MockedCatalystTS.instances[0];
-      instance._accessToken = "refreshed-access";
-      instance._refreshToken = "refreshed-refresh";
-      await instance.interceptors[0].onResponse?.({});
+      await MockedCatalyst.instances[0].opts.onTokenRefreshed?.(REFRESHED_TOKEN);
 
       const account = store.get(accountAtom);
       expect(account?.credential.accessToken).toBe("refreshed-access");

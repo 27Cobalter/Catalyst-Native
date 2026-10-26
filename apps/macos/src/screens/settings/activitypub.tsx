@@ -22,7 +22,7 @@ const STATE_LABEL: Record<CatalystActivityPubSettings["state"], string> = {
   retired: "連合終了済み",
 };
 
-const ELIGIBILITY_MESSAGE: Record<CatalystActivityPubSettings["eligibilityReason"], string> = {
+const ELIGIBILITY_MESSAGE: Record<NonNullable<CatalystActivityPubSettings["eligibilityReason"]>, string> = {
   "screen-name-required": "先にアカウント設定でユーザー名を変更し、確定してください。",
   suspended: "凍結中のアカウントでは ActivityPub を有効化できません。",
   "account-deleted": "このアカウントでは ActivityPub を有効化できません。",
@@ -137,7 +137,7 @@ export const ActivityPubPage = ({ onBack }: SettingsPageProps) => {
         {settings.state === "active" && (
           <SettingsAction label="連合を終了" tone="danger" busy={isSaving} busyLabel="終了しています" onPress={confirmRetire} />
         )}
-        {settings.state === "unavailable" && (
+        {settings.state === "unavailable" && settings.eligibilityReason && (
           <View className="px-4 py-3">
             <Text className="text-[13px] leading-5 text-light-text-muted dark:text-dark-text-muted">
               {ELIGIBILITY_MESSAGE[settings.eligibilityReason]}
