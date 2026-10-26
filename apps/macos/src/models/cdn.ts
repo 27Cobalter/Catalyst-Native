@@ -60,7 +60,8 @@ export const getCdnUrl = ({ src, variant, width, aspect, mode, format }: GetCdnU
     return `${src}/${MEDIA_VARIANTS[variant ?? "original"]}${additional}`;
   }
 
-  if (src.startsWith(`https://api.natsuneko.com`)) {
+  // akasha はお題の自動生成バナーなどを PNG で直接返すため、CDN の変換を通さない
+  if (src.startsWith(`https://api.natsuneko.com`) || src.startsWith(`https://akasha.natsuneko.com`)) {
     return src;
   }
 

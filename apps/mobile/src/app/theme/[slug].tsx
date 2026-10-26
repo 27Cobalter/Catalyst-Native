@@ -40,17 +40,11 @@ const ThemeHeader = ({ theme }: { theme: CatalystWeeklyTheme }) => {
   return (
     <View className="gap-4 bg-light-background pb-5 dark:bg-dark-background">
       <CatalystMediaFrame>
-        {theme.bannerUrl ? (
-          <UniImage
-            source={{ uri: getCdnUrl({ src: theme.bannerUrl, variant: "header", width: 1500 }) }}
-            className="h-40 w-full"
-            contentFit="cover"
-          />
-        ) : (
-          <View className="h-40 w-full items-center justify-center bg-light-surface-muted dark:bg-dark-surface-muted">
-            <UniCalendarDays size={52} className="text-light-icon dark:text-dark-icon" />
-          </View>
-        )}
+        <UniImage
+          source={{ uri: getCdnUrl({ src: theme.bannerUrl ?? theme.generatedBannerUrl, variant: "header", width: 1500 }) }}
+          className="h-40 w-full"
+          contentFit="cover"
+        />
       </CatalystMediaFrame>
 
       <View className="gap-3 px-4">
