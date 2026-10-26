@@ -14,24 +14,17 @@ import { FlashList } from "@shopify/flash-list";
 import { cn } from "cn";
 import dayjs from "dayjs";
 import { useAtomValue } from "jotai";
-import { Calendar } from "lucide-react-native";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Image, Pressable, Text, View } from "react-native";
-import { withUniwind } from "uniwind";
-
-const UniCalendar = withUniwind(Calendar);
 
 const ThemeCell = ({ item: theme, width, }: { item: CatalystWeeklyTheme; width: number; }) => {
   const { hovered, hoverProps } = useHover();
-  const hasBanner = !!theme.bannerUrl;
   const remainingDays = Math.max(0, dayjs(theme.until).diff(dayjs(), "day") + 1);
 
   return <Pressable {...hoverProps} >
     <View className={cn("flex gap-2 bg-light-surface pb-2 dark:bg-dark-surface", hovered && "bg-light-surface-elevated dark:bg-dark-surface-elevated")} style={{ marginHorizontal: 2, marginVertical: 2 }}>
       <View className="overflow-hidden rounded-sm">
-        {hasBanner ? <Image source={{ uri: getCdnUrl({ src: theme.bannerUrl!, variant: "header", width: 150 }) }} width={width} height={width / 3} /> : <View className="flex h-full w-full items-center justify-center bg-light-surface-muted dark:bg-dark-surface-muted" style={{ width, height: width / 3 }}>
-          <UniCalendar className="text-light-text-subtle dark:text-dark-text-subtle" />
-        </View>}
+        <Image source={{ uri: getCdnUrl({ src: theme.bannerUrl ?? theme.generatedBannerUrl, variant: "header", width: 150 }) }} width={width} height={width / 3} />
       </View>
 
       <View className="flex flex-col gap-2 p-2">

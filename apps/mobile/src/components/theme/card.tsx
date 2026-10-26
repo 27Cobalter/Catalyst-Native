@@ -9,12 +9,10 @@ import type { CatalystWeeklyTheme } from "@/models/sdk-types";
 import dayjs from "dayjs";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { CalendarDays } from "lucide-react-native";
 import { Pressable, View } from "react-native";
 import { withUniwind } from "uniwind";
 
 const UniImage = withUniwind(Image);
-const UniCalendarDays = withUniwind(CalendarDays);
 
 type Props = {
   theme: CatalystWeeklyTheme;
@@ -38,17 +36,11 @@ export const WeeklyThemeCard = ({ theme }: Props) => {
       onPress={() => router.push(`/theme/${theme.slug}` as never)}
     >
       <CatalystMediaFrame>
-        {theme.bannerUrl ? (
-          <UniImage
-            source={{ uri: getCdnUrl({ src: theme.bannerUrl, variant: "header", width: 1500 }) }}
-            className="h-32 w-full"
-            contentFit="cover"
-          />
-        ) : (
-          <View className="h-32 w-full items-center justify-center bg-light-surface-muted dark:bg-dark-surface-muted">
-            <UniCalendarDays size={40} className="text-light-icon dark:text-dark-icon" />
-          </View>
-        )}
+        <UniImage
+          source={{ uri: getCdnUrl({ src: theme.bannerUrl ?? theme.generatedBannerUrl, variant: "header", width: 1500 }) }}
+          className="h-32 w-full"
+          contentFit="cover"
+        />
       </CatalystMediaFrame>
 
       <View className="gap-1.5 pt-2">
