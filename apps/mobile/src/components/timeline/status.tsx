@@ -19,7 +19,7 @@ import {
 } from "@/models/streaming";
 import { useRouter } from "expo-router";
 import { useAtom, useAtomValue } from "jotai";
-import { Repeat2 } from "lucide-react-native";
+import { Repeat2, Sparkles } from "lucide-react-native";
 import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
 import { withUniwind } from "uniwind";
@@ -47,7 +47,12 @@ type StatusWithRepost = {
   };
 };
 
+type StatusWithRecommendation = {
+  isRecommended?: boolean;
+};
+
 const UniRepeat2 = withUniwind(Repeat2);
+const UniSparkles = withUniwind(Sparkles);
 
 export const TimelineStatus = memo(({ status, renderingMode = "twtr" }: Props) => {
   const router = useRouter();
@@ -60,6 +65,7 @@ export const TimelineStatus = memo(({ status, renderingMode = "twtr" }: Props) =
   const isLoggedIn = account !== null;
   const privacy = (status as StatusWithReactions).privacy;
   const repost = (status as StatusWithRepost).repost;
+  const isRecommended = (status as StatusWithRecommendation).isRecommended === true;
 
   const [cachedReactions, setCachedReactions] = useAtom(reactionCacheAtomFamily(status.id));
 
@@ -186,6 +192,15 @@ export const TimelineStatus = memo(({ status, renderingMode = "twtr" }: Props) =
 
   return (
     <View className="bg-light-background pt-3 dark:bg-dark-background">
+      {isRecommended ? (
+        <View className="mb-1 flex-row items-center gap-1 px-4">
+          <UniSparkles size={14} className="text-light-tint dark:text-dark-tint" />
+          <CatalystText variant="caption" tone="muted" numberOfLines={1}>
+            おすすめ
+          </CatalystText>
+        </View>
+      ) : null}
+
       {repost ? (
         <View className="mb-1 flex-row items-center gap-1 px-4">
           <UniRepeat2 size={14} className="text-light-tint dark:text-dark-tint" />
