@@ -165,8 +165,8 @@ settings:
 catalogs:
   default:
     '@natsuneko-laboratory/catalyst-sdk':
-      specifier: 2026.10.26-beta.3
-      version: 2026.10.26-beta.3
+      specifier: 2026.10.27-beta.1
+      version: 2026.10.27-beta.1
     '@natsuneko-laboratory/fleet-renderer-core':
       specifier: 0.2.0
       version: 0.2.0
@@ -214,7 +214,6 @@ packageExtensionsChecksum: sha256-MAz1kyuO3px3+fcbXoxIe/8bB41Q9QpElHhNNAWOov8=
 
 patchedDependencies:
   '@likashefqet/react-native-image-zoom': 7fe39025924f852ab1e8fc75a6ea7d7b6d566a9168f83e181c9a954458f77221
-  '@natsuneko-laboratory/catalyst-sdk@2026.10.26-beta.3': 25aa76c14ca42dd6da25e70e4e8c343d846039d453c6d542468ef6b9226fe790
   react-native-config@1.7.2: 5eaa2c9d6d22c492d2357f4c77584d57dffdf7d3980c04c5c29dc8a6fb292169
   react-native-image-crop-picker@0.51.1: cd866b1ea81ab83baf37d0eaaad198db237089e37a1200b542626cf002a4c26b
 
@@ -279,7 +278,7 @@ importers:
     dependencies:
       '@natsuneko-laboratory/catalyst-sdk':
         specifier: 'catalog:'
-        version: 2026.10.26-beta.3(patch_hash=25aa76c14ca42dd6da25e70e4e8c343d846039d453c6d542468ef6b9226fe790)
+        version: 2026.10.27-beta.1
       '@natsuneko-laboratory/fleet-renderer-core':
         specifier: 'catalog:'
         version: 0.2.0
@@ -418,7 +417,7 @@ importers:
         version: 0.1.5(expo@58.0.16)
       '@natsuneko-laboratory/catalyst-sdk':
         specifier: 'catalog:'
-        version: 2026.10.26-beta.3(patch_hash=25aa76c14ca42dd6da25e70e4e8c343d846039d453c6d542468ef6b9226fe790)
+        version: 2026.10.27-beta.1
       '@natsuneko-laboratory/fleet-renderer-core':
         specifier: 'catalog:'
         version: 0.2.0
@@ -713,7 +712,7 @@ importers:
     dependencies:
       '@natsuneko-laboratory/catalyst-sdk':
         specifier: 'catalog:'
-        version: 2026.10.26-beta.3(patch_hash=25aa76c14ca42dd6da25e70e4e8c343d846039d453c6d542468ef6b9226fe790)
+        version: 2026.10.27-beta.1
       '@natsuneko-laboratory/fleet-renderer-core':
         specifier: 'catalog:'
         version: 0.2.0
@@ -2825,8 +2824,8 @@ packages:
       '@emnapi/core': ^1.7.1 || ^2.0.0-alpha.4
       '@emnapi/runtime': ^1.7.1 || ^2.0.0-alpha.4
 
-  '@natsuneko-laboratory/catalyst-sdk@2026.10.26-beta.3':
-    resolution: {integrity: sha512-c3n9mPhClVhcQ/FVc6EQh+zCcT1D/sLq1CSCauxndUemYOsZt+kdltNgTo6prHcxU6Z6AP/EXR+yX52I/z9vxQ==}
+  '@natsuneko-laboratory/catalyst-sdk@2026.10.27-beta.1':
+    resolution: {integrity: sha512-qZ/Ut5K1XOPdZ89Fjt8hxmqIJlIo9MXYwnxXg2UBoyoIxhKEXZwGx+//ct94fXaENWU/jL5DETT9RqVVrKsR0A==}
 
   '@natsuneko-laboratory/fleet-renderer-core@0.1.0':
     resolution: {integrity: sha512-Ee3oWN8tb0UC6yS+XI3U//2wr3Eev/fTg4pxI0kp/PjxntSqO8vb94vAG2BIBxjM7S2n9v26zy7pnbGEyanbWw==}
@@ -13585,7 +13584,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.4
     optional: true
 
-  '@natsuneko-laboratory/catalyst-sdk@2026.10.26-beta.3(patch_hash=25aa76c14ca42dd6da25e70e4e8c343d846039d453c6d542468ef6b9226fe790)': {}
+  '@natsuneko-laboratory/catalyst-sdk@2026.10.27-beta.1': {}
 
   '@natsuneko-laboratory/fleet-renderer-core@0.1.0': {}
 
