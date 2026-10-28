@@ -15,10 +15,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { View } from "react-native";
 import { v4 } from "uuid";
 
+// Web 版の検索と同じ並び
 const TABS: Tab[] = [
   { key: "statuses", label: "投稿" },
-  { key: "albums", label: "アルバム" },
   { key: "users", label: "ユーザー" },
+  { key: "albums", label: "アルバム" },
   { key: "contests", label: "コンテスト" },
 ];
 
@@ -28,11 +29,13 @@ export default function HomeScreen() {
   const [state, setState] = useState<string>("");
   const [query, setQuery] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>(TABS[0].key);
+  // ページャーは全タブを最初から描画するので、一度開いたタブだけ中身を出して、開くまで読み込みを始めない
+  const [visitedTabs, setVisitedTabs] = useState<ReadonlySet<string>>(() => new Set([TABS[0].key]));
   const client = useAtomValue(clientAtom);
   const [stateKey, setStateKey] = useState(v4());
   const timelineRef = useRef<TimelineHandle>(null);
-  const albumsRef = useRef<TimelineHandle>(null);
   const usersRef = useRef<TimelineHandle>(null);
+  const albumsRef = useRef<TimelineHandle>(null);
   const contestsRef = useRef<TimelineHandle>(null);
 
   const timeline = useCallback(
@@ -59,19 +62,13 @@ export default function HomeScreen() {
 
   const scroller = useRef<{ scrollToTop: () => void }>(null);
   const scrollActiveTimelineToTopHandler = useMemo(() => {
-    return {
-      scrollToTop: () => {
-        if (activeTab === "statuses") {
-          timelineRef.current?.scrollToTop();
-        } else if (activeTab === "albums") {
-          albumsRef.current?.scrollToTop();
-        } else if (activeTab === "users") {
-          usersRef.current?.scrollToTop();
-        } else if (activeTab === "contests") {
-          contestsRef.current?.scrollToTop();
-        }
-      },
+    const refs: Record<string, React.RefObject<TimelineHandle | null>> = {
+      statuses: timelineRef,
+      users: usersRef,
+      albums: albumsRef,
+      contests: contestsRef,
     };
+    return { scrollToTop: () => refs[activeTab]?.current?.scrollToTop() };
   }, [activeTab]);
 
   useEffect(() => {
@@ -88,15 +85,21 @@ export default function HomeScreen() {
           onChangeText={setState}
           onClear={() => setState("")}
           onSubmitEditing={runQuery}
-          placeholder="投稿、ユーザー、アルバム、コンテストを検索"
+          placeholder="検索"
           returnKeyType="search"
         />
       </View>
       <View className="flex-1">
         <Tabs
           tabs={TABS}
-          onTabChange={(w) => setActiveTab(w.key)}
+          scrollable
+          onTabChange={(w) => {
+            setActiveTab(w.key);
+            setVisitedTabs((prev) => (prev.has(w.key) ? prev : new Set(prev).add(w.key)));
+          }}
           renderScene={(w) => {
+            if (!visitedTabs.has(w.key)) return null;
+
             switch (w.key) {
               case "statuses": {
                 if (query) {
@@ -114,20 +117,20 @@ export default function HomeScreen() {
                 return <StatusesPlaceholder />;
               }
 
-              case "albums": {
-                if (query) {
-                  return <AlbumList ref={albumsRef} query={query} />;
-                }
-
-                return <AlbumsPlaceholder />;
-              }
-
               case "users": {
                 if (query) {
                   return <UserList ref={usersRef} query={query} />;
                 }
 
                 return <UsersPlaceholder />;
+              }
+
+              case "albums": {
+                if (query) {
+                  return <AlbumList ref={albumsRef} query={query} />;
+                }
+
+                return <AlbumsPlaceholder />;
               }
 
               case "contests": {
