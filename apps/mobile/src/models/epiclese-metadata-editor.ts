@@ -2,6 +2,8 @@ import type {
   CreateMetadata,
   EpiclesePlatformResponse,
   EpicleseStatusMetadataResponse,
+  EpicleseWorldResponse,
+  UserResponse,
 } from "@natsuneko-laboratory/catalyst-sdk";
 
 // メタデータの保存 API は投稿の全写真分をまとめて置き換えるため、アプリでまだ編集できない項目も
@@ -10,7 +12,15 @@ import type {
 
 export type EditableMediaMetadata = CreateMetadata[number];
 
-export type ApplyToAllField = "privacyMetadata";
+export type EditableWorld = NonNullable<EditableMediaMetadata["world"]>;
+
+export type ApplyToAllField = "privacyMetadata" | "platformAndWorld" | "users";
+
+// 送信形式の users は id しか持たないため、表示用の情報は別に持つ
+export type UserProfile = { displayName: string; screenName: string; iconUrl: string | null };
+
+// サーバーの METADATA_SCHEMA の上限。超えると保存ごと 400 になる
+export const MAX_USERS = 10;
 
 type ResponseItem = EpicleseStatusMetadataResponse[string];
 type ResponseAuthor = ResponseItem["reference"][number]["author"];
@@ -22,19 +32,13 @@ const toAuthor = (author: ResponseAuthor) => ({
   name: author.name,
 });
 
-const toWorld = (world: ResponseItem["world"]): EditableMediaMetadata["world"] => {
-  if (!world) {
-    return undefined;
-  }
-
-  return {
-    id: world.id,
-    platformIdentifier: world.platformIdentifier,
-    platform: world.platform?.id ?? "",
-    name: world.name,
-    author: world.author ? toAuthor(world.author) : null,
-  };
-};
+export const toEditableWorld = (world: EpicleseWorldResponse): EditableWorld => ({
+  id: world.id,
+  platformIdentifier: world.platformIdentifier,
+  platform: world.platform?.id ?? "",
+  name: world.name,
+  author: world.author ? toAuthor(world.author) : null,
+});
 
 const toReference = (reference: ResponseItem["reference"]): EditableMediaMetadata["reference"] =>
   reference.map((item) => ({
@@ -65,7 +69,7 @@ export const toEditableMetadata = (
     return {
       id: media.id,
       platform: platforms.find((platform) => platform.name === item.platform)?.id,
-      world: toWorld(item.world),
+      world: item.world ? toEditableWorld(item.world) : undefined,
       users: item.users.map((user) => ({ id: user.id })),
       reference: toReference(item.reference),
       privacyMetadata,
@@ -84,10 +88,48 @@ export const applyToAll = (
   sourceIndex: number,
   field: ApplyToAllField,
 ): EditableMediaMetadata[] => {
-  const value = items[sourceIndex][field];
+  const source = items[sourceIndex];
 
-  return items.map((item) => ({ ...item, [field]: value }));
+  switch (field) {
+    // ワールドはプラットフォームに属するので、必ず組でコピーする
+    case "platformAndWorld":
+      return items.map((item) => ({ ...item, platform: source.platform, world: source.world }));
+    case "users":
+      return items.map((item) => ({ ...item, users: source.users }));
+    case "privacyMetadata":
+      return items.map((item) => ({ ...item, privacyMetadata: source.privacyMetadata }));
+  }
 };
+
+// ワールドはプラットフォームに属するので、別のプラットフォームに変えたらワールドを外す (Web 版と同じ)
+export const setPlatform = (item: EditableMediaMetadata, platformId: string | undefined): EditableMediaMetadata => ({
+  ...item,
+  platform: platformId,
+  world: platformId !== undefined && item.platform === platformId ? item.world : undefined,
+});
+
+export const toggleUser = (users: { id: string }[], userId: string): { users: { id: string }[]; limited: boolean } => {
+  if (users.some((user) => user.id === userId)) {
+    return { users: users.filter((user) => user.id !== userId), limited: false };
+  }
+
+  if (users.length >= MAX_USERS) {
+    return { users, limited: true };
+  }
+
+  return { users: [...users, { id: userId }], limited: false };
+};
+
+export const toUserProfile = (user: Pick<UserResponse, "displayName" | "screenName" | "profile">): UserProfile => ({
+  displayName: user.displayName,
+  screenName: user.screenName,
+  iconUrl: user.profile?.iconUrl ?? null,
+});
+
+export const collectUserProfiles = (response: EpicleseStatusMetadataResponse): Record<string, UserProfile> =>
+  Object.fromEntries(
+    Object.values(response).flatMap((item) => item.users.map((user) => [user.id, toUserProfile(user)] as const)),
+  );
 
 // どちらも toEditableMetadata から作られるのでキー順が揃い、文字列比較で足りる
 export const isMetadataDirty = (initial: EditableMediaMetadata[], current: EditableMediaMetadata[]) =>
