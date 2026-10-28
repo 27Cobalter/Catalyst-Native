@@ -68,20 +68,18 @@ export function CatalystTabs({
     isScrollingProgrammatically.current = true;
     setActiveIndex(index);
     onTabChange?.(tabs[index]!, index);
+    // インジケーターはページのスクロール位置 (scrollX) に追従させる。ここで scrollX を別にアニメーションさせると、
+    // ゆっくり動き出すスクロールの位置で上書きされて、インジケーターが行き来してしまう
     flatListRef.current?.scrollToIndex({ index, animated: !reducedMotion });
-    Animated.timing(scrollX, {
-      toValue: index * screenWidth,
-      duration: reducedMotion ? 0 : 220,
-      useNativeDriver: false,
-    }).start(() => {
-      isScrollingProgrammatically.current = false;
-    });
   };
 
   const handleScroll = Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: false });
 
   const handleMomentumScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (isScrollingProgrammatically.current) return;
+    if (isScrollingProgrammatically.current) {
+      isScrollingProgrammatically.current = false;
+      return;
+    }
     const offsetX = e.nativeEvent.contentOffset.x;
     const index = Math.round(offsetX / screenWidth);
     const clampedIndex = Math.max(0, Math.min(index, tabs.length - 1));
@@ -175,6 +173,10 @@ export function CatalystTabs({
             scrollEventThrottle={16}
             onScroll={handleScroll}
             onMomentumScrollEnd={handleMomentumScrollEnd}
+            // タブを押したスクロールで完了の通知が来ない場合に備え、次にユーザーが動かしたらフラグを下ろす
+            onScrollBeginDrag={() => {
+              isScrollingProgrammatically.current = false;
+            }}
             className="flex-1"
           />
         </GestureDetector>
