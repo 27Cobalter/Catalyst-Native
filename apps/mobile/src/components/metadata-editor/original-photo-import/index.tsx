@@ -33,9 +33,15 @@ export const OriginalPhotoImport = ({ statusId, mediaId, hidesAutoMetadata }: Pr
   const sheetRef = useRef<BottomSheetModal>(null);
   const setMetadataRevision = useSetAtom(metadataRevisionAtomFamily(statusId));
   const [isParsing, setIsParsing] = useState(false);
-  const [records, setRecords] = useState<DenormalizedRecords | null>(null);
+  // 解析中に写真を切り替えられても、選んだときの写真に付与する (付与は取り消せないので、別の写真に付くと戻せない)
+  const [pending, setPending] = useState<{
+    mediaId: string;
+    hidesAutoMetadata: boolean;
+    records: DenormalizedRecords;
+  } | null>(null);
 
   const handlePick = useCallback(async () => {
+    const target = { mediaId, hidesAutoMetadata };
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsMultipleSelection: false,
@@ -55,7 +61,7 @@ export const OriginalPhotoImport = ({ statusId, mediaId, hidesAutoMetadata }: Pr
         return;
       }
 
-      setRecords(detected);
+      setPending({ ...target, records: detected });
       sheetRef.current?.present();
     } catch (error) {
       console.error("Failed to read original photo metadata:", error);
@@ -63,7 +69,7 @@ export const OriginalPhotoImport = ({ statusId, mediaId, hidesAutoMetadata }: Pr
     } finally {
       setIsParsing(false);
     }
-  }, []);
+  }, [hidesAutoMetadata, mediaId]);
 
   const handleApplied = useCallback(() => {
     sheetRef.current?.dismiss();
@@ -108,11 +114,11 @@ export const OriginalPhotoImport = ({ statusId, mediaId, hidesAutoMetadata }: Pr
       >
         <BottomSheetView style={{ paddingBottom: insets.bottom * 2 }}>
           <View className="pt-1">
-            {records && (
+            {pending && (
               <ImportConfirmContent
-                mediaId={mediaId}
-                records={records}
-                hidesAutoMetadata={hidesAutoMetadata}
+                mediaId={pending.mediaId}
+                records={pending.records}
+                hidesAutoMetadata={pending.hidesAutoMetadata}
                 onApplied={handleApplied}
                 onCancel={() => sheetRef.current?.dismiss()}
               />
