@@ -7,12 +7,16 @@ import type {
 } from "@natsuneko-laboratory/catalyst-sdk";
 import { useAtomValue } from "jotai";
 import { useCallback, useState } from "react";
-import { Alert, ScrollView } from "react-native";
+import { Alert } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import { withUniwind } from "uniwind";
 
 import { MetadataRow } from "../metadata-row";
 import { PickerHeader } from "../picker-header";
 import { FormField } from "./form-field";
 import { getWorldIdPlaceholder } from "./placeholders";
+
+const UniKeyboardAwareScrollView = withUniwind(KeyboardAwareScrollView);
 
 export type WorldDraft = {
   name: string;
@@ -61,6 +65,16 @@ export const WorldFormStep = ({ platform, draft, onChange, onBack, onPickAuthor,
         },
         throwOnError: true,
       });
+      // サーバーは ID だけで既存のワールドを探すので、別のプラットフォームで登録済みのワールドが返ることがある。
+      // そのまま選ぶと「cluster の写真に VRChat のワールド」のような食い違いで保存されてしまうため、選ばずに知らせる
+      if (data.world.platform?.id !== platform.id) {
+        Alert.alert(
+          "エラー",
+          `このワールドは別のプラットフォーム (${data.world.platform?.name ?? "不明"}) で登録されています。ワールドID を確認してください`,
+        );
+        return;
+      }
+
       onSaved(data.world);
     } catch (error) {
       console.error("Failed to create world:", error);
@@ -77,7 +91,11 @@ export const WorldFormStep = ({ platform, draft, onChange, onBack, onPickAuthor,
         left={{ label: "戻る", onPress: onBack, disabled: isSaving }}
         right={{ label: "保存", onPress: handleSave, disabled: !canSave }}
       />
-      <ScrollView contentContainerClassName="gap-6 px-5 py-5" keyboardShouldPersistTaps="handled">
+      <UniKeyboardAwareScrollView
+        bottomOffset={24}
+        contentContainerClassName="gap-6 px-5 py-5"
+        keyboardShouldPersistTaps="handled"
+      >
         <FormField label="ワールド名" description="ワールドの名前を正確に入力してください">
           <CatalystTextField
             value={draft.name}
@@ -99,7 +117,7 @@ export const WorldFormStep = ({ platform, draft, onChange, onBack, onPickAuthor,
         <FormField label="ワールド作者" description="ワールドの作者を選択、もしくは入力してください。">
           <MetadataRow label="作者" value={draft.author?.name ?? "未選択"} onPress={onPickAuthor} />
         </FormField>
-      </ScrollView>
+      </UniKeyboardAwareScrollView>
     </>
   );
 };

@@ -34,8 +34,28 @@ export const WorldPickerModal = ({ visible, platform, platforms, value, onCancel
 
   const handleSelectWorld = useCallback((world: EpicleseWorldResponse) => onSelect(toEditableWorld(world)), [onSelect]);
 
+  // Android の戻る操作はモーダル全体ではなく 1 つ前のステップに戻す (登録の入力を失わないように)
+  const handleRequestClose = useCallback(() => {
+    switch (step) {
+      case "author-form":
+        return setStep("author-search");
+      case "author-search":
+        return setStep("world-form");
+      case "world-form":
+        return setStep("world-search");
+      case "world-search":
+        return onCancel();
+    }
+  }, [onCancel, step]);
+
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onCancel}>
+    <Modal
+      testID="world-picker-modal"
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={handleRequestClose}
+    >
       <View className="flex-1 bg-light-background dark:bg-dark-background">
         {step === "world-search" && (
           <WorldSearchStep

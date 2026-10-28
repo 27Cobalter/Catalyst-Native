@@ -4,7 +4,8 @@ import type { EpicleseAuthorResponse, EpiclesePlatformResponse } from "@natsunek
 import { useAtomValue } from "jotai";
 import { Check } from "lucide-react-native";
 import { useCallback, useState } from "react";
-import { Alert, ScrollView, View } from "react-native";
+import { Alert, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { withUniwind } from "uniwind";
 
 import { PickerHeader } from "../picker-header";
@@ -13,6 +14,7 @@ import { getAuthorIdPlaceholder } from "./placeholders";
 import { TEXT_INPUT_CLASS_NAME } from "./world-form-step";
 
 const UniCheck = withUniwind(Check);
+const UniKeyboardAwareScrollView = withUniwind(KeyboardAwareScrollView);
 
 const PLATFORM_DESCRIPTION =
   "この作者が所属するプラットフォームを選択します。写真自体のプラットフォームと異なっていても構いません（例：BOOTH のショップのみを持つ作者）";
@@ -69,7 +71,11 @@ export const AuthorFormStep = ({ platform, platforms, onBack, onSaved }: Props) 
         left={{ label: "戻る", onPress: onBack, disabled: isSaving }}
         right={{ label: "保存", onPress: handleSave, disabled: !canSave }}
       />
-      <ScrollView contentContainerClassName="gap-6 py-5" keyboardShouldPersistTaps="handled">
+      <UniKeyboardAwareScrollView
+        bottomOffset={24}
+        contentContainerClassName="gap-6 py-5"
+        keyboardShouldPersistTaps="handled"
+      >
         <View className="gap-2">
           <View className="gap-1 px-5">
             <CatalystText variant="label">プラットフォーム</CatalystText>
@@ -110,7 +116,7 @@ export const AuthorFormStep = ({ platform, platforms, onBack, onSaved }: Props) 
             />
           </FormField>
         </View>
-      </ScrollView>
+      </UniKeyboardAwareScrollView>
     </>
   );
 };
