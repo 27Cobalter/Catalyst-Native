@@ -221,8 +221,12 @@ export default Sentry.wrap(function RootLayout() {
                   }}
                 />
                 <Stack.Screen
-                  name="status/[id]"
+                  name="status/[id]/index"
                   options={{ title: "投稿", headerBackTitle: "戻る" }}
+                />
+                <Stack.Screen
+                  name="status/[id]/metadata"
+                  options={{ title: "メタデータ", headerBackTitle: "キャンセル" }}
                 />
                 <Stack.Screen
                   name="user/[screenName]/index"
