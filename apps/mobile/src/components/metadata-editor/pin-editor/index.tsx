@@ -1,5 +1,6 @@
 import {
   addPin,
+  applyItem,
   findInvalidPinIndex,
   isPinUntouched,
   MAX_PINS,
@@ -7,16 +8,22 @@ import {
   movePinDown,
   movePinUp,
   removePin,
+  toPinAuthor,
+  updateNewItem,
   type EditablePin,
 } from "@/models/epiclese-pin-editor";
 import type { Media } from "@/models/sdk-types";
-import type { EpiclesePlatformResponse } from "@natsuneko-laboratory/catalyst-sdk";
+import type { EpicleseAuthorResponse, EpiclesePlatformResponse } from "@natsuneko-laboratory/catalyst-sdk";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Modal, ScrollView } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { withUniwind } from "uniwind";
 
 import { PickerHeader } from "../picker-header";
+import { AuthorFormStep } from "../world-picker/author-form-step";
+import { AuthorSearchStep } from "../world-picker/author-search-step";
+import { ItemCreateStep } from "./item-create-step";
+import { ItemSearchStep } from "./item-search-step";
 import { PinCanvas } from "./pin-canvas";
 import { PinList } from "./pin-list";
 
@@ -35,10 +42,13 @@ type Props = {
 };
 
 // 1 枚の写真のピンを編集する。「完了」まで編集画面には反映しないので、開いている間は下書きを持つ
-export const PinEditorModal = ({ visible, media, pins, onCancel, onDone }: Props) => {
+export const PinEditorModal = ({ visible, media, pins, platform, platforms, onCancel, onDone }: Props) => {
   const [draft, setDraft] = useState(pins);
   const [step, setStep] = useState<Step>("canvas");
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  // アイテム検索の作者の絞り込み。ピンごとではなく、モーダルを開いている間は持ち越す
+  const [authorFilter, setAuthorFilter] = useState<EpicleseAuthorResponse | null>(null);
+  const activePin = activeIndex !== null ? draft[activeIndex] : undefined;
 
   useEffect(() => {
     if (!visible) return;
@@ -46,14 +56,24 @@ export const PinEditorModal = ({ visible, media, pins, onCancel, onDone }: Props
     setDraft(pins);
     setStep("canvas");
     setActiveIndex(null);
+    setAuthorFilter(null);
     // 開いた時点の値から始めればよく、開いている間に親の値が変わっても下書きは作り直さない
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
-  const openPin = useCallback((index: number) => {
+  // 既存アイテムを選んだピンと何も入力していないピンは検索から、新規作成の途中のピンはその入力から開く
+  const openPin = useCallback((index: number, pin: EditablePin) => {
     setActiveIndex(index);
-    setStep("item-search");
+    setStep(pin.reference || isPinUntouched(pin) ? "item-search" : "item-create");
   }, []);
+
+  const updateActive = useCallback(
+    (updater: (pin: EditablePin) => EditablePin) => {
+      if (activeIndex === null) return;
+      setDraft((prev) => prev.map((pin, i) => (i === activeIndex ? updater(pin) : pin)));
+    },
+    [activeIndex],
+  );
 
   const handleAdd = useCallback(
     (point: { x: number; y: number }) => {
@@ -64,7 +84,7 @@ export const PinEditorModal = ({ visible, media, pins, onCancel, onDone }: Props
       }
 
       setDraft(next.pins);
-      openPin(next.pins.length - 1);
+      openPin(next.pins.length - 1, next.pins[next.pins.length - 1]);
     },
     [draft, openPin],
   );
@@ -90,13 +110,35 @@ export const PinEditorModal = ({ visible, media, pins, onCancel, onDone }: Props
     onDone(draft);
   }, [draft, onDone]);
 
-  const handleRequestClose = useCallback(() => {
-    if (step === "canvas") {
-      onCancel();
-      return;
-    }
+  const deleteActive = useCallback(() => {
+    if (activeIndex !== null) setDraft((prev) => removePin(prev, activeIndex));
+    setActiveIndex(null);
+    setStep("canvas");
+  }, [activeIndex]);
 
-    backToCanvas();
+  const selectAuthor = useCallback(
+    (author: EpicleseAuthorResponse) => {
+      updateActive((pin) => updateNewItem(pin, { author: toPinAuthor(author) }));
+      setStep("item-create");
+    },
+    [updateActive],
+  );
+
+  // Android の戻る操作はモーダル全体ではなく 1 つ前のステップに戻す
+  const handleRequestClose = useCallback(() => {
+    switch (step) {
+      case "canvas":
+        return onCancel();
+      case "author-form":
+        return setStep("author-search");
+      case "author-search":
+        return setStep("item-create");
+      case "author-filter":
+        return setStep("item-search");
+      case "item-search":
+      case "item-create":
+        return backToCanvas();
+    }
   }, [backToCanvas, onCancel, step]);
 
   return (
@@ -121,20 +163,78 @@ export const PinEditorModal = ({ visible, media, pins, onCancel, onDone }: Props
                 pins={draft}
                 activeIndex={activeIndex}
                 onAdd={handleAdd}
-                onSelect={openPin}
+                onSelect={(index) => openPin(index, draft[index])}
                 onMove={(index, point) => setDraft((prev) => movePin(prev, index, point))}
               />
               <PinList
                 pins={draft}
-                onSelect={openPin}
+                onSelect={(index) => openPin(index, draft[index])}
                 onMoveUp={(index) => setDraft((prev) => movePinUp(prev, index))}
                 onMoveDown={(index) => setDraft((prev) => movePinDown(prev, index))}
                 onRemove={(index) => setDraft((prev) => removePin(prev, index))}
               />
             </ScrollView>
           </>
-        ) : (
-          <PickerHeader title="アイテムを選択" left={{ label: "戻る", onPress: backToCanvas }} />
+        ) : null}
+        {step === "item-search" && activePin && (
+          <ItemSearchStep
+            pin={activePin}
+            authorFilter={authorFilter}
+            onPickAuthorFilter={() => setStep("author-filter")}
+            onSelect={(item) => {
+              updateActive((pin) => applyItem(pin, item));
+              setActiveIndex(null);
+              setStep("canvas");
+            }}
+            onCreateNew={() => setStep("item-create")}
+            onDelete={deleteActive}
+            onBack={backToCanvas}
+          />
+        )}
+        {step === "item-create" && activePin && (
+          <ItemCreateStep
+            pin={activePin}
+            platform={platform}
+            onChange={(patch) => updateActive((pin) => updateNewItem(pin, patch))}
+            onPickAuthor={() => setStep("author-search")}
+            onBackToSearch={() => setStep("item-search")}
+            onDelete={deleteActive}
+            onBack={backToCanvas}
+          />
+        )}
+        {step === "author-filter" && (
+          <AuthorSearchStep
+            title="作者で絞り込む"
+            allOption={{
+              label: "すべての作者",
+              onSelect: () => {
+                setAuthorFilter(null);
+                setStep("item-search");
+              },
+            }}
+            onBack={() => setStep("item-search")}
+            onSelect={(author) => {
+              setAuthorFilter(author);
+              setStep("item-search");
+            }}
+          />
+        )}
+        {step === "author-search" && platform && (
+          <AuthorSearchStep
+            platform={platform}
+            title="作者"
+            onBack={() => setStep("item-create")}
+            onSelect={selectAuthor}
+            onRegister={() => setStep("author-form")}
+          />
+        )}
+        {step === "author-form" && platform && (
+          <AuthorFormStep
+            platform={platform}
+            platforms={platforms}
+            onBack={() => setStep("author-search")}
+            onSaved={selectAuthor}
+          />
         )}
       </UniGestureHandlerRootView>
     </Modal>

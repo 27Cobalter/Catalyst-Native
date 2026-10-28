@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { createStore, Provider } from "jotai";
 import { Alert } from "react-native";
 
@@ -41,11 +41,21 @@ const pin = (i: number, overrides: Partial<EditablePin> = {}): EditablePin => ({
 });
 const pins = (n: number) => Array.from({ length: n }, (_, i) => pin(i));
 
+const jacket = {
+  id: "i-1",
+  type: "cloth" as const,
+  name: "Jacket",
+  description: "",
+  externalUrl: null,
+  imageUrl: null,
+  author: { id: "a-1", platformIdentifier: "usr_1", platform: null, name: "Author" },
+};
+
 const renderEditor = async (initialPins: EditablePin[]) => {
   const client = {
     epiclese: {
       v1: {
-        items: { get: jest.fn(async () => ({ data: { items: [] } })) },
+        items: { get: jest.fn(async () => ({ data: { items: [jacket] } })) },
         authors: { get: jest.fn(async () => ({ data: { items: [] } })) },
       },
     },
@@ -133,5 +143,43 @@ describe("PinEditorModal", () => {
       ["i-2", 1],
       ["i-1", 2],
     ]);
+  });
+
+  it("何も入力せずに戻った新しいピンは消える", async () => {
+    const { onDone } = await renderEditor([]);
+
+    await tapCanvas(200, 200);
+    await fireEvent.press(screen.getByText("戻る"));
+    await fireEvent.press(screen.getByText("完了"));
+
+    expect(onDone).toHaveBeenCalledWith([]);
+  });
+
+  it("アイテムを選ぶとピンに入る", async () => {
+    const { onDone } = await renderEditor([]);
+
+    await tapCanvas(200, 200);
+    await act(async () => {
+      jest.advanceTimersByTime(300);
+    });
+    await fireEvent.press(screen.getByText("Jacket（Author）"));
+    await fireEvent.press(screen.getByText("完了"));
+
+    expect(onDone.mock.calls[0][0]).toEqual([
+      { x: 5000, y: 5000, order: 0, reference: "i-1", type: "cloth", name: "Jacket" },
+    ]);
+  });
+
+  it("新規作成で作者が無ければ完了で止まる", async () => {
+    const { onDone } = await renderEditor([]);
+
+    await tapCanvas(200, 200);
+    await fireEvent.press(screen.getByText("新しいアイテムを作成"));
+    await fireEvent.changeText(screen.getByPlaceholderText("例：ネオンジャケット"), "X");
+    await fireEvent.press(screen.getByText("戻る"));
+    await fireEvent.press(screen.getByText("完了"));
+
+    expect(onDone).not.toHaveBeenCalled();
+    expect(alert).toHaveBeenCalledWith("エラー", "1 番のピンの入力が足りません");
   });
 });
