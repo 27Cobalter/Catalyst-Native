@@ -14,6 +14,7 @@ import {
   type ApplyToAllSheetRef,
 } from "@/components/metadata-editor/apply-to-all-sheet";
 import { MetadataRow } from "@/components/metadata-editor/metadata-row";
+import { OriginalPhotoImport } from "@/components/metadata-editor/original-photo-import";
 import { PhotoPager } from "@/components/metadata-editor/photo-pager";
 import { PinEditorModal } from "@/components/metadata-editor/pin-editor";
 import { PlatformSheet, type PlatformSheetRef } from "@/components/metadata-editor/platform-sheet";
@@ -355,6 +356,13 @@ export default function StatusMetadataScreen() {
               onPress={() => setIsPinEditorVisible(true)}
             />
             <CatalystDivider className="ml-5 w-auto" />
+            {medias[index] && (
+              <OriginalPhotoImport
+                statusId={id}
+                mediaId={medias[index].id}
+                hidesAutoMetadata={current?.privacyMetadata ?? false}
+              />
+            )}
             <View className="min-h-16 flex-row items-center bg-light-background px-5 py-3 dark:bg-dark-surface">
               <CatalystText variant="subtitle" className="mr-4 flex-1 text-[15px] font-semibold">
                 自動設定されたメタデータを表示しない

@@ -36,6 +36,7 @@ jest.mock("@/components/metadata-editor/metadata-row", () => ({ MetadataRow: () 
 jest.mock("@/components/metadata-editor/user-picker-modal", () => ({ UserPickerModal: () => null }));
 jest.mock("@/components/metadata-editor/world-picker", () => ({ WorldPickerModal: () => null }));
 jest.mock("@/components/metadata-editor/pin-editor", () => ({ PinEditorModal: () => null }));
+jest.mock("@/components/metadata-editor/original-photo-import", () => ({ OriginalPhotoImport: () => null }));
 jest.mock("@/components/design-system", () => {
   const { Pressable, Text, View } = jest.requireActual("react-native");
   return {
