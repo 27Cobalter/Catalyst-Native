@@ -1,12 +1,14 @@
 import { CatalystSearchField } from "@/components/design-system";
 import { AlbumList } from "@/components/explorer/albums/list";
-import { AlbumsPlaceholder } from "@/components/explorer/albums/placeholder";
 import { ContestList } from "@/components/explorer/contests/list";
+import { ItemList } from "@/components/explorer/items/list";
 import { StatusesEmptyResult } from "@/components/explorer/statuses/empty-result";
 import { StatusesPlaceholder } from "@/components/explorer/statuses/placeholder";
+import { TrendList } from "@/components/explorer/trends/list";
 import { UserList } from "@/components/explorer/users/list";
 import { UsersPlaceholder } from "@/components/explorer/users/placeholder";
 import { Tab, Tabs } from "@/components/tabs";
+import { WeeklyThemeList } from "@/components/theme/list";
 import { TimelineBase, TimelineHandle } from "@/components/timeline/base";
 import { clientAtom } from "@/models/atoms/credential";
 import { useScrollToTop } from "expo-router/react-navigation";
@@ -15,11 +17,15 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { View } from "react-native";
 import { v4 } from "uuid";
 
+// Web 版の検索と同じ並び
 const TABS: Tab[] = [
   { key: "statuses", label: "投稿" },
-  { key: "albums", label: "アルバム" },
   { key: "users", label: "ユーザー" },
+  { key: "trends", label: "トレンド" },
+  { key: "albums", label: "アルバム" },
+  { key: "items", label: "アイテム" },
   { key: "contests", label: "コンテスト" },
+  { key: "themes", label: "お題" },
 ];
 
 const CURRENT_CONTEST_STATES = ["opening", "voting", "closing", "electing"];
@@ -28,12 +34,17 @@ export default function HomeScreen() {
   const [state, setState] = useState<string>("");
   const [query, setQuery] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>(TABS[0].key);
+  // ページャーは全タブを最初から描画するので、一度開いたタブだけ中身を出して、開くまで読み込みを始めない
+  const [visitedTabs, setVisitedTabs] = useState<ReadonlySet<string>>(() => new Set([TABS[0].key]));
   const client = useAtomValue(clientAtom);
   const [stateKey, setStateKey] = useState(v4());
   const timelineRef = useRef<TimelineHandle>(null);
-  const albumsRef = useRef<TimelineHandle>(null);
   const usersRef = useRef<TimelineHandle>(null);
+  const trendsRef = useRef<TimelineHandle>(null);
+  const albumsRef = useRef<TimelineHandle>(null);
+  const itemsRef = useRef<TimelineHandle>(null);
   const contestsRef = useRef<TimelineHandle>(null);
+  const themesRef = useRef<TimelineHandle>(null);
 
   const timeline = useCallback(
     async (since: string | null, until: string | null) => {
@@ -59,19 +70,16 @@ export default function HomeScreen() {
 
   const scroller = useRef<{ scrollToTop: () => void }>(null);
   const scrollActiveTimelineToTopHandler = useMemo(() => {
-    return {
-      scrollToTop: () => {
-        if (activeTab === "statuses") {
-          timelineRef.current?.scrollToTop();
-        } else if (activeTab === "albums") {
-          albumsRef.current?.scrollToTop();
-        } else if (activeTab === "users") {
-          usersRef.current?.scrollToTop();
-        } else if (activeTab === "contests") {
-          contestsRef.current?.scrollToTop();
-        }
-      },
+    const refs: Record<string, React.RefObject<TimelineHandle | null>> = {
+      statuses: timelineRef,
+      users: usersRef,
+      trends: trendsRef,
+      albums: albumsRef,
+      items: itemsRef,
+      contests: contestsRef,
+      themes: themesRef,
     };
+    return { scrollToTop: () => refs[activeTab]?.current?.scrollToTop() };
   }, [activeTab]);
 
   useEffect(() => {
@@ -88,15 +96,21 @@ export default function HomeScreen() {
           onChangeText={setState}
           onClear={() => setState("")}
           onSubmitEditing={runQuery}
-          placeholder="投稿、ユーザー、アルバム、コンテストを検索"
+          placeholder="検索"
           returnKeyType="search"
         />
       </View>
       <View className="flex-1">
         <Tabs
           tabs={TABS}
-          onTabChange={(w) => setActiveTab(w.key)}
+          scrollable
+          onTabChange={(w) => {
+            setActiveTab(w.key);
+            setVisitedTabs((prev) => (prev.has(w.key) ? prev : new Set(prev).add(w.key)));
+          }}
           renderScene={(w) => {
+            if (!visitedTabs.has(w.key)) return null;
+
             switch (w.key) {
               case "statuses": {
                 if (query) {
@@ -114,20 +128,24 @@ export default function HomeScreen() {
                 return <StatusesPlaceholder />;
               }
 
-              case "albums": {
-                if (query) {
-                  return <AlbumList ref={albumsRef} query={query} />;
-                }
-
-                return <AlbumsPlaceholder />;
-              }
-
               case "users": {
                 if (query) {
                   return <UserList ref={usersRef} query={query} />;
                 }
 
                 return <UsersPlaceholder />;
+              }
+
+              case "trends": {
+                return <TrendList ref={trendsRef} />;
+              }
+
+              case "albums": {
+                return <AlbumList ref={albumsRef} query={query} />;
+              }
+
+              case "items": {
+                return <ItemList ref={itemsRef} query={query || undefined} />;
               }
 
               case "contests": {
@@ -139,6 +157,10 @@ export default function HomeScreen() {
                     query={query || undefined}
                   />
                 );
+              }
+
+              case "themes": {
+                return <WeeklyThemeList ref={themesRef} query={query} />;
               }
             }
           }}

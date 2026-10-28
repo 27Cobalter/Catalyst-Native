@@ -29,7 +29,6 @@ import { metadataRevisionAtomFamily } from "@/models/atoms/epiclese-metadata";
 import { openUrlWithBrowser } from "@/models/browser-settings";
 import {
   EPICLESE_ITEM_TYPE_LABELS,
-  getEpicleseItemUrl,
   getEpicleseWorld,
   type EpicleseMetadata,
   type EpicleseReference,
@@ -688,7 +687,7 @@ export default function StatusDetailsPage() {
                           <Pressable
                             accessibilityRole="link"
                             className="min-w-0 shrink active:opacity-75"
-                            onPress={() => openUrlWithBrowser(getEpicleseItemUrl(item.reference))}
+                            onPress={() => router.push(`/items/${item.reference}`)}
                           >
                             <CatalystText variant="caption" tone="link" numberOfLines={1}>
                               {item.name}

@@ -75,5 +75,3 @@ export const getEpicleseWorld = (meta: EpicleseMediaMetadata): EpicleseWorld | n
   const platformIdentifier = meta.world?.platformIdentifier || meta.additionalData2?.World?.ref || "";
   return name ? { name, platformIdentifier } : null;
 };
-
-export const getEpicleseItemUrl = (id: string) => `https://epiclese.natsuneko.com/item/${id}`;
