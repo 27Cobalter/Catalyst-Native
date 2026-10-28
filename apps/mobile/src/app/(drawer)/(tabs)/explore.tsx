@@ -2,6 +2,7 @@ import { CatalystSearchField } from "@/components/design-system";
 import { AlbumList } from "@/components/explorer/albums/list";
 import { AlbumsPlaceholder } from "@/components/explorer/albums/placeholder";
 import { ContestList } from "@/components/explorer/contests/list";
+import { ItemList } from "@/components/explorer/items/list";
 import { StatusesEmptyResult } from "@/components/explorer/statuses/empty-result";
 import { StatusesPlaceholder } from "@/components/explorer/statuses/placeholder";
 import { TrendList } from "@/components/explorer/trends/list";
@@ -23,6 +24,7 @@ const TABS: Tab[] = [
   { key: "users", label: "ユーザー" },
   { key: "trends", label: "トレンド" },
   { key: "albums", label: "アルバム" },
+  { key: "items", label: "アイテム" },
   { key: "contests", label: "コンテスト" },
   { key: "themes", label: "お題" },
 ];
@@ -41,6 +43,7 @@ export default function HomeScreen() {
   const usersRef = useRef<TimelineHandle>(null);
   const trendsRef = useRef<TimelineHandle>(null);
   const albumsRef = useRef<TimelineHandle>(null);
+  const itemsRef = useRef<TimelineHandle>(null);
   const contestsRef = useRef<TimelineHandle>(null);
   const themesRef = useRef<TimelineHandle>(null);
 
@@ -73,6 +76,7 @@ export default function HomeScreen() {
       users: usersRef,
       trends: trendsRef,
       albums: albumsRef,
+      items: itemsRef,
       contests: contestsRef,
       themes: themesRef,
     };
@@ -143,6 +147,10 @@ export default function HomeScreen() {
                 }
 
                 return <AlbumsPlaceholder />;
+              }
+
+              case "items": {
+                return <ItemList ref={itemsRef} query={query || undefined} />;
               }
 
               case "contests": {
