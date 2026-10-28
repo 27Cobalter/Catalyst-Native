@@ -25,7 +25,7 @@ import {
   requestPermissionsAsync as requestMediaLibraryPermissions,
 } from "expo-media-library";
 import { useAtomValue } from "jotai";
-import { Download, EyeOff, ImageDown, Share2 } from "lucide-react-native";
+import { Download, EyeOff, ImageDown, Share2, Tags } from "lucide-react-native";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Platform, Pressable, Share, Text, View, useColorScheme, useWindowDimensions } from "react-native";
 import Toast from "react-native-toast-message";
@@ -317,9 +317,25 @@ export const MediaCarousel = memo(({ medias, createdAt, onIndexChange, pins }: P
         );
       }
 
+      // タイムラインではピンの座標を取っていないので、今見ている写真にアイテム情報がある目印だけを出す。
+      // 投稿詳細のタグ表示の切り替えボタンと同じ形・同じ右下に置き、画面によってアイコンの場所が変わらないようにする。
+      // 押せない目印なので、カルーセルのスワイプやタップは邪魔しない。古い形式の投稿には hasReference が無いことがある
+      if (!pins) {
+        return medias[index]?.hasReference ? (
+          <View
+            pointerEvents="none"
+            accessible
+            accessibilityLabel="アイテム情報あり"
+            className="absolute right-3 bottom-3 size-9 items-center justify-center rounded-full bg-black/40"
+          >
+            <Tags size={16} color="white" />
+          </View>
+        ) : null;
+      }
+
       // Photo pin overlay (座標付きメタデータ) — 現在表示中の media のピンのみ重ねる
       const currentMedia = medias[index];
-      const references = currentMedia ? pins?.[currentMedia.id] : undefined;
+      const references = currentMedia ? pins[currentMedia.id] : undefined;
       if (!currentMedia || !references || references.length === 0) return null;
 
       return (

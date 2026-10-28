@@ -28,7 +28,7 @@ type Props = {
 
 export const ReactionNotification = memo(({ notification }: Props) => {
   const router = useRouter();
-  const { isGrouped, entities } = notification;
+  const { isGrouped, entities, hasMore } = notification;
   const occurredBy = entities[0]?.occurredBy;
   const belongsTo = notification.belongsTo as unknown as CatalystStatus | null;
 
@@ -64,7 +64,7 @@ export const ReactionNotification = memo(({ notification }: Props) => {
         )}
 
         <Text className="text-sm text-light-text dark:text-dark-text">
-          {entities.length > 1 ? `${entities.length}回リアクションされました` : "リアクションされました"}
+          {entities.length > 1 ? `${entities.length}回${hasMore ? "以上" : ""}リアクションされました` : "リアクションされました"}
         </Text>
 
         {occurredBy && isActivityPubRemoteActor(occurredBy) && entities.length === 1 ? (
