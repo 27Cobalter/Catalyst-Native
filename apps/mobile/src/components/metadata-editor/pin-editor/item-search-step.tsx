@@ -7,6 +7,7 @@ import { useAtomValue } from "jotai";
 import { Check } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
 import { MetadataRow } from "../metadata-row";
@@ -34,6 +35,7 @@ export const ItemSearchStep = ({
   onBack,
 }: Props) => {
   const client = useAtomValue(clientAtom);
+  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState("");
   const authorId = authorFilter?.id;
 
@@ -77,6 +79,8 @@ export const ItemSearchStep = ({
           data={results}
           keyExtractor={(item) => item.id}
           keyboardShouldPersistTaps="handled"
+          // 末尾の行がホームインジケーターに重ならないよう、下の安全領域ぶん余白を取る
+          contentContainerStyle={{ paddingBottom: insets.bottom }}
           ListEmptyComponent={
             isLoading ? (
               <ActivityIndicator className="py-8" colorClassName="accent-light-tint dark:accent-dark-tint" />

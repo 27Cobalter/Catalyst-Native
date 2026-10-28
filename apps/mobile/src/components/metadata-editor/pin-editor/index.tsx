@@ -17,6 +17,7 @@ import type { Media } from "@/models/sdk-types";
 import type { EpicleseAuthorResponse, EpiclesePlatformResponse } from "@natsuneko-laboratory/catalyst-sdk";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Modal, ScrollView } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { withUniwind } from "uniwind";
 
@@ -44,6 +45,7 @@ type Props = {
 
 // 1 枚の写真のピンを編集する。「完了」まで編集画面には反映しないので、開いている間は下書きを持つ
 export const PinEditorModal = ({ visible, media, pins, platform, platforms, onCancel, onDone }: Props) => {
+  const insets = useSafeAreaInsets();
   const [draft, setDraft] = useState(pins);
   const [step, setStep] = useState<Step>("canvas");
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -182,7 +184,8 @@ export const PinEditorModal = ({ visible, media, pins, platform, platforms, onCa
               onSelect={(index) => openPin(index, draft[index])}
               onMove={(index, point) => setDraft((prev) => movePin(prev, index, point))}
             />
-            <ScrollView className="flex-1">
+            {/* 一覧の末尾がホームインジケーターに重ならないよう、下の安全領域ぶん余白を取る */}
+            <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: insets.bottom }}>
               <PinList
                 pins={draft}
                 onSelect={(index) => openPin(index, draft[index])}
