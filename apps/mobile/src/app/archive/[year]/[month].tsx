@@ -1,0 +1,112 @@
+import { CatalystEmptyState, CatalystText } from "@/components/design-system";
+import { TimelineBase } from "@/components/timeline/base";
+import { formatArchiveMonth, useArchiveMonths, type ArchiveMonth } from "@/hooks/use-archive-months";
+import { clientAtom } from "@/models/atoms/credential";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useAtomValue } from "jotai";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react-native";
+import { useCallback } from "react";
+import { Pressable, View } from "react-native";
+import { withUniwind } from "uniwind";
+
+const UniCalendarDaysIcon = withUniwind(CalendarDays);
+const UniChevronLeftIcon = withUniwind(ChevronLeft);
+const UniChevronRightIcon = withUniwind(ChevronRight);
+
+type MonthLinkProps = {
+  target: ArchiveMonth | undefined;
+  current: { year: number; month: number };
+  direction: "newer" | "older";
+  onPress: (target: ArchiveMonth) => void;
+};
+
+// 行き先の月を添えた前後移動のボタン。同じ年なら「11月」、年をまたぐときは「2025年12月」と出す
+const MonthLink = ({ target, current, direction, onPress }: MonthLinkProps) => {
+  // 行き先が無い側も幅を取っておき、見出しが中央からずれないようにする
+  if (!target) return <View className="flex-1" />;
+
+  const label = target.year === current.year ? `${target.month}月` : formatArchiveMonth(target);
+  return (
+    <View className={direction === "newer" ? "flex-1 items-start" : "flex-1 items-end"}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${direction === "newer" ? "新しい月" : "古い月"}: ${formatArchiveMonth(target)}`}
+        onPress={() => onPress(target)}
+        className="h-10 flex-row items-center gap-0.5 rounded-lg px-2 active:opacity-60"
+      >
+        {direction === "newer" ? <UniChevronLeftIcon size={18} className="text-light-tint dark:text-dark-tint" /> : null}
+        <CatalystText variant="label" tone="tint">
+          {label}
+        </CatalystText>
+        {direction === "older" ? <UniChevronRightIcon size={18} className="text-light-tint dark:text-dark-tint" /> : null}
+      </Pressable>
+    </View>
+  );
+};
+
+const ArchiveMonthEmpty = () => <CatalystEmptyState icon={<UniCalendarDaysIcon />} title="この月の投稿はありません" />;
+
+export default function ArchiveMonthPage() {
+  const params = useLocalSearchParams<{ year: string; month: string }>();
+  const year = Number(params.year);
+  const month = Number(params.month);
+  const router = useRouter();
+  const client = useAtomValue(clientAtom);
+  const { months } = useArchiveMonths();
+
+  // 前後の月は、投稿のある月だけをたどる (months は新しい順)
+  const index = months.findIndex((w) => w.year === year && w.month === month);
+  const newer = index > 0 ? months[index - 1] : undefined;
+  const older = index >= 0 ? months[index + 1] : undefined;
+  const count = index >= 0 ? months[index].count : undefined;
+
+  const fetcher = useCallback(
+    async (since: string | null, until: string | null) => {
+      if (!client || !year || !month) return [];
+
+      const { data } = await client.catalyst.v1.timeline.archive.get({
+        query: { year, month, since: since ?? undefined, until: until ?? undefined },
+        throwOnError: true,
+      });
+      return data.statuses;
+    },
+    [client, year, month],
+  );
+
+  // 月を移るたびに画面を積むと戻るのが大変なので、置き換えて月の一覧へ 1 回で戻れるようにする
+  const moveTo = useCallback(
+    (target: ArchiveMonth) => router.replace(`/archive/${target.year}/${target.month}`),
+    [router],
+  );
+
+  // 月の一覧 (新しい順) と同じ向きにそろえ、左を新しい月、右を古い月にする
+  const ListHeaderComponent = useCallback(
+    () => (
+      <View className="flex-row items-center gap-2 border-b border-light-divider px-2 py-3 dark:border-dark-divider">
+        <MonthLink target={newer} current={{ year, month }} direction="newer" onPress={moveTo} />
+        <View className="items-center">
+          <CatalystText variant="title">{formatArchiveMonth({ year, month })}</CatalystText>
+          {count !== undefined ? (
+            <CatalystText variant="caption" tone="muted">
+              {count} 件の投稿
+            </CatalystText>
+          ) : null}
+        </View>
+        <MonthLink target={older} current={{ year, month }} direction="older" onPress={moveTo} />
+      </View>
+    ),
+    [count, month, moveTo, newer, older, year],
+  );
+
+  return (
+    <View className="flex-1 bg-light-background dark:bg-dark-background">
+      <TimelineBase
+        key={`${year}-${month}`}
+        fetcher={fetcher}
+        ListHeaderComponent={ListHeaderComponent}
+        ListEmptyComponent={ArchiveMonthEmpty}
+        ListEmptyComponentStyle={{ minHeight: "80%" }}
+      />
+    </View>
+  );
+}

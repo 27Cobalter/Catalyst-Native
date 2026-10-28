@@ -257,6 +257,14 @@ export default Sentry.wrap(function RootLayout() {
                   options={{ title: "お題", headerBackTitle: "戻る" }}
                 />
                 <Stack.Screen
+                  name="archive/index"
+                  options={{ title: "月間アーカイブ", headerBackTitle: "戻る" }}
+                />
+                <Stack.Screen
+                  name="archive/[year]/[month]"
+                  options={{ title: "月間アーカイブ", headerBackTitle: "戻る" }}
+                />
+                <Stack.Screen
                   name="gallery"
                   options={{ title: "ギャラリー", headerBackTitle: "戻る" }}
                 />
