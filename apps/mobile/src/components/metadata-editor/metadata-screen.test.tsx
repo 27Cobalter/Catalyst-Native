@@ -31,12 +31,16 @@ jest.mock("expo-router", () => ({
 jest.mock("@/components/metadata-editor/photo-pager", () => ({ PhotoPager: () => null }));
 jest.mock("@/components/metadata-editor/thumbnail-strip", () => ({ ThumbnailStrip: () => null }));
 jest.mock("@/components/metadata-editor/apply-to-all-sheet", () => ({ ApplyToAllSheet: () => null }));
+jest.mock("@/components/metadata-editor/platform-sheet", () => ({ PlatformSheet: () => null }));
+jest.mock("@/components/metadata-editor/metadata-row", () => ({ MetadataRow: () => null }));
 jest.mock("@/components/design-system", () => {
   const { Pressable, Text, View } = jest.requireActual("react-native");
   return {
+    CatalystAvatar: View,
     CatalystButton: View,
     CatalystButtonIcon: View,
     CatalystButtonText: Text,
+    CatalystDivider: View,
     CatalystEmptyState: ({ title }: { title: string }) => <Text>{title}</Text>,
     CatalystSwitch: ({ value, onValueChange }: { value: boolean; onValueChange: (value: boolean) => void }) => (
       <Pressable
@@ -49,7 +53,12 @@ jest.mock("@/components/design-system", () => {
   };
 });
 jest.mock("uniwind", () => ({ withUniwind: (component: unknown) => component }));
-jest.mock("lucide-react-native", () => ({ Copy: () => null, EyeOff: () => null }));
+jest.mock("lucide-react-native", () => ({
+  Copy: () => null,
+  EyeOff: () => null,
+  MapPin: () => null,
+  Users: () => null,
+}));
 
 const createClient = () => ({
   catalyst: {

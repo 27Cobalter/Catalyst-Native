@@ -1,7 +1,9 @@
 import {
+  CatalystAvatar,
   CatalystButton,
   CatalystButtonIcon,
   CatalystButtonText,
+  CatalystDivider,
   CatalystEmptyState,
   CatalystSwitch,
   CatalystText,
@@ -11,34 +13,46 @@ import {
   type ApplyToAllOption,
   type ApplyToAllSheetRef,
 } from "@/components/metadata-editor/apply-to-all-sheet";
+import { MetadataRow } from "@/components/metadata-editor/metadata-row";
 import { PhotoPager } from "@/components/metadata-editor/photo-pager";
+import { PlatformSheet, type PlatformSheetRef } from "@/components/metadata-editor/platform-sheet";
 import { ThumbnailStrip } from "@/components/metadata-editor/thumbnail-strip";
 import { accountAtom } from "@/models/atoms/account";
 import { clientAtom } from "@/models/atoms/credential";
 import { metadataRevisionAtomFamily } from "@/models/atoms/epiclese-metadata";
 import {
   applyToAll,
+  collectUserProfiles,
   isMetadataConfigured,
   isMetadataDirty,
+  setPlatform,
   toEditableMetadata,
   type ApplyToAllField,
   type EditableMediaMetadata,
+  type UserProfile,
 } from "@/models/epiclese-metadata-editor";
 import type { Media } from "@/models/sdk-types";
+import type { EpiclesePlatformResponse } from "@natsuneko-laboratory/catalyst-sdk";
 import { Stack, useLocalSearchParams, usePreventRemove, useRouter } from "expo-router";
 import { useAtomValue, useSetAtom } from "jotai";
-import { Copy, EyeOff } from "lucide-react-native";
+import { Copy, EyeOff, MapPin, Users } from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, View } from "react-native";
 import { withUniwind } from "uniwind";
 
 const UniCopy = withUniwind(Copy);
 const UniEyeOff = withUniwind(EyeOff);
+const UniMapPin = withUniwind(MapPin);
+const UniUsers = withUniwind(Users);
 
 const HIDE_AUTO_DESCRIPTION =
   "ResoniteScreenshotExtensions や VRCX などのツールで画像に埋め込まれたメタデータがある場合でも、表示したくないときは ON にしてください。編集画面から追加したメタデータは引き続き表示されます。";
 
-const APPLY_TO_ALL_OPTIONS: ApplyToAllOption[] = [{ field: "privacyMetadata", label: "表示設定", icon: UniEyeOff }];
+const APPLY_TO_ALL_OPTIONS: ApplyToAllOption[] = [
+  { field: "platformAndWorld", label: "プラットフォームとワールド", icon: UniMapPin },
+  { field: "users", label: "写っている人", icon: UniUsers },
+  { field: "privacyMetadata", label: "表示設定", icon: UniEyeOff },
+];
 
 type LoadState = { kind: "loading" } | { kind: "forbidden" } | { kind: "error" } | { kind: "ready"; medias: Media[] };
 
@@ -58,7 +72,10 @@ export default function StatusMetadataScreen() {
   const [index, setIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [platforms, setPlatforms] = useState<EpiclesePlatformResponse[]>([]);
+  const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
   const applyToAllSheetRef = useRef<ApplyToAllSheetRef>(null);
+  const platformSheetRef = useRef<PlatformSheetRef>(null);
 
   const isDirty = isMetadataDirty(initialItems, items);
   const canSave = isDirty && !isSubmitting;
@@ -94,6 +111,8 @@ export default function StatusMetadataScreen() {
         if (cancelled) return;
 
         const editable = toEditableMetadata(data.status.medias, metadata, platforms);
+        setPlatforms(platforms);
+        setUserProfiles(collectUserProfiles(metadata));
         setInitialItems(editable);
         setItems(editable);
         setIndex(0);
@@ -111,11 +130,21 @@ export default function StatusMetadataScreen() {
     };
   }, [id, userId, client, reloadKey]);
 
-  const handleTogglePrivacy = useCallback(
-    (value: boolean) => {
-      setItems((prev) => prev.map((item, i) => (i === index ? { ...item, privacyMetadata: value } : item)));
+  const updateCurrent = useCallback(
+    (updater: (item: EditableMediaMetadata) => EditableMediaMetadata) => {
+      setItems((prev) => prev.map((item, i) => (i === index ? updater(item) : item)));
     },
     [index],
+  );
+
+  const handleTogglePrivacy = useCallback(
+    (value: boolean) => updateCurrent((item) => ({ ...item, privacyMetadata: value })),
+    [updateCurrent],
+  );
+
+  const handleSelectPlatform = useCallback(
+    (platformId: string | undefined) => updateCurrent((item) => setPlatform(item, platformId)),
+    [updateCurrent],
   );
 
   const handleApplyToAll = useCallback(
@@ -198,6 +227,8 @@ export default function StatusMetadataScreen() {
 
   const { medias } = loadState;
   const current = items[index];
+  const currentPlatform = platforms.find((platform) => platform.id === current?.platform);
+  const currentUsers = current?.users ?? [];
 
   return (
     <>
@@ -239,6 +270,52 @@ export default function StatusMetadataScreen() {
             <CatalystText variant="caption" tone="subtle" className="px-5 pb-2">
               この写真の設定
             </CatalystText>
+            <MetadataRow
+              label="プラットフォーム"
+              value={currentPlatform?.name ?? "未選択"}
+              onPress={() => platformSheetRef.current?.open()}
+            />
+            <CatalystDivider className="ml-5 w-auto" />
+            <MetadataRow
+              label="ワールド"
+              disabled={!currentPlatform}
+              value={
+                !currentPlatform
+                  ? "先にプラットフォームを選択してください"
+                  : current?.world
+                    ? [current.world.name, current.world.author?.name].filter(Boolean).join("・")
+                    : "未選択"
+              }
+              onPress={() => {}}
+            />
+            <CatalystDivider className="ml-5 w-auto" />
+            <MetadataRow
+              label="写っている人"
+              value={
+                currentUsers.length === 0 ? (
+                  "未選択"
+                ) : (
+                  <>
+                    <View className="flex-row">
+                      {currentUsers.slice(0, 3).map((user, i) => (
+                        <CatalystAvatar
+                          key={user.id}
+                          size="sm"
+                          source={userProfiles[user.id]?.iconUrl}
+                          fallback={userProfiles[user.id]?.displayName ?? user.id.slice(0, 8)}
+                          className={
+                            i > 0 ? "-ml-2 border-2 border-light-background dark:border-dark-surface" : undefined
+                          }
+                        />
+                      ))}
+                    </View>
+                    <CatalystText tone="muted">{currentUsers.length} 人</CatalystText>
+                  </>
+                )
+              }
+              onPress={() => {}}
+            />
+            <CatalystDivider className="ml-5 w-auto" />
             <View className="min-h-16 flex-row items-center bg-light-background px-5 py-3 dark:bg-dark-surface">
               <CatalystText variant="subtitle" className="mr-4 flex-1 text-[15px] font-semibold">
                 自動設定されたメタデータを表示しない
@@ -263,6 +340,12 @@ export default function StatusMetadataScreen() {
         </ScrollView>
       </View>
       <ApplyToAllSheet ref={applyToAllSheetRef} options={APPLY_TO_ALL_OPTIONS} onSelect={handleApplyToAll} />
+      <PlatformSheet
+        ref={platformSheetRef}
+        platforms={platforms}
+        value={current?.platform}
+        onSelect={handleSelectPlatform}
+      />
     </>
   );
 }
