@@ -23,7 +23,7 @@ type Props = {
 
 export const FleetReactionNotification = memo(({ notification }: Props) => {
   const router = useRouter();
-  const { entities } = notification;
+  const { entities, hasMore } = notification;
   const belongsTo = notification.belongsTo as unknown as CatalystFleet | null;
 
   const navigateToReactions = () => {
@@ -52,7 +52,7 @@ export const FleetReactionNotification = memo(({ notification }: Props) => {
         <Pressable onPress={navigateToReactions}>
           <Text className="text-sm text-light-text dark:text-dark-text">
             {entities.length > 1
-              ? `あなたの Fleet に ${entities.length} 件のリアクションが付きました`
+              ? `あなたの Fleet に ${entities.length} 件${hasMore ? "以上" : ""}のリアクションが付きました`
               : "あなたの Fleet にリアクションが付きました"}
           </Text>
         </Pressable>

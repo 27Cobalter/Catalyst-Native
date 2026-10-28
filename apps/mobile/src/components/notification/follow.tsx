@@ -9,7 +9,7 @@ type Props = {
 };
 
 export const FollowNotification = memo(({ notification }: Props) => {
-  const { entities } = notification;
+  const { entities, hasMore } = notification;
   const occurredBy = entities[0]?.occurredBy;
   const isGrouped = entities.length > 1 && !entities.every((e) => e.occurredBy.id === entities[0].occurredBy.id);
   const isRemote = occurredBy ? isActivityPubRemoteActor(occurredBy) : false;
@@ -29,7 +29,7 @@ export const FollowNotification = memo(({ notification }: Props) => {
       <View className="flex-1 gap-2">
         <Text className="text-sm text-light-text dark:text-dark-text">
           {isGrouped
-            ? `${entities.length}人にフォローされました`
+            ? `${entities.length}人${hasMore ? "以上" : ""}にフォローされました`
             : isRemote
               ? `${occurredBy?.displayName ?? ""}さんにフォローされました`
               : `${occurredBy?.displayName ?? ""}さんにフォローされました`}
