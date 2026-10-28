@@ -8,6 +8,7 @@ import { PickerHeader } from "./picker-header";
 import { Check, X } from "lucide-react-native";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Modal, Pressable, ScrollView, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
 const UniCheck = withUniwind(Check);
@@ -24,6 +25,7 @@ type Props = {
 // 「完了」を押すまで編集画面には反映しないので、開いている間は下書きを持つ
 export const UserPickerModal = ({ visible, users, profiles, onCancel, onDone }: Props) => {
   const client = useAtomValue(clientAtom);
+  const insets = useSafeAreaInsets();
   const [draft, setDraft] = useState(users);
   const [draftProfiles, setDraftProfiles] = useState(profiles);
   const [query, setQuery] = useState("");
@@ -129,6 +131,8 @@ export const UserPickerModal = ({ visible, users, profiles, onCancel, onDone }: 
             data={results}
             keyExtractor={(user) => user.id}
             keyboardShouldPersistTaps="handled"
+            // 末尾の行がホームインジケーターに重ならないよう、下の安全領域ぶん余白を取る
+            contentContainerStyle={{ paddingBottom: insets.bottom }}
             ListEmptyComponent={
               isLoading ? (
                 <ActivityIndicator className="py-8" colorClassName="accent-light-tint dark:accent-dark-tint" />
