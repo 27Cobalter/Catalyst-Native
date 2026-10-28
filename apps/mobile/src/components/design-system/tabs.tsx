@@ -1,5 +1,6 @@
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import React, { useMemo, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   FlatList,
@@ -7,6 +8,8 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
   Pressable,
+  ScrollView,
+  type ScrollViewInstance,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -38,7 +41,11 @@ export type CatalystTabsProps = {
   onTabChange?: (tab: CatalystTab, index: number) => void;
   onSwipeRightFromStart?: () => void;
   swipeRightThreshold?: number;
+  /** タブを文字の幅で並べ、収まらない分はタブバーを横スクロールさせる */
+  scrollable?: boolean;
 };
+
+type TabFrame = { x: number; width: number };
 
 export function CatalystTabs({
   tabs,
@@ -47,6 +54,7 @@ export function CatalystTabs({
   onTabChange,
   onSwipeRightFromStart,
   swipeRightThreshold = 70,
+  scrollable = false,
 }: CatalystTabsProps) {
   const [activeIndex, setActiveIndex] = useState(defaultIndex);
   const reducedMotion = useReducedMotion();
@@ -54,15 +62,45 @@ export function CatalystTabs({
   const [scrollX] = useState(() => new Animated.Value(defaultIndex * screenWidth));
   const flatListRef = useRef<FlatList<CatalystTab>>(null);
   const isScrollingProgrammatically = useRef(false);
+  const tabBarRef = useRef<ScrollViewInstance>(null);
+  const [measuredFrames, setMeasuredFrames] = useState<(TabFrame | undefined)[]>([]);
 
+  // 均等幅のときはタブの位置を計算で求め、横スクロールのときは実際に描画された位置を使う
   const tabWidth = screenWidth / tabs.length;
-  const indicatorWidth = Math.min(64, Math.max(36, tabWidth * 0.44));
+  const frames = scrollable ? measuredFrames : tabs.map((_, i) => ({ x: i * tabWidth, width: tabWidth }));
+  const isMeasured = tabs.every((_, i) => frames[i]);
+  const indicatorWidthOf = (i: number) => Math.min(64, Math.max(36, (frames[i]?.width ?? 0) * 0.44));
 
-  const indicatorTranslateX = scrollX.interpolate({
-    inputRange: tabs.map((_, i) => i * screenWidth),
-    outputRange: tabs.map((_, i) => i * tabWidth + (tabWidth - indicatorWidth) / 2),
+  const inputRange = tabs.map((_, i) => i * screenWidth);
+  const indicatorWidth = scrollX.interpolate({
+    inputRange,
+    outputRange: tabs.map((_, i) => indicatorWidthOf(i)),
     extrapolate: "clamp",
   });
+  const indicatorTranslateX = scrollX.interpolate({
+    inputRange,
+    outputRange: tabs.map((_, i) => (frames[i]?.x ?? 0) + ((frames[i]?.width ?? 0) - indicatorWidthOf(i)) / 2),
+    extrapolate: "clamp",
+  });
+
+  // 選んだタブが端で見切れているときだけ、隣のタブが少し覗く位置までタブバーをスクロールする。
+  // 見えているタブでもスクロールさせると、タブバーの動きとインジケーターの動きが重なって揺れて見える
+  const tabBarScrollX = useRef(0);
+  const activeFrame = scrollable ? measuredFrames[activeIndex] : undefined;
+  useEffect(() => {
+    if (!activeFrame) return;
+    const margin = 48;
+    const left = tabBarScrollX.current;
+    let x: number | null = null;
+    if (activeFrame.x < left) {
+      x = Math.max(0, activeFrame.x - margin);
+    } else if (activeFrame.x + activeFrame.width > left + screenWidth) {
+      x = activeFrame.x + activeFrame.width + margin - screenWidth;
+    }
+    if (x !== null) {
+      tabBarRef.current?.scrollTo({ x, animated: !reducedMotion });
+    }
+  }, [activeFrame, screenWidth, reducedMotion]);
 
   const handleTabPress = (index: number) => {
     isScrollingProgrammatically.current = true;
@@ -120,41 +158,76 @@ export function CatalystTabs({
     <View style={{ width: screenWidth, flex: 1 }}>{renderScene(item)}</View>
   );
 
+  const tabBar = (
+    <View className="relative flex-row">
+      {tabs.map((tab, index) => {
+        const isActive = index === activeIndex;
+        return (
+          <Pressable
+            key={tab.key}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: isActive }}
+            className={cn("h-12 items-center justify-center", scrollable ? "px-4" : "flex-1")}
+            onPress={() => handleTabPress(index)}
+            onLayout={
+              scrollable
+                ? (e) => {
+                    const { x, width } = e.nativeEvent.layout;
+                    setMeasuredFrames((prev) => {
+                      const next = [...prev];
+                      next[index] = { x, width };
+                      return next;
+                    });
+                  }
+                : undefined
+            }
+          >
+            <CatalystText
+              variant="label"
+              tone={isActive ? "default" : "subtle"}
+              className={isActive ? "font-bold" : undefined}
+            >
+              {tab.label}
+            </CatalystText>
+          </Pressable>
+        );
+      })}
+      {scrollable ? null : <CatalystDivider className="absolute bottom-0" />}
+      <Animated.View
+        className="absolute bottom-0 h-1 rounded-full bg-light-accent dark:bg-dark-accent"
+        style={[
+          {
+            width: indicatorWidth,
+            opacity: isMeasured ? 1 : 0,
+            transform: [{ translateX: indicatorTranslateX }],
+          },
+        ]}
+      />
+    </View>
+  );
+
   return (
     <PagerGesturesContext.Provider value={pagerGestures}>
       <View className="flex-1">
-        <View className="relative flex-row">
-          {tabs.map((tab, index) => {
-            const isActive = index === activeIndex;
-            return (
-              <Pressable
-                key={tab.key}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: isActive }}
-                className="h-12 flex-1 items-center justify-center"
-                onPress={() => handleTabPress(index)}
-              >
-                <CatalystText
-                  variant="label"
-                  tone={isActive ? "default" : "subtle"}
-                  className={isActive ? "font-bold" : undefined}
-                >
-                  {tab.label}
-                </CatalystText>
-              </Pressable>
-            );
-          })}
-          <CatalystDivider className="absolute bottom-0" />
-          <Animated.View
-            className="absolute bottom-0 h-1 rounded-full bg-light-accent dark:bg-dark-accent"
-            style={[
-              {
-                width: indicatorWidth,
-                transform: [{ translateX: indicatorTranslateX }],
-              },
-            ]}
-          />
-        </View>
+        {scrollable ? (
+          // 区切り線はスクロールさせず、画面幅いっぱいに引く
+          <View>
+            <CatalystDivider className="absolute bottom-0" />
+            <ScrollView
+              ref={tabBarRef}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              scrollEventThrottle={16}
+              onScroll={(e) => {
+                tabBarScrollX.current = e.nativeEvent.contentOffset.x;
+              }}
+            >
+              {tabBar}
+            </ScrollView>
+          </View>
+        ) : (
+          tabBar
+        )}
 
         <GestureDetector gesture={composedGesture}>
           <AnimatedFlatList
