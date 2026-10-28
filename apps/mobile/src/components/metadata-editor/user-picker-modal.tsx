@@ -148,7 +148,7 @@ export const UserPickerModal = ({ visible, users, profiles, onCancel, onDone }: 
                   accessibilityState={{ selected: isSelected }}
                   className="px-4"
                 >
-                  <CatalystAvatar source={user.profile?.iconUrl} fallback={user.displayName} />
+                  <CatalystAvatar source={toUserProfile(user).iconUrl} fallback={user.displayName} />
                   <View className="min-w-0 flex-1">
                     <CatalystText variant="label" numberOfLines={1}>
                       {user.displayName}

@@ -335,12 +335,19 @@ describe("collectUserProfiles", () => {
       id: "u1",
       screenName: "one",
       displayName: "One",
-      profile: { iconUrl: "https://example.com/1.png", bannerUrl: "", bio: "", website: "", additionalWebsites: [] },
+      profile: {
+        iconUrl: "https://cdn.natsuneko.com/icons/1",
+        bannerUrl: "",
+        bio: "",
+        website: "",
+        additionalWebsites: [],
+      },
     };
     const u2 = { id: "u2", screenName: "two", displayName: "Two", profile: null };
 
     expect(collectUserProfiles({ m1: responseItem({ users: [u1] }), m2: responseItem({ users: [u1, u2] }) })).toEqual({
-      u1: { displayName: "One", screenName: "one", iconUrl: "https://example.com/1.png" },
+      // アイコンは元画像のままでは表示できないので、CDN のアイコン用の URL にする
+      u1: { displayName: "One", screenName: "one", iconUrl: "https://cdn.natsuneko.com/icons/1/tiny" },
       u2: { displayName: "Two", screenName: "two", iconUrl: null },
     });
   });

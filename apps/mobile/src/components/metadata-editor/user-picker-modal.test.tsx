@@ -16,7 +16,13 @@ const searchResult = (id: string, displayName: string) => ({
   id,
   screenName: id,
   displayName,
-  profile: { iconUrl: `https://example.com/${id}.png`, bannerUrl: "", bio: "", website: "", additionalWebsites: [] },
+  profile: {
+    iconUrl: `https://cdn.natsuneko.com/icons/${id}`,
+    bannerUrl: "",
+    bio: "",
+    website: "",
+    additionalWebsites: [],
+  },
 });
 
 const renderPicker = async ({
@@ -87,7 +93,7 @@ describe("UserPickerModal", () => {
     await fireEvent.press(screen.getByText("完了"));
 
     expect(onDone).toHaveBeenCalledWith([{ id: "u1" }], {
-      u1: { displayName: "One", screenName: "u1", iconUrl: "https://example.com/u1.png" },
+      u1: { displayName: "One", screenName: "u1", iconUrl: "https://cdn.natsuneko.com/icons/u1/tiny" },
     });
   });
 });
