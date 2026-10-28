@@ -6,6 +6,8 @@ import type {
   UserResponse,
 } from "@natsuneko-laboratory/catalyst-sdk";
 
+import { getCdnUrl } from "@/lib/media";
+
 // メタデータの保存 API は投稿の全写真分をまとめて置き換えるため、アプリでまだ編集できない項目も
 // 読み込んだ値をそのまま送り返す必要がある。GET と POST は形が違うので、Web 版 EditMetadataForm の
 // transform と同じ規則で送信形式に変換して保持する。
@@ -123,7 +125,8 @@ export const toggleUser = (users: { id: string }[], userId: string): { users: { 
 export const toUserProfile = (user: Pick<UserResponse, "displayName" | "screenName" | "profile">): UserProfile => ({
   displayName: user.displayName,
   screenName: user.screenName,
-  iconUrl: user.profile?.iconUrl ?? null,
+  // アイコンは元画像のままでは表示できないので、他の画面と同じく CDN のアイコン用の URL にする
+  iconUrl: user.profile?.iconUrl ? getCdnUrl({ src: user.profile.iconUrl, variant: "icon", width: 96 }) : null,
 });
 
 export const collectUserProfiles = (response: EpicleseStatusMetadataResponse): Record<string, UserProfile> =>

@@ -5,6 +5,7 @@ import { useAtomValue } from "jotai";
 import { Check } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { Alert, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { withUniwind } from "uniwind";
 
@@ -28,6 +29,7 @@ type Props = {
 
 export const AuthorFormStep = ({ platform, platforms, onBack, onSaved }: Props) => {
   const client = useAtomValue(clientAtom);
+  const insets = useSafeAreaInsets();
   // null は「なし (BOOTH のショップなど)」。VR-SNS のアカウントを持たない作者を表す
   const [platformId, setPlatformId] = useState<string | null>(platform.id);
   const [name, setName] = useState("");
@@ -116,6 +118,8 @@ export const AuthorFormStep = ({ platform, platforms, onBack, onSaved }: Props) 
             />
           </FormField>
         </View>
+        {/* 末尾の入力欄がホームインジケーターに重ならないよう、下の安全領域ぶん余白を取る */}
+        <View style={{ height: insets.bottom }} />
       </UniKeyboardAwareScrollView>
     </>
   );

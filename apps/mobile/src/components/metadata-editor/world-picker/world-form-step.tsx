@@ -7,7 +7,8 @@ import type {
 } from "@natsuneko-laboratory/catalyst-sdk";
 import { useAtomValue } from "jotai";
 import { useCallback, useState } from "react";
-import { Alert } from "react-native";
+import { Alert, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { withUniwind } from "uniwind";
 
@@ -40,6 +41,7 @@ type Props = {
 // 入力中の値は親 (モーダル) が持つ。作者を選びに行って戻っても消えないようにするため
 export const WorldFormStep = ({ platform, draft, onChange, onBack, onPickAuthor, onSaved }: Props) => {
   const client = useAtomValue(clientAtom);
+  const insets = useSafeAreaInsets();
   const [isSaving, setIsSaving] = useState(false);
   const canSave = draft.name.trim() !== "" && draft.platformIdentifier.trim() !== "" && !isSaving;
 
@@ -117,6 +119,8 @@ export const WorldFormStep = ({ platform, draft, onChange, onBack, onPickAuthor,
         <FormField label="ワールド作者" description="ワールドの作者を選択、もしくは入力してください。">
           <MetadataRow label="作者" value={draft.author?.name ?? "未選択"} onPress={onPickAuthor} />
         </FormField>
+        {/* 末尾の入力欄がホームインジケーターに重ならないよう、下の安全領域ぶん余白を取る */}
+        <View style={{ height: insets.bottom }} />
       </UniKeyboardAwareScrollView>
     </>
   );

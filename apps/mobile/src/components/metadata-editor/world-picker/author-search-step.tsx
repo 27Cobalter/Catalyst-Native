@@ -5,6 +5,7 @@ import type { EpicleseAuthorResponse, EpiclesePlatformResponse } from "@natsunek
 import { useAtomValue } from "jotai";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PickerHeader } from "../picker-header";
 
@@ -29,6 +30,7 @@ export const AuthorSearchStep = ({
   onRegister,
 }: Props) => {
   const client = useAtomValue(clientAtom);
+  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState("");
 
   const platformId = platform?.id;
@@ -70,6 +72,8 @@ export const AuthorSearchStep = ({
           data={results}
           keyExtractor={(author) => author.id}
           keyboardShouldPersistTaps="handled"
+          // 末尾の行がホームインジケーターに重ならないよう、下の安全領域ぶん余白を取る
+          contentContainerStyle={{ paddingBottom: insets.bottom }}
           ListEmptyComponent={
             isLoading ? (
               <ActivityIndicator className="py-8" colorClassName="accent-light-tint dark:accent-dark-tint" />
