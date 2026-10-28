@@ -16,6 +16,7 @@ import {
 import { MetadataRow } from "@/components/metadata-editor/metadata-row";
 import { PhotoPager } from "@/components/metadata-editor/photo-pager";
 import { PlatformSheet, type PlatformSheetRef } from "@/components/metadata-editor/platform-sheet";
+import { UserPickerModal } from "@/components/metadata-editor/user-picker-modal";
 import { ThumbnailStrip } from "@/components/metadata-editor/thumbnail-strip";
 import { accountAtom } from "@/models/atoms/account";
 import { clientAtom } from "@/models/atoms/credential";
@@ -76,6 +77,7 @@ export default function StatusMetadataScreen() {
   const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
   const applyToAllSheetRef = useRef<ApplyToAllSheetRef>(null);
   const platformSheetRef = useRef<PlatformSheetRef>(null);
+  const [isUserPickerVisible, setIsUserPickerVisible] = useState(false);
 
   const isDirty = isMetadataDirty(initialItems, items);
   const canSave = isDirty && !isSubmitting;
@@ -139,6 +141,15 @@ export default function StatusMetadataScreen() {
 
   const handleTogglePrivacy = useCallback(
     (value: boolean) => updateCurrent((item) => ({ ...item, privacyMetadata: value })),
+    [updateCurrent],
+  );
+
+  const handleSelectUsers = useCallback(
+    (users: { id: string }[], profiles: Record<string, UserProfile>) => {
+      setUserProfiles((prev) => ({ ...prev, ...profiles }));
+      updateCurrent((item) => ({ ...item, users }));
+      setIsUserPickerVisible(false);
+    },
     [updateCurrent],
   );
 
@@ -291,6 +302,7 @@ export default function StatusMetadataScreen() {
             <CatalystDivider className="ml-5 w-auto" />
             <MetadataRow
               label="写っている人"
+              onPress={() => setIsUserPickerVisible(true)}
               value={
                 currentUsers.length === 0 ? (
                   "未選択"
@@ -313,7 +325,6 @@ export default function StatusMetadataScreen() {
                   </>
                 )
               }
-              onPress={() => {}}
             />
             <CatalystDivider className="ml-5 w-auto" />
             <View className="min-h-16 flex-row items-center bg-light-background px-5 py-3 dark:bg-dark-surface">
@@ -340,6 +351,13 @@ export default function StatusMetadataScreen() {
         </ScrollView>
       </View>
       <ApplyToAllSheet ref={applyToAllSheetRef} options={APPLY_TO_ALL_OPTIONS} onSelect={handleApplyToAll} />
+      <UserPickerModal
+        visible={isUserPickerVisible}
+        users={currentUsers}
+        profiles={userProfiles}
+        onCancel={() => setIsUserPickerVisible(false)}
+        onDone={handleSelectUsers}
+      />
       <PlatformSheet
         ref={platformSheetRef}
         platforms={platforms}
