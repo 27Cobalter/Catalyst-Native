@@ -25,6 +25,7 @@ import { quoteSearchQualifier } from "@/lib/search-query";
 import { cn } from "@/lib/utils";
 import { accountAtom } from "@/models/atoms/account";
 import { clientAtom } from "@/models/atoms/credential";
+import { metadataRevisionAtomFamily } from "@/models/atoms/epiclese-metadata";
 import { openUrlWithBrowser } from "@/models/browser-settings";
 import {
   EPICLESE_ITEM_TYPE_LABELS,
@@ -157,6 +158,7 @@ export default function StatusDetailsPage() {
   const router = useRouter();
   const account = useAtomValue(accountAtom);
   const client = useAtomValue(clientAtom);
+  const metadataRevision = useAtomValue(metadataRevisionAtomFamily(id));
   const { subscribe, unsubscribe } = useStreamingReactions();
 
   const [status, setStatus] = useState<CatalystStatusV1_1 | null>(null);
@@ -251,7 +253,7 @@ export default function StatusDetailsPage() {
     };
 
     fetchData();
-  }, [id, account, client]);
+  }, [id, account, client, metadataRevision]);
 
   const handleStreamingReaction = useCallback(
     (event: ReactionStreamingEvent) => {

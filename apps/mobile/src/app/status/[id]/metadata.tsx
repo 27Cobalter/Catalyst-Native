@@ -9,16 +9,18 @@ import { PhotoPager } from "@/components/metadata-editor/photo-pager";
 import { ThumbnailStrip } from "@/components/metadata-editor/thumbnail-strip";
 import { accountAtom } from "@/models/atoms/account";
 import { clientAtom } from "@/models/atoms/credential";
+import { metadataRevisionAtomFamily } from "@/models/atoms/epiclese-metadata";
 import {
   isMetadataConfigured,
+  isMetadataDirty,
   toEditableMetadata,
   type EditableMediaMetadata,
 } from "@/models/epiclese-metadata-editor";
 import type { Media } from "@/models/sdk-types";
-import { Stack, useLocalSearchParams } from "expo-router";
-import { useAtomValue } from "jotai";
+import { Stack, useLocalSearchParams, usePreventRemove, useRouter } from "expo-router";
+import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, View } from "react-native";
 
 const HIDE_AUTO_DESCRIPTION =
   "ResoniteScreenshotExtensions や VRCX などのツールで画像に埋め込まれたメタデータがある場合でも、表示したくないときは ON にしてください。編集画面から追加したメタデータは引き続き表示されます。";
@@ -27,16 +29,23 @@ type LoadState = { kind: "loading" } | { kind: "forbidden" } | { kind: "error" }
 
 export default function StatusMetadataScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   // トークン更新のたびに accountAtom は作り直されるので、読み込みはユーザー ID とクライアントにだけ追従させる。
   // account そのものに追従すると、更新のたびに読み込み直して編集中の内容が消える
   const userId = useAtomValue(accountAtom)?.user.id;
   const client = useAtomValue(clientAtom);
+  const setMetadataRevision = useSetAtom(metadataRevisionAtomFamily(id));
 
   const [loadState, setLoadState] = useState<LoadState>({ kind: "loading" });
   const [reloadKey, setReloadKey] = useState(0);
   const [initialItems, setInitialItems] = useState<EditableMediaMetadata[]>([]);
   const [items, setItems] = useState<EditableMediaMetadata[]>([]);
   const [index, setIndex] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
+  const isDirty = isMetadataDirty(initialItems, items);
+  const canSave = isDirty && !isSubmitting;
 
   useEffect(() => {
     if (!id) return;
@@ -93,6 +102,50 @@ export default function StatusMetadataScreen() {
     [index],
   );
 
+  const handleSave = useCallback(async () => {
+    if (!canSave) return;
+
+    setIsSubmitting(true);
+
+    try {
+      await client.epiclese.v1.tag.by.status.id.create({
+        path: { id },
+        body: items,
+        throwOnError: true,
+      });
+      setMetadataRevision((revision) => revision + 1);
+      setIsSaved(true);
+    } catch (error) {
+      console.error("Failed to save metadata:", error);
+      Alert.alert("エラー", "メタデータの保存に失敗しました");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [canSave, client, id, items, setMetadataRevision]);
+
+  // 保存済みにしたレンダーで usePreventRemove が外れてから戻る。同じレンダーで戻ると破棄確認が出てしまう
+  useEffect(() => {
+    if (isSaved) router.back();
+  }, [isSaved, router]);
+
+  // 保存中は離れさせない。破棄して離れても送信中の保存は取り消せず、結果だけが残ってしまうため
+  usePreventRemove(isSubmitting || (isDirty && !isSaved), ({ repeat }) => {
+    if (isSubmitting) return;
+
+    Alert.alert("変更を破棄しますか？", undefined, [
+      { text: "編集を続ける", style: "cancel" },
+      {
+        text: "破棄",
+        style: "destructive",
+        // 変更を戻して preventRemove を false にしてから、止めた画面遷移をやり直す
+        onPress: () => {
+          setItems(initialItems);
+          repeat();
+        },
+      },
+    ]);
+  });
+
   if (loadState.kind === "loading") {
     return (
       <View className="flex-1 items-center justify-center bg-light-background dark:bg-dark-background">
@@ -128,8 +181,12 @@ export default function StatusMetadataScreen() {
       <Stack.Screen
         options={{
           headerRight: () => (
-            <Pressable disabled hitSlop={8} className="px-1 py-2">
-              <CatalystText variant="subtitle" tone="subtle" className="opacity-60">
+            <Pressable onPress={handleSave} disabled={!canSave} hitSlop={8} className="px-1 py-2">
+              <CatalystText
+                variant="subtitle"
+                tone={canSave ? "tint" : "subtle"}
+                className={!canSave ? "opacity-60" : undefined}
+              >
                 保存
               </CatalystText>
             </Pressable>
@@ -137,6 +194,11 @@ export default function StatusMetadataScreen() {
         }}
       />
       <View className="flex-1 bg-light-surface-muted dark:bg-dark-background">
+        {isSubmitting && (
+          <View className="absolute inset-0 z-50 items-center justify-center bg-light-overlay dark:bg-dark-overlay">
+            <ActivityIndicator size="large" colorClassName="accent-light-tint dark:accent-dark-tint" />
+          </View>
+        )}
         <ScrollView className="flex-1">
           <PhotoPager medias={medias} index={index} onIndexChange={setIndex} />
           {medias.length >= 2 && (
