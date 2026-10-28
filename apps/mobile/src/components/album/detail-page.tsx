@@ -328,9 +328,12 @@ const AlbumVisualContent = ({
 }) => {
   const { width: screenWidth } = useWindowDimensions();
   const [items, setItems] = useState<CatalystStatusV1_1[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  // 最初の取得が始まる前に空の表示が一瞬出ないよう、読み込み中から始める
+  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const isLoadingRef = useRef(false);
+  // 空のページが返ったら末尾とみなし、スクロールのたびに同じ条件で取り直さないようにする
+  const hasMoreRef = useRef(true);
   const sets = useRef<Set<string>>(new Set());
 
   const loadInitial = useCallback(async () => {
@@ -339,6 +342,7 @@ const AlbumVisualContent = ({
     try {
       const result = await fetcher(null, null);
       sets.current = new Set();
+      hasMoreRef.current = result.length > 0;
       setItems((prev) => merge(prev, result, sets, (item) => item.id));
     } finally {
       setIsLoading(false);
@@ -348,6 +352,8 @@ const AlbumVisualContent = ({
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
+    // 前に末尾まで読んでいても (最初が 0 件だった場合も)、更新した後はまた続きを読めるようにする
+    hasMoreRef.current = true;
     try {
       const since = items[0]?.id ?? null;
       const newItems = await fetcher(since, null);
@@ -364,7 +370,7 @@ const AlbumVisualContent = ({
   }, [fetcher, items]);
 
   const loadMore = useCallback(async () => {
-    if (isLoadingRef.current) return;
+    if (isLoadingRef.current || !hasMoreRef.current) return;
 
     const until = items[items.length - 1]?.id ?? null;
     if (!until) return;
@@ -373,6 +379,7 @@ const AlbumVisualContent = ({
     isLoadingRef.current = true;
     try {
       const newItems = await fetcher(null, until);
+      hasMoreRef.current = newItems.length > 0;
       if (newItems.length > 0) {
         setItems((prev) => merge(prev, newItems, sets, (item) => item.id));
       }
