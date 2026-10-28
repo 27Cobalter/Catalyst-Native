@@ -4,9 +4,11 @@ import { AlbumsPlaceholder } from "@/components/explorer/albums/placeholder";
 import { ContestList } from "@/components/explorer/contests/list";
 import { StatusesEmptyResult } from "@/components/explorer/statuses/empty-result";
 import { StatusesPlaceholder } from "@/components/explorer/statuses/placeholder";
+import { TrendList } from "@/components/explorer/trends/list";
 import { UserList } from "@/components/explorer/users/list";
 import { UsersPlaceholder } from "@/components/explorer/users/placeholder";
 import { Tab, Tabs } from "@/components/tabs";
+import { WeeklyThemeList } from "@/components/theme/list";
 import { TimelineBase, TimelineHandle } from "@/components/timeline/base";
 import { clientAtom } from "@/models/atoms/credential";
 import { useScrollToTop } from "expo-router/react-navigation";
@@ -19,8 +21,10 @@ import { v4 } from "uuid";
 const TABS: Tab[] = [
   { key: "statuses", label: "投稿" },
   { key: "users", label: "ユーザー" },
+  { key: "trends", label: "トレンド" },
   { key: "albums", label: "アルバム" },
   { key: "contests", label: "コンテスト" },
+  { key: "themes", label: "お題" },
 ];
 
 const CURRENT_CONTEST_STATES = ["opening", "voting", "closing", "electing"];
@@ -35,8 +39,10 @@ export default function HomeScreen() {
   const [stateKey, setStateKey] = useState(v4());
   const timelineRef = useRef<TimelineHandle>(null);
   const usersRef = useRef<TimelineHandle>(null);
+  const trendsRef = useRef<TimelineHandle>(null);
   const albumsRef = useRef<TimelineHandle>(null);
   const contestsRef = useRef<TimelineHandle>(null);
+  const themesRef = useRef<TimelineHandle>(null);
 
   const timeline = useCallback(
     async (since: string | null, until: string | null) => {
@@ -65,8 +71,10 @@ export default function HomeScreen() {
     const refs: Record<string, React.RefObject<TimelineHandle | null>> = {
       statuses: timelineRef,
       users: usersRef,
+      trends: trendsRef,
       albums: albumsRef,
       contests: contestsRef,
+      themes: themesRef,
     };
     return { scrollToTop: () => refs[activeTab]?.current?.scrollToTop() };
   }, [activeTab]);
@@ -125,6 +133,10 @@ export default function HomeScreen() {
                 return <UsersPlaceholder />;
               }
 
+              case "trends": {
+                return <TrendList ref={trendsRef} />;
+              }
+
               case "albums": {
                 if (query) {
                   return <AlbumList ref={albumsRef} query={query} />;
@@ -142,6 +154,10 @@ export default function HomeScreen() {
                     query={query || undefined}
                   />
                 );
+              }
+
+              case "themes": {
+                return <WeeklyThemeList ref={themesRef} query={query} />;
               }
             }
           }}
