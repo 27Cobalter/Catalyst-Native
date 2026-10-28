@@ -182,4 +182,22 @@ describe("PinEditorModal", () => {
     expect(onDone).not.toHaveBeenCalled();
     expect(alert).toHaveBeenCalledWith("エラー", "1 番のピンの入力が足りません");
   });
+
+  it("変更があるときにシートを閉じようとしたら確認し、すぐには閉じない", async () => {
+    const { onCancel } = await renderEditor(pins(1));
+
+    await fireEvent.press(screen.getByLabelText("1 番のピンを削除"));
+    await fireEvent(screen.getByTestId("pin-editor-modal"), "requestClose");
+
+    expect(onCancel).not.toHaveBeenCalled();
+    expect(alert).toHaveBeenCalledWith("変更を破棄しますか？", undefined, expect.any(Array));
+  });
+
+  it("変更が無ければシートを閉じる操作でそのまま閉じる", async () => {
+    const { onCancel } = await renderEditor(pins(1));
+
+    await fireEvent(screen.getByTestId("pin-editor-modal"), "requestClose");
+
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
 });

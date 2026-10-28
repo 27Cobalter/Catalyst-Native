@@ -10,6 +10,7 @@ import {
   MAX_PINS,
   movePinDown,
   movePinUp,
+  normalizePins,
   removePin,
   setPins,
   toDisplayPoint,
@@ -185,5 +186,27 @@ describe("setPins", () => {
       item.users,
       item.privacyMetadata,
     ]);
+  });
+});
+
+describe("URL の扱い", () => {
+  // 入力中に毎回落とすと単語の区切りの空白まで打てなくなるので、確定時にまとめて落とす
+  it("確定時に名前と URL の前後の空白を落とし、空になった URL は外す", () => {
+    const [result, emptied] = normalizePins([
+      pin({ name: " Jacket ", externalUrl: " https://booth.pm/ja/items/1 " }),
+      pin({ name: "X", externalUrl: "  " }),
+    ]);
+
+    expect(result.name).toBe("Jacket");
+    expect(result.externalUrl).toBe("https://booth.pm/ja/items/1");
+    expect(emptied.externalUrl).toBeUndefined();
+  });
+
+  it("ホスト部分が URL として不正なら無効", () => {
+    const valid = pin({ name: "X", author: pinAuthor });
+
+    expect(findInvalidPinIndex([{ ...valid, externalUrl: "https://%zz" }])).toBe(0);
+    expect(findInvalidPinIndex([{ ...valid, externalUrl: "https://[" }])).toBe(0);
+    expect(findInvalidPinIndex([{ ...valid, externalUrl: "https://example.com/a?b=c#d" }])).toBe(-1);
   });
 });

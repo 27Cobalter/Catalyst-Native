@@ -7,6 +7,7 @@ import {
   movePin,
   movePinDown,
   movePinUp,
+  normalizePins,
   removePin,
   toPinAuthor,
   updateNewItem,
@@ -101,14 +102,29 @@ export const PinEditorModal = ({ visible, media, pins, platform, platforms, onCa
   }, [activeIndex]);
 
   const handleDone = useCallback(() => {
-    const invalidIndex = findInvalidPinIndex(draft);
+    const normalized = normalizePins(draft);
+    const invalidIndex = findInvalidPinIndex(normalized);
     if (invalidIndex !== -1) {
       Alert.alert("エラー", `${invalidIndex + 1} 番のピンの入力が足りません`);
       return;
     }
 
-    onDone(draft);
+    onDone(normalized);
   }, [draft, onDone]);
+
+  // iOS の pageSheet は下へのスワイプでも閉じようとする (onRequestClose)。ピンのドラッグや
+  // スクロールの勢いで閉じてしまい、置いたピンを失わないよう、変更があれば確かめる
+  const confirmCancel = useCallback(() => {
+    if (JSON.stringify(draft) === JSON.stringify(pins)) {
+      onCancel();
+      return;
+    }
+
+    Alert.alert("変更を破棄しますか？", undefined, [
+      { text: "編集を続ける", style: "cancel" },
+      { text: "破棄", style: "destructive", onPress: onCancel },
+    ]);
+  }, [draft, onCancel, pins]);
 
   const deleteActive = useCallback(() => {
     if (activeIndex !== null) setDraft((prev) => removePin(prev, activeIndex));
@@ -128,7 +144,7 @@ export const PinEditorModal = ({ visible, media, pins, platform, platforms, onCa
   const handleRequestClose = useCallback(() => {
     switch (step) {
       case "canvas":
-        return onCancel();
+        return confirmCancel();
       case "author-form":
         return setStep("author-search");
       case "author-search":
@@ -139,7 +155,7 @@ export const PinEditorModal = ({ visible, media, pins, platform, platforms, onCa
       case "item-create":
         return backToCanvas();
     }
-  }, [backToCanvas, onCancel, step]);
+  }, [backToCanvas, confirmCancel, step]);
 
   return (
     <Modal
@@ -157,15 +173,16 @@ export const PinEditorModal = ({ visible, media, pins, platform, platforms, onCa
               left={{ label: "キャンセル", onPress: onCancel }}
               right={{ label: "完了", onPress: handleDone }}
             />
-            <ScrollView>
-              <PinCanvas
-                media={media}
-                pins={draft}
-                activeIndex={activeIndex}
-                onAdd={handleAdd}
-                onSelect={(index) => openPin(index, draft[index])}
-                onMove={(index, point) => setDraft((prev) => movePin(prev, index, point))}
-              />
+            {/* ピンのドラッグが外側のスクロールと取り合わないよう、写真はスクロールさせず一覧だけをスクロールする */}
+            <PinCanvas
+              media={media}
+              pins={draft}
+              activeIndex={activeIndex}
+              onAdd={handleAdd}
+              onSelect={(index) => openPin(index, draft[index])}
+              onMove={(index, point) => setDraft((prev) => movePin(prev, index, point))}
+            />
+            <ScrollView className="flex-1">
               <PinList
                 pins={draft}
                 onSelect={(index) => openPin(index, draft[index])}

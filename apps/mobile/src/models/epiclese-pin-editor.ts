@@ -124,6 +124,9 @@ export const toPinAuthor = (author: EpicleseAuthorResponse): NonNullable<Editabl
 export const isPinUntouched = (pin: EditablePin) =>
   !pin.reference && !pin.author && !pin.externalUrl && !pin.description?.trim() && !pin.name.trim();
 
+// サーバーは zod の url() (WHATWG URL) で確かめる。ホストに使えない文字があると保存全体が失敗するので、ここで止める
+const EXTERNAL_URL_PATTERN = /^https?:\/\/[^\s/?#%[\]@]+(?:[/?#]\S*)?$/;
+
 const isValidPin = (pin: EditablePin) => {
   if (pin.reference) {
     return true;
@@ -135,12 +138,21 @@ const isValidPin = (pin: EditablePin) => {
     name.length >= 1 &&
     name.length <= MAX_NAME_LENGTH &&
     !!pin.author &&
-    (!pin.externalUrl || /^https?:\/\/\S+$/.test(pin.externalUrl)) &&
+    (!pin.externalUrl || EXTERNAL_URL_PATTERN.test(pin.externalUrl)) &&
     (pin.description?.length ?? 0) <= MAX_DESCRIPTION_LENGTH
   );
 };
 
 export const findInvalidPinIndex = (pins: EditablePin[]) => pins.findIndex((pin) => !isValidPin(pin));
+
+// 入力中に前後の空白を落とすと単語の区切りの空白まで打てなくなるので、「完了」のときにまとめて落とす。
+// 貼り付けた URL の末尾の空白で「入力が足りません」になるのを防ぐ
+export const normalizePins = (pins: EditablePin[]): EditablePin[] =>
+  pins.map((pin) => ({
+    ...pin,
+    name: pin.name.trim(),
+    externalUrl: pin.externalUrl?.trim() || undefined,
+  }));
 
 export const setPins = (item: EditableMediaMetadata, pins: EditablePin[]): EditableMediaMetadata => ({
   ...item,
