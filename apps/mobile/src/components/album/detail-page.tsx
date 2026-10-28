@@ -33,7 +33,7 @@ import {
   Pencil,
   Send,
 } from "lucide-react-native";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   NativeScrollEvent,
@@ -309,28 +309,44 @@ const distributeToColumns = (items: GalleryItem[], columnWidth: number): Gallery
   return columns;
 };
 
-const expandGalleryItems = (statuses: CatalystStatusV1_1[]): GalleryItem[] => {
-  return statuses.flatMap((status) =>
-    status.medias.map((media) => ({
+const expandGalleryItems = (statuses: CatalystStatusV1_1[], onlyReferencedMedia: boolean): GalleryItem[] => {
+  return statuses.flatMap((status) => {
+    // アイテム情報の付いた写真だけに絞る。絞ると 1 枚も残らない投稿は、すべての写真を出す
+    const referenced = onlyReferencedMedia ? status.medias.filter((media) => media.hasReference) : [];
+    const medias = referenced.length > 0 ? referenced : status.medias;
+    return medias.map((media) => ({
       key: `${status.id}:${media.id}`,
       statusId: status.id,
       media,
-    })),
-  );
+    }));
+  });
 };
 
-const AlbumVisualContent = ({
+/** アルバムのグリッド・ギャラリー表示。アイテム別ページでもギャラリー表示に使う */
+export const AlbumVisualContent = ({
   mode,
   fetcher,
+  header,
+  emptyState,
+  onlyReferencedMedia = false,
 }: {
   mode: Extract<CatalystAlbumDisplayMode, "grid" | "gallery">;
   fetcher: (since: string | null, until: string | null) => Promise<CatalystStatusV1_1[]>;
+  /** 写真の上に出す見出し */
+  header?: ReactNode;
+  /** 投稿が 1 件も無いときの表示。省略するとアルバム向けの文言を出す */
+  emptyState?: ReactNode;
+  /** ギャラリー表示で、アイテム情報の付いた写真だけを並べる */
+  onlyReferencedMedia?: boolean;
 }) => {
   const { width: screenWidth } = useWindowDimensions();
   const [items, setItems] = useState<CatalystStatusV1_1[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  // 最初の取得が始まる前に空の表示が一瞬出ないよう、読み込み中から始める
+  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const isLoadingRef = useRef(false);
+  // 空のページが返ったら末尾とみなし、スクロールのたびに同じ条件で取り直さないようにする
+  const hasMoreRef = useRef(true);
   const sets = useRef<Set<string>>(new Set());
 
   const loadInitial = useCallback(async () => {
@@ -339,6 +355,7 @@ const AlbumVisualContent = ({
     try {
       const result = await fetcher(null, null);
       sets.current = new Set();
+      hasMoreRef.current = result.length > 0;
       setItems((prev) => merge(prev, result, sets, (item) => item.id));
     } finally {
       setIsLoading(false);
@@ -348,6 +365,8 @@ const AlbumVisualContent = ({
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
+    // 前に末尾まで読んでいても (最初が 0 件だった場合も)、更新した後はまた続きを読めるようにする
+    hasMoreRef.current = true;
     try {
       const since = items[0]?.id ?? null;
       const newItems = await fetcher(since, null);
@@ -364,7 +383,7 @@ const AlbumVisualContent = ({
   }, [fetcher, items]);
 
   const loadMore = useCallback(async () => {
-    if (isLoadingRef.current) return;
+    if (isLoadingRef.current || !hasMoreRef.current) return;
 
     const until = items[items.length - 1]?.id ?? null;
     if (!until) return;
@@ -373,6 +392,7 @@ const AlbumVisualContent = ({
     isLoadingRef.current = true;
     try {
       const newItems = await fetcher(null, until);
+      hasMoreRef.current = newItems.length > 0;
       if (newItems.length > 0) {
         setItems((prev) => merge(prev, newItems, sets, (item) => item.id));
       }
@@ -418,7 +438,8 @@ const AlbumVisualContent = ({
           />
         }
       >
-        {rows.length === 0 && !isLoading ? <EmptyState /> : null}
+        {header}
+        {rows.length === 0 && !isLoading ? (emptyState ?? <EmptyState />) : null}
         {rows.map((row, rowIndex) => (
           <View key={`row-${rowIndex}`} className="flex-row" style={{ marginTop: rowIndex > 0 ? GRID_GAP : 0 }}>
             {row.map((item, colIndex) => (
@@ -438,7 +459,7 @@ const AlbumVisualContent = ({
   }
 
   const columnWidth = (screenWidth - GALLERY_GAP * (GALLERY_COLUMNS - 1)) / GALLERY_COLUMNS;
-  const galleryItems = expandGalleryItems(items);
+  const galleryItems = expandGalleryItems(items, onlyReferencedMedia);
   const columns = distributeToColumns(galleryItems, columnWidth);
 
   return (
@@ -455,7 +476,8 @@ const AlbumVisualContent = ({
         />
       }
     >
-      {galleryItems.length === 0 && !isLoading ? <EmptyState /> : null}
+      {header}
+      {galleryItems.length === 0 && !isLoading ? (emptyState ?? <EmptyState />) : null}
       <View className="flex-row" style={{ gap: GALLERY_GAP }}>
         {columns.map((column, index) => (
           <View key={index} style={{ width: columnWidth }}>

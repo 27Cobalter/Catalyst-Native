@@ -1,6 +1,8 @@
 // @ts-check
 const pkg = require("./package.json");
 
+// サーバー側 (apple-app-site-association / assetlinks.json) にも同じパスが要る。
+// サーバーが未対応でも、iOS と Android 15 以降はブラウザで開くだけなので、アプリ側は先に足しておける
 const APP_LINK_PATH_PREFIXES = [
   "/status/",
   "/album/",
@@ -8,6 +10,7 @@ const APP_LINK_PATH_PREFIXES = [
   "/contest/",
   "/tags/",
   "/themes/",
+  "/items/",
   "/user/",
   "/@",
 ];
