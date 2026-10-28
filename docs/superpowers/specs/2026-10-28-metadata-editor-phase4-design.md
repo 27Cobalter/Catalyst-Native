@@ -52,7 +52,7 @@ Photoshop などでレタッチして投稿した写真は、VRChat や Resonite
 Web 版は `foreign-model` の `extractCatalystPhotoMetadata` を使うが、アプリは `foreign-model` に依存していない。アプリは同じ `@natsuneko-laboratory/memora` 0.3.0 を持っているので、その方針を **純粋関数として移植** し、Web と同じ `records` を作る:
 
 - `parseAllImageMetadata` の結果を、`ResoniteScreenshotExtensions` を先頭にして順に試し、最初に条件を満たしたものを使う。
-  - **Resonite**: `LocationName` (空なら無し)、`TakenAt` (ISO8601、解釈できなければ無し)、`TakenBy` (`{ value: takenBy.name ?? "", referenceId: takenBy.id ?? "", referenceType: "author" }`)、`Platform: "Resonite"`、`AppVersion`、`CameraFOV` (文字列に)。
+  - **Resonite**: `LocationName` (空なら無し)、`TakenAt` (ISO8601。解釈できない日付なら、Web 版と同じくこの候補ごと飛ばして次の候補を試す)、`TakenBy` (`{ value: takenBy.name ?? "", referenceId: takenBy.id ?? "", referenceType: "author" }`)、`Platform: "Resonite"`、`AppVersion`、`CameraFOV` (文字列に)。
   - **VRCX**: `version === 1` かつ `world` と `author` があるときだけ。`LocationName` (world 参照)、`TakenBy` (author 参照)、`Platform: "VRChat"`、`Application: "VRCX"`、`Version: "1"`。
   - **VRChat 旧形式**: `author` が `usr_` で始まり `world` が `wrld_` で始まる → `CreatorTool: "VRChat"`、`Platform: "VRChat"`、`Author` / `World` (値は空、`referenceId` に ID)、`Parser: "2025.07.22-beta.1674"`。
   - **VRChat 新形式**: `authorId` が `usr_` で始まり、`worldId` が `wrld_` で始まるか空 → `CreatorTool` / `Platform` 同上、`Author` (`author ?? ""` と `authorId`)、`World` (`worldDisplayName || "<Private World>"` と `worldId`)、`Parser: "2025.08.01-beta.1678"`。
