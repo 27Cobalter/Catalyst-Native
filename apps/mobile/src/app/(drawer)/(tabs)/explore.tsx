@@ -1,6 +1,5 @@
 import { CatalystSearchField } from "@/components/design-system";
 import { AlbumList } from "@/components/explorer/albums/list";
-import { AlbumsPlaceholder } from "@/components/explorer/albums/placeholder";
 import { ContestList } from "@/components/explorer/contests/list";
 import { StatusesEmptyResult } from "@/components/explorer/statuses/empty-result";
 import { StatusesPlaceholder } from "@/components/explorer/statuses/placeholder";
@@ -126,11 +125,7 @@ export default function HomeScreen() {
               }
 
               case "albums": {
-                if (query) {
-                  return <AlbumList ref={albumsRef} query={query} />;
-                }
-
-                return <AlbumsPlaceholder />;
+                return <AlbumList ref={albumsRef} query={query} />;
               }
 
               case "contests": {
