@@ -1,12 +1,9 @@
 import { CatalystBadge, CatalystBadgeText, CatalystText } from "@/components/design-system";
 import { cn } from "@/lib/utils";
 import { openUrlWithBrowser } from "@/models/browser-settings";
-import {
-  EPICLESE_ITEM_TYPE_LABELS,
-  getEpicleseItemUrl,
-  type EpicleseReference,
-} from "@/models/epiclese";
+import { EPICLESE_ITEM_TYPE_LABELS, type EpicleseReference } from "@/models/epiclese";
 import type { Media } from "@/models/sdk-types";
+import { useRouter } from "expo-router";
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
@@ -36,6 +33,7 @@ type Props = {
 // x, y は元画像に対する 0-10000 の正規化座標（万分率）。画像は contain 表示のため、
 // コンテナ内の実描画領域（レターボックス分を除いた矩形）を求めてから配置する。
 export const MediaPinOverlay = ({ media, references, width, height, visible, onToggleVisible }: Props) => {
+  const router = useRouter();
   const [selected, setSelected] = useState<EpicleseReference | null>(null);
   const detailSheetRef = useRef<BottomSheetModal>(null);
   const theme = useColorScheme() ?? "light";
@@ -136,7 +134,10 @@ export const MediaPinOverlay = ({ media, references, width, height, visible, onT
               <Pressable
                 accessibilityRole="link"
                 className="active:opacity-75"
-                onPress={() => openUrlWithBrowser(getEpicleseItemUrl(selected.reference))}
+                onPress={() => {
+                  detailSheetRef.current?.dismiss();
+                  router.push(`/items/${selected.reference}`);
+                }}
               >
                 <CatalystText variant="subtitle" tone="link">
                   {selected.name}
