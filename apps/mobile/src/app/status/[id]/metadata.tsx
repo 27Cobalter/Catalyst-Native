@@ -1,29 +1,44 @@
 import {
   CatalystButton,
+  CatalystButtonIcon,
   CatalystButtonText,
   CatalystEmptyState,
   CatalystSwitch,
   CatalystText,
 } from "@/components/design-system";
+import {
+  ApplyToAllSheet,
+  type ApplyToAllOption,
+  type ApplyToAllSheetRef,
+} from "@/components/metadata-editor/apply-to-all-sheet";
 import { PhotoPager } from "@/components/metadata-editor/photo-pager";
 import { ThumbnailStrip } from "@/components/metadata-editor/thumbnail-strip";
 import { accountAtom } from "@/models/atoms/account";
 import { clientAtom } from "@/models/atoms/credential";
 import { metadataRevisionAtomFamily } from "@/models/atoms/epiclese-metadata";
 import {
+  applyToAll,
   isMetadataConfigured,
   isMetadataDirty,
   toEditableMetadata,
+  type ApplyToAllField,
   type EditableMediaMetadata,
 } from "@/models/epiclese-metadata-editor";
 import type { Media } from "@/models/sdk-types";
 import { Stack, useLocalSearchParams, usePreventRemove, useRouter } from "expo-router";
 import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useEffect, useState } from "react";
+import { Copy, EyeOff } from "lucide-react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, View } from "react-native";
+import { withUniwind } from "uniwind";
+
+const UniCopy = withUniwind(Copy);
+const UniEyeOff = withUniwind(EyeOff);
 
 const HIDE_AUTO_DESCRIPTION =
   "ResoniteScreenshotExtensions や VRCX などのツールで画像に埋め込まれたメタデータがある場合でも、表示したくないときは ON にしてください。編集画面から追加したメタデータは引き続き表示されます。";
+
+const APPLY_TO_ALL_OPTIONS: ApplyToAllOption[] = [{ field: "privacyMetadata", label: "表示設定", icon: UniEyeOff }];
 
 type LoadState = { kind: "loading" } | { kind: "forbidden" } | { kind: "error" } | { kind: "ready"; medias: Media[] };
 
@@ -43,6 +58,7 @@ export default function StatusMetadataScreen() {
   const [index, setIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const applyToAllSheetRef = useRef<ApplyToAllSheetRef>(null);
 
   const isDirty = isMetadataDirty(initialItems, items);
   const canSave = isDirty && !isSubmitting;
@@ -98,6 +114,13 @@ export default function StatusMetadataScreen() {
   const handleTogglePrivacy = useCallback(
     (value: boolean) => {
       setItems((prev) => prev.map((item, i) => (i === index ? { ...item, privacyMetadata: value } : item)));
+    },
+    [index],
+  );
+
+  const handleApplyToAll = useCallback(
+    (field: ApplyToAllField) => {
+      setItems((prev) => applyToAll(prev, index, field));
     },
     [index],
   );
@@ -226,8 +249,20 @@ export default function StatusMetadataScreen() {
               {HIDE_AUTO_DESCRIPTION}
             </CatalystText>
           </View>
+
+          {medias.length >= 2 && (
+            <View className="px-5 py-6">
+              <CatalystButton tone="secondary" onPress={() => applyToAllSheetRef.current?.open()}>
+                <CatalystButtonIcon>
+                  <UniCopy />
+                </CatalystButtonIcon>
+                <CatalystButtonText>すべての写真に適用…</CatalystButtonText>
+              </CatalystButton>
+            </View>
+          )}
         </ScrollView>
       </View>
+      <ApplyToAllSheet ref={applyToAllSheetRef} options={APPLY_TO_ALL_OPTIONS} onSelect={handleApplyToAll} />
     </>
   );
 }

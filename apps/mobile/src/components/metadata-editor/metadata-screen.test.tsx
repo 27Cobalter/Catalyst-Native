@@ -30,6 +30,7 @@ jest.mock("expo-router", () => ({
 
 jest.mock("@/components/metadata-editor/photo-pager", () => ({ PhotoPager: () => null }));
 jest.mock("@/components/metadata-editor/thumbnail-strip", () => ({ ThumbnailStrip: () => null }));
+jest.mock("@/components/metadata-editor/apply-to-all-sheet", () => ({ ApplyToAllSheet: () => null }));
 jest.mock("@/components/design-system", () => {
   const { Pressable, Text, View } = jest.requireActual("react-native");
   return {
