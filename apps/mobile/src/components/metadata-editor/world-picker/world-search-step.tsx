@@ -7,6 +7,7 @@ import { useAtomValue } from "jotai";
 import { Check } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
 import { PickerHeader } from "../picker-header";
@@ -26,6 +27,7 @@ type Row = { id: string; name: string; authorName: string | undefined; world: Ep
 
 export const WorldSearchStep = ({ platform, value, onCancel, onSelect, onClear, onRegister }: Props) => {
   const client = useAtomValue(clientAtom);
+  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState("");
 
   const fetchWorlds = useCallback(
@@ -79,6 +81,8 @@ export const WorldSearchStep = ({ platform, value, onCancel, onSelect, onClear, 
           data={rows}
           keyExtractor={(row) => row.id}
           keyboardShouldPersistTaps="handled"
+          // 末尾の行がホームインジケーターに重ならないよう、下の安全領域ぶん余白を取る
+          contentContainerStyle={{ paddingBottom: insets.bottom }}
           ListEmptyComponent={
             isLoading ? (
               <ActivityIndicator className="py-8" colorClassName="accent-light-tint dark:accent-dark-tint" />

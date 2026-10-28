@@ -8,6 +8,9 @@ import { UserPickerModal } from "./user-picker-modal";
 
 jest.mock("lucide-react-native", () => new Proxy({}, { get: () => () => null }));
 jest.mock("expo-image", () => ({ Image: () => null }));
+jest.mock("react-native-safe-area-context", () => ({
+  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+}));
 // design-system の index 経由で読まれる reanimated は jest 環境で初期化できないので、使わない部品ごと差し替える
 jest.mock("@/components/design-system/switch", () => ({ CatalystSwitch: () => null }));
 jest.mock("@/components/design-system/tabs", () => ({ CatalystTabs: () => null, usePagerGestures: () => ({}) }));
@@ -16,7 +19,13 @@ const searchResult = (id: string, displayName: string) => ({
   id,
   screenName: id,
   displayName,
-  profile: { iconUrl: `https://example.com/${id}.png`, bannerUrl: "", bio: "", website: "", additionalWebsites: [] },
+  profile: {
+    iconUrl: `https://cdn.natsuneko.com/icons/${id}`,
+    bannerUrl: "",
+    bio: "",
+    website: "",
+    additionalWebsites: [],
+  },
 });
 
 const renderPicker = async ({
@@ -87,7 +96,7 @@ describe("UserPickerModal", () => {
     await fireEvent.press(screen.getByText("完了"));
 
     expect(onDone).toHaveBeenCalledWith([{ id: "u1" }], {
-      u1: { displayName: "One", screenName: "u1", iconUrl: "https://example.com/u1.png" },
+      u1: { displayName: "One", screenName: "u1", iconUrl: "https://cdn.natsuneko.com/icons/u1/tiny" },
     });
   });
 });

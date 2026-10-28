@@ -3,6 +3,7 @@ import { ITEM_TYPE_LABELS, ITEM_TYPES, type EditablePin } from "@/models/epicles
 import type { EpiclesePlatformResponse } from "@natsuneko-laboratory/catalyst-sdk";
 import { Check } from "lucide-react-native";
 import { Pressable, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { withUniwind } from "uniwind";
 
@@ -28,6 +29,8 @@ type Props = {
 
 // 新しいアイテムは保存時にサーバーが作る。ここでは入力をピンに書き込むだけ
 export const ItemCreateStep = ({ pin, platform, onChange, onPickAuthor, onBackToSearch, onDelete, onBack }: Props) => {
+  const insets = useSafeAreaInsets();
+
   return (
     <>
       <PickerHeader title="アイテムを新規作成" left={{ label: "戻る", onPress: onBack }} />
@@ -105,6 +108,8 @@ export const ItemCreateStep = ({ pin, platform, onChange, onPickAuthor, onBackTo
             <CatalystText tone="danger">ピンを削除</CatalystText>
           </Pressable>
         </View>
+        {/* 末尾の入力欄がホームインジケーターに重ならないよう、下の安全領域ぶん余白を取る */}
+        <View style={{ height: insets.bottom }} />
       </UniKeyboardAwareScrollView>
     </>
   );
