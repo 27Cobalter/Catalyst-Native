@@ -17,6 +17,7 @@ import { MetadataRow } from "@/components/metadata-editor/metadata-row";
 import { PhotoPager } from "@/components/metadata-editor/photo-pager";
 import { PlatformSheet, type PlatformSheetRef } from "@/components/metadata-editor/platform-sheet";
 import { UserPickerModal } from "@/components/metadata-editor/user-picker-modal";
+import { WorldPickerModal } from "@/components/metadata-editor/world-picker";
 import { ThumbnailStrip } from "@/components/metadata-editor/thumbnail-strip";
 import { accountAtom } from "@/models/atoms/account";
 import { clientAtom } from "@/models/atoms/credential";
@@ -30,6 +31,7 @@ import {
   toEditableMetadata,
   type ApplyToAllField,
   type EditableMediaMetadata,
+  type EditableWorld,
   type UserProfile,
 } from "@/models/epiclese-metadata-editor";
 import type { Media } from "@/models/sdk-types";
@@ -78,6 +80,7 @@ export default function StatusMetadataScreen() {
   const applyToAllSheetRef = useRef<ApplyToAllSheetRef>(null);
   const platformSheetRef = useRef<PlatformSheetRef>(null);
   const [isUserPickerVisible, setIsUserPickerVisible] = useState(false);
+  const [isWorldPickerVisible, setIsWorldPickerVisible] = useState(false);
 
   const isDirty = isMetadataDirty(initialItems, items);
   const canSave = isDirty && !isSubmitting;
@@ -149,6 +152,14 @@ export default function StatusMetadataScreen() {
       setUserProfiles((prev) => ({ ...prev, ...profiles }));
       updateCurrent((item) => ({ ...item, users }));
       setIsUserPickerVisible(false);
+    },
+    [updateCurrent],
+  );
+
+  const handleSelectWorld = useCallback(
+    (world: EditableWorld | undefined) => {
+      updateCurrent((item) => ({ ...item, world }));
+      setIsWorldPickerVisible(false);
     },
     [updateCurrent],
   );
@@ -297,7 +308,7 @@ export default function StatusMetadataScreen() {
                     ? [current.world.name, current.world.author?.name].filter(Boolean).join("・")
                     : "未選択"
               }
-              onPress={() => {}}
+              onPress={() => setIsWorldPickerVisible(true)}
             />
             <CatalystDivider className="ml-5 w-auto" />
             <MetadataRow
@@ -358,6 +369,16 @@ export default function StatusMetadataScreen() {
         onCancel={() => setIsUserPickerVisible(false)}
         onDone={handleSelectUsers}
       />
+      {currentPlatform && (
+        <WorldPickerModal
+          visible={isWorldPickerVisible}
+          platform={currentPlatform}
+          platforms={platforms}
+          value={current?.world}
+          onCancel={() => setIsWorldPickerVisible(false)}
+          onSelect={handleSelectWorld}
+        />
+      )}
       <PlatformSheet
         ref={platformSheetRef}
         platforms={platforms}

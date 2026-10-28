@@ -1,15 +1,10 @@
-import {
-  CatalystAvatar,
-  CatalystDivider,
-  CatalystListItem,
-  CatalystSearchField,
-  CatalystText,
-} from "@/components/design-system";
+import { CatalystAvatar, CatalystListItem, CatalystSearchField, CatalystText } from "@/components/design-system";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import { clientAtom } from "@/models/atoms/credential";
 import { MAX_USERS, toggleUser, toUserProfile, type UserProfile } from "@/models/epiclese-metadata-editor";
 import type { UserResponse } from "@natsuneko-laboratory/catalyst-sdk";
 import { useAtomValue } from "jotai";
+import { PickerHeader } from "./picker-header";
 import { Check, X } from "lucide-react-native";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Modal, Pressable, ScrollView, View } from "react-native";
@@ -75,20 +70,11 @@ export const UserPickerModal = ({ visible, users, profiles, onCancel, onDone }: 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onCancel}>
       <View className="flex-1 bg-light-background dark:bg-dark-background">
-        <View className="min-h-14 flex-row items-center justify-between px-4">
-          <Pressable onPress={onCancel} hitSlop={8} className="py-2">
-            <CatalystText variant="subtitle" tone="tint" className="font-normal">
-              キャンセル
-            </CatalystText>
-          </Pressable>
-          <CatalystText variant="subtitle">写っている人</CatalystText>
-          <Pressable onPress={() => onDone(draft, draftProfiles)} hitSlop={8} className="py-2">
-            <CatalystText variant="subtitle" tone="tint">
-              完了
-            </CatalystText>
-          </Pressable>
-        </View>
-        <CatalystDivider />
+        <PickerHeader
+          title="写っている人"
+          left={{ label: "キャンセル", onPress: onCancel }}
+          right={{ label: "完了", onPress: () => onDone(draft, draftProfiles) }}
+        />
 
         <View className="gap-2 px-4 py-3">
           <CatalystText variant="caption" tone="subtle">

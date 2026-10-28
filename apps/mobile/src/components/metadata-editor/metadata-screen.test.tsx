@@ -34,6 +34,7 @@ jest.mock("@/components/metadata-editor/apply-to-all-sheet", () => ({ ApplyToAll
 jest.mock("@/components/metadata-editor/platform-sheet", () => ({ PlatformSheet: () => null }));
 jest.mock("@/components/metadata-editor/metadata-row", () => ({ MetadataRow: () => null }));
 jest.mock("@/components/metadata-editor/user-picker-modal", () => ({ UserPickerModal: () => null }));
+jest.mock("@/components/metadata-editor/world-picker", () => ({ WorldPickerModal: () => null }));
 jest.mock("@/components/design-system", () => {
   const { Pressable, Text, View } = jest.requireActual("react-native");
   return {
