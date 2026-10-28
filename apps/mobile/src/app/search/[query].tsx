@@ -7,10 +7,20 @@ import { Stack, useLocalSearchParams } from "expo-router";
 import { useAtomValue } from "jotai";
 import { useCallback, useEffect, useState } from "react";
 
+// expo-router の時点でデコード済みのことがあり、「100%」のように % を含む語をもう一度デコードすると例外になる。
+// そのときはデコード済みとみなしてそのまま使う
+const safeDecode = (value: string) => {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+};
+
 export default function SearchPage() {
   const params = useLocalSearchParams<{ query: string }>();
   const client = useAtomValue(clientAtom);
-  const hashtag = decodeURIComponent(params.query ?? "");
+  const hashtag = safeDecode(params.query ?? "");
   const [world, setWorld] = useState<{ name: string; platformIdentifier: string } | null>(null);
   const fetcher = useCallback(
     async (since: string | null, until: string | null) => {
