@@ -16,8 +16,8 @@ import {
 import type { Media } from "@/models/sdk-types";
 import type { EpicleseAuthorResponse, EpiclesePlatformResponse } from "@natsuneko-laboratory/catalyst-sdk";
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Modal, ScrollView } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Alert, Modal, Platform, ScrollView } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { withUniwind } from "uniwind";
 
@@ -30,6 +30,7 @@ import { PinCanvas } from "./pin-canvas";
 import { PinList } from "./pin-list";
 
 const UniGestureHandlerRootView = withUniwind(GestureHandlerRootView);
+const UniSafeAreaView = withUniwind(SafeAreaView);
 
 type Step = "canvas" | "item-search" | "item-create" | "author-filter" | "author-search" | "author-form";
 
@@ -168,94 +169,101 @@ export const PinEditorModal = ({ visible, media, pins, platform, platforms, onCa
       onRequestClose={handleRequestClose}
     >
       <UniGestureHandlerRootView className="flex-1 bg-light-background dark:bg-dark-background">
-        {step === "canvas" ? (
-          <>
-            <PickerHeader
-              title={`ピン ${draft.length}/${MAX_PINS}`}
-              left={{ label: "キャンセル", onPress: onCancel }}
-              right={{ label: "完了", onPress: handleDone }}
-            />
-            {/* ピンのドラッグが外側のスクロールと取り合わないよう、写真はスクロールさせず一覧だけをスクロールする */}
-            <PinCanvas
-              media={media}
-              pins={draft}
-              activeIndex={activeIndex}
-              onAdd={handleAdd}
-              onSelect={(index) => openPin(index, draft[index])}
-              onMove={(index, point) => setDraft((prev) => movePin(prev, index, point))}
-            />
-            {/* 一覧の末尾がホームインジケーターに重ならないよう、下の安全領域ぶん余白を取る */}
-            <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: insets.bottom }}>
-              <PinList
-                pins={draft}
-                onSelect={(index) => openPin(index, draft[index])}
-                onMoveUp={(index) => setDraft((prev) => movePinUp(prev, index))}
-                onMoveDown={(index) => setDraft((prev) => movePinDown(prev, index))}
-                onRemove={(index) => setDraft((prev) => removePin(prev, index))}
+        {/* Android では pageSheet が効かず全画面表示になり、edge-to-edge でステータスバーの裏まで描画されるので上端と左右を避ける。
+            下端は一覧とフォームごとにホームインジケーターぶんの余白を取っている。iOS はシート表示なので避けない */}
+        <UniSafeAreaView
+          edges={Platform.OS === "android" ? ["top", "left", "right"] : []}
+          className="flex-1 bg-light-background dark:bg-dark-background"
+        >
+          {step === "canvas" ? (
+            <>
+              <PickerHeader
+                title={`ピン ${draft.length}/${MAX_PINS}`}
+                left={{ label: "キャンセル", onPress: onCancel }}
+                right={{ label: "完了", onPress: handleDone }}
               />
-            </ScrollView>
-          </>
-        ) : null}
-        {step === "item-search" && activePin && (
-          <ItemSearchStep
-            pin={activePin}
-            authorFilter={authorFilter}
-            onPickAuthorFilter={() => setStep("author-filter")}
-            onSelect={(item) => {
-              updateActive((pin) => applyItem(pin, item));
-              setActiveIndex(null);
-              setStep("canvas");
-            }}
-            onCreateNew={() => setStep("item-create")}
-            onDelete={deleteActive}
-            onBack={backToCanvas}
-          />
-        )}
-        {step === "item-create" && activePin && (
-          <ItemCreateStep
-            pin={activePin}
-            platform={platform}
-            onChange={(patch) => updateActive((pin) => updateNewItem(pin, patch))}
-            onPickAuthor={() => setStep("author-search")}
-            onBackToSearch={() => setStep("item-search")}
-            onDelete={deleteActive}
-            onBack={backToCanvas}
-          />
-        )}
-        {step === "author-filter" && (
-          <AuthorSearchStep
-            title="作者で絞り込む"
-            allOption={{
-              label: "すべての作者",
-              onSelect: () => {
-                setAuthorFilter(null);
+              {/* ピンのドラッグが外側のスクロールと取り合わないよう、写真はスクロールさせず一覧だけをスクロールする */}
+              <PinCanvas
+                media={media}
+                pins={draft}
+                activeIndex={activeIndex}
+                onAdd={handleAdd}
+                onSelect={(index) => openPin(index, draft[index])}
+                onMove={(index, point) => setDraft((prev) => movePin(prev, index, point))}
+              />
+              {/* 一覧の末尾がホームインジケーターに重ならないよう、下の安全領域ぶん余白を取る */}
+              <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: insets.bottom }}>
+                <PinList
+                  pins={draft}
+                  onSelect={(index) => openPin(index, draft[index])}
+                  onMoveUp={(index) => setDraft((prev) => movePinUp(prev, index))}
+                  onMoveDown={(index) => setDraft((prev) => movePinDown(prev, index))}
+                  onRemove={(index) => setDraft((prev) => removePin(prev, index))}
+                />
+              </ScrollView>
+            </>
+          ) : null}
+          {step === "item-search" && activePin && (
+            <ItemSearchStep
+              pin={activePin}
+              authorFilter={authorFilter}
+              onPickAuthorFilter={() => setStep("author-filter")}
+              onSelect={(item) => {
+                updateActive((pin) => applyItem(pin, item));
+                setActiveIndex(null);
+                setStep("canvas");
+              }}
+              onCreateNew={() => setStep("item-create")}
+              onDelete={deleteActive}
+              onBack={backToCanvas}
+            />
+          )}
+          {step === "item-create" && activePin && (
+            <ItemCreateStep
+              pin={activePin}
+              platform={platform}
+              onChange={(patch) => updateActive((pin) => updateNewItem(pin, patch))}
+              onPickAuthor={() => setStep("author-search")}
+              onBackToSearch={() => setStep("item-search")}
+              onDelete={deleteActive}
+              onBack={backToCanvas}
+            />
+          )}
+          {step === "author-filter" && (
+            <AuthorSearchStep
+              title="作者で絞り込む"
+              allOption={{
+                label: "すべての作者",
+                onSelect: () => {
+                  setAuthorFilter(null);
+                  setStep("item-search");
+                },
+              }}
+              onBack={() => setStep("item-search")}
+              onSelect={(author) => {
+                setAuthorFilter(author);
                 setStep("item-search");
-              },
-            }}
-            onBack={() => setStep("item-search")}
-            onSelect={(author) => {
-              setAuthorFilter(author);
-              setStep("item-search");
-            }}
-          />
-        )}
-        {step === "author-search" && platform && (
-          <AuthorSearchStep
-            platform={platform}
-            title="作者"
-            onBack={() => setStep("item-create")}
-            onSelect={selectAuthor}
-            onRegister={() => setStep("author-form")}
-          />
-        )}
-        {step === "author-form" && platform && (
-          <AuthorFormStep
-            platform={platform}
-            platforms={platforms}
-            onBack={() => setStep("author-search")}
-            onSaved={selectAuthor}
-          />
-        )}
+              }}
+            />
+          )}
+          {step === "author-search" && platform && (
+            <AuthorSearchStep
+              platform={platform}
+              title="作者"
+              onBack={() => setStep("item-create")}
+              onSelect={selectAuthor}
+              onRegister={() => setStep("author-form")}
+            />
+          )}
+          {step === "author-form" && platform && (
+            <AuthorFormStep
+              platform={platform}
+              platforms={platforms}
+              onBack={() => setStep("author-search")}
+              onSaved={selectAuthor}
+            />
+          )}
+        </UniSafeAreaView>
       </UniGestureHandlerRootView>
     </Modal>
   );
