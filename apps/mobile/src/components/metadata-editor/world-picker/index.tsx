@@ -1,12 +1,16 @@
 import { toEditableWorld, type EditableWorld } from "@/models/epiclese-metadata-editor";
 import type { EpiclesePlatformResponse, EpicleseWorldResponse } from "@natsuneko-laboratory/catalyst-sdk";
 import { useCallback, useEffect, useState } from "react";
-import { Modal, View } from "react-native";
+import { Modal, Platform } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { withUniwind } from "uniwind";
 
 import { AuthorFormStep } from "./author-form-step";
 import { AuthorSearchStep } from "./author-search-step";
 import { EMPTY_WORLD_DRAFT, WorldFormStep, type WorldDraft } from "./world-form-step";
 import { WorldSearchStep } from "./world-search-step";
+
+const UniSafeAreaView = withUniwind(SafeAreaView);
 
 type Step = "world-search" | "world-form" | "author-search" | "author-form";
 
@@ -56,7 +60,12 @@ export const WorldPickerModal = ({ visible, platform, platforms, value, onCancel
       presentationStyle="pageSheet"
       onRequestClose={handleRequestClose}
     >
-      <View className="flex-1 bg-light-background dark:bg-dark-background">
+      {/* Android では pageSheet が効かず全画面表示になり、edge-to-edge でステータスバーの裏まで描画されるので上端と左右を避ける。
+          下端は一覧ごとにホームインジケーターぶんの余白を取っている。iOS はシート表示なので避けない */}
+      <UniSafeAreaView
+        edges={Platform.OS === "android" ? ["top", "left", "right"] : []}
+        className="flex-1 bg-light-background dark:bg-dark-background"
+      >
         {step === "world-search" && (
           <WorldSearchStep
             platform={platform}
@@ -99,7 +108,7 @@ export const WorldPickerModal = ({ visible, platform, platforms, value, onCancel
             }}
           />
         )}
-      </View>
+      </UniSafeAreaView>
     </Modal>
   );
 };
