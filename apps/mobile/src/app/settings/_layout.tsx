@@ -44,7 +44,7 @@ export default function SettingsLayout() {
               }
               return renderCatalystStackHeader({
                 ...props,
-                back: split && !props.route.name.startsWith("legal/") ? undefined : props.back,
+                back: split && !props.route.name.includes("/") ? undefined : props.back,
               });
             },
           }}
@@ -57,6 +57,7 @@ export default function SettingsLayout() {
             }}
           />
           <Stack.Screen name="account" options={{ title: "アカウント", headerBackTitle: "戻る" }} />
+          <Stack.Screen name="account/delete" options={{ title: "アカウント削除", headerBackTitle: "戻る" }} />
           <Stack.Screen name="notifications" options={{ title: "通知", headerBackTitle: "戻る" }} />
           <Stack.Screen name="display" options={{ title: "表示", headerBackTitle: "戻る" }} />
           <Stack.Screen

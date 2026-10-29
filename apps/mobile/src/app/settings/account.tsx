@@ -73,43 +73,6 @@ export default function AccountSettingsPage() {
     ]);
   }, [setAccount]);
 
-  const handleDeleteAccount = useCallback(() => {
-    Alert.alert("アカウントを削除しますか？", "この操作は取り消せません。", [
-      { text: "キャンセル", style: "cancel" },
-      {
-        text: "削除",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            if (account) {
-              const token = account.credential.client.accessToken;
-              const res = await fetch(
-                `https://api.natsuneko.com/egeria/v1/me`,
-                {
-                  method: "DELETE",
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                  },
-                },
-              );
-
-              if (res.ok) {
-                Alert.alert(
-                  "アカウントの削除を開始しました。投稿したデータが完全に消えるまで最大24時間かかることがあります",
-                );
-                await Credential.logout();
-                setAccount(null);
-                router.dismissAll();
-              }
-            }
-          } catch {
-            // ignored
-          }
-        },
-      },
-    ]);
-  }, [account, setAccount]);
-
   const footerText = !canEditScreenName
     ? "すでに1度ユーザー名を変更しているため、変更できません。"
     : errorMessage;
@@ -234,7 +197,7 @@ export default function AccountSettingsPage() {
         <CatalystListItem
           divided={false}
           className="min-h-14 px-5 py-3.5"
-          onPress={handleDeleteAccount}
+          onPress={() => router.push("/settings/account/delete")}
         >
           <CatalystListItemContent className="gap-0">
             <CatalystText
