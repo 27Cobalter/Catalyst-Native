@@ -27,7 +27,7 @@ export default function LegalLicensesPage() {
       data={LICENSES}
       keyExtractor={(w) => w.id}
       className="flex-1 bg-light-surface-muted dark:bg-dark-background"
-      style={{ paddingBottom: insets.bottom }}
+      contentContainerStyle={{ paddingBottom: insets.bottom }}
       renderItem={({ item, index }) => {
         return (
           <View className="bg-light-background dark:bg-dark-surface">
