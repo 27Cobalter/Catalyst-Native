@@ -14,7 +14,9 @@ import {
   type ApplyToAllSheetRef,
 } from "@/components/metadata-editor/apply-to-all-sheet";
 import { MetadataRow } from "@/components/metadata-editor/metadata-row";
+import { OriginalPhotoImport } from "@/components/metadata-editor/original-photo-import";
 import { PhotoPager } from "@/components/metadata-editor/photo-pager";
+import { PinEditorModal } from "@/components/metadata-editor/pin-editor";
 import { PlatformSheet, type PlatformSheetRef } from "@/components/metadata-editor/platform-sheet";
 import { UserPickerModal } from "@/components/metadata-editor/user-picker-modal";
 import { WorldPickerModal } from "@/components/metadata-editor/world-picker";
@@ -34,6 +36,7 @@ import {
   type EditableWorld,
   type UserProfile,
 } from "@/models/epiclese-metadata-editor";
+import { setPins, type EditablePin } from "@/models/epiclese-pin-editor";
 import type { Media } from "@/models/sdk-types";
 import type { EpiclesePlatformResponse } from "@natsuneko-laboratory/catalyst-sdk";
 import { Stack, useLocalSearchParams, usePreventRemove, useRouter } from "expo-router";
@@ -81,6 +84,7 @@ export default function StatusMetadataScreen() {
   const platformSheetRef = useRef<PlatformSheetRef>(null);
   const [isUserPickerVisible, setIsUserPickerVisible] = useState(false);
   const [isWorldPickerVisible, setIsWorldPickerVisible] = useState(false);
+  const [isPinEditorVisible, setIsPinEditorVisible] = useState(false);
 
   const isDirty = isMetadataDirty(initialItems, items);
   const canSave = isDirty && !isSubmitting;
@@ -160,6 +164,14 @@ export default function StatusMetadataScreen() {
     (world: EditableWorld | undefined) => {
       updateCurrent((item) => ({ ...item, world }));
       setIsWorldPickerVisible(false);
+    },
+    [updateCurrent],
+  );
+
+  const handleDonePins = useCallback(
+    (pins: EditablePin[]) => {
+      updateCurrent((item) => setPins(item, pins));
+      setIsPinEditorVisible(false);
     },
     [updateCurrent],
   );
@@ -338,6 +350,19 @@ export default function StatusMetadataScreen() {
               }
             />
             <CatalystDivider className="ml-5 w-auto" />
+            <MetadataRow
+              label="ピン"
+              value={current?.reference.length ? `${current.reference.length} 件` : "未設定"}
+              onPress={() => setIsPinEditorVisible(true)}
+            />
+            <CatalystDivider className="ml-5 w-auto" />
+            {medias[index] && (
+              <OriginalPhotoImport
+                statusId={id}
+                mediaId={medias[index].id}
+                hidesAutoMetadata={current?.privacyMetadata ?? false}
+              />
+            )}
             <View className="min-h-16 flex-row items-center bg-light-background px-5 py-3 dark:bg-dark-surface">
               <CatalystText variant="subtitle" className="mr-4 flex-1 text-[15px] font-semibold">
                 自動設定されたメタデータを表示しない
@@ -377,6 +402,17 @@ export default function StatusMetadataScreen() {
           value={current?.world}
           onCancel={() => setIsWorldPickerVisible(false)}
           onSelect={handleSelectWorld}
+        />
+      )}
+      {medias[index] && (
+        <PinEditorModal
+          visible={isPinEditorVisible}
+          media={medias[index]}
+          pins={current?.reference ?? []}
+          platform={currentPlatform}
+          platforms={platforms}
+          onCancel={() => setIsPinEditorVisible(false)}
+          onDone={handleDonePins}
         />
       )}
       <PlatformSheet
