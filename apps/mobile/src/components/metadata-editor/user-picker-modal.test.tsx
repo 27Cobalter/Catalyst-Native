@@ -9,6 +9,7 @@ import { UserPickerModal } from "./user-picker-modal";
 jest.mock("lucide-react-native", () => new Proxy({}, { get: () => () => null }));
 jest.mock("expo-image", () => ({ Image: () => null }));
 jest.mock("react-native-safe-area-context", () => ({
+  SafeAreaView: jest.requireActual("react-native").View,
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 // design-system の index 経由で読まれる reanimated は jest 環境で初期化できないので、使わない部品ごと差し替える

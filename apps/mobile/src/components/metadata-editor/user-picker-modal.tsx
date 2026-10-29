@@ -7,12 +7,13 @@ import { useAtomValue } from "jotai";
 import { PickerHeader } from "./picker-header";
 import { Check, X } from "lucide-react-native";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Modal, Pressable, ScrollView, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ActivityIndicator, FlatList, Modal, Platform, Pressable, ScrollView, View } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { withUniwind } from "uniwind";
 
 const UniCheck = withUniwind(Check);
 const UniX = withUniwind(X);
+const UniSafeAreaView = withUniwind(SafeAreaView);
 
 type Props = {
   visible: boolean;
@@ -71,7 +72,12 @@ export const UserPickerModal = ({ visible, users, profiles, onCancel, onDone }: 
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onCancel}>
-      <View className="flex-1 bg-light-background dark:bg-dark-background">
+      {/* Android では pageSheet が効かず全画面表示になり、edge-to-edge でステータスバーの裏まで描画されるので上端と左右を避ける。
+          下端は一覧ごとにホームインジケーターぶんの余白を取っている。iOS はシート表示なので避けない */}
+      <UniSafeAreaView
+        edges={Platform.OS === "android" ? ["top", "left", "right"] : []}
+        className="flex-1 bg-light-background dark:bg-dark-background"
+      >
         <PickerHeader
           title="写っている人"
           left={{ label: "キャンセル", onPress: onCancel }}
@@ -167,7 +173,7 @@ export const UserPickerModal = ({ visible, users, profiles, onCancel, onDone }: 
             }}
           />
         )}
-      </View>
+      </UniSafeAreaView>
     </Modal>
   );
 };
