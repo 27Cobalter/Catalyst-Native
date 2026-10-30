@@ -80,21 +80,29 @@ export const StatusesPlaceholder = () => {
     const attempt = ++attemptRef.current;
     isSearchingRef.current = true;
     setIsSearching(true);
-    try {
-      const { data } = await client.catalyst.v11.onThisDay.get({ throwOnError: true });
-      // 探している間に別の画面へ移っていたら (戻ってきた後も)、勝手に投稿を開かない
-      if (attempt === attemptRef.current) {
-        router.push(`/status/${data.id}`);
-      }
-    } catch {
-      if (attempt !== attemptRef.current) return;
+
+    // 404 は過去のこの日に投稿が無いとき。それ以外は通信やサーバーの失敗なので、すぐやり直せば開けることがある
+    const fail = (isNotFound: boolean) => {
       isSearchingRef.current = false;
       setIsSearching(false);
-      Toast.show({
-        type: "error",
-        text1: "この日の投稿を見つけられませんでした",
-        text2: "別の日にもう一度お試しください。",
-      });
+      Toast.show(
+        isNotFound
+          ? { type: "error", text1: "この日の投稿を見つけられませんでした", text2: "別の日にもう一度お試しください。" }
+          : { type: "error", text1: "思い出を読み込めませんでした", text2: "時間をおいてもう一度お試しください" },
+      );
+    };
+
+    try {
+      const { data, response } = await client.catalyst.v11.onThisDay.get();
+      // 探している間に別の画面へ移っていたら (戻ってきた後も)、勝手に投稿を開かない
+      if (attempt !== attemptRef.current) return;
+      if (data) {
+        router.push(`/status/${data.id}`);
+      } else {
+        fail(response.status === 404);
+      }
+    } catch {
+      if (attempt === attemptRef.current) fail(false);
     }
   }, [client, router]);
 

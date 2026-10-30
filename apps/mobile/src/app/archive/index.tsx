@@ -1,4 +1,11 @@
-import { CatalystEmptyState, CatalystListItem, CatalystSkeleton, CatalystText } from "@/components/design-system";
+import {
+  CatalystButton,
+  CatalystButtonText,
+  CatalystEmptyState,
+  CatalystListItem,
+  CatalystSkeleton,
+  CatalystText,
+} from "@/components/design-system";
 import { useArchiveMonths, type ArchiveMonth } from "@/hooks/use-archive-months";
 import { FlashList, type ListRenderItem } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
@@ -27,6 +34,20 @@ const ArchiveMonthsPlaceholder = () => (
 
 const ArchiveMonthsEmpty = () => <CatalystEmptyState icon={<UniCalendarDaysIcon />} title="アーカイブはまだありません" />;
 
+const ArchiveMonthsError = ({ onReload }: { onReload: () => void }) => (
+  <View className="h-full items-center justify-center gap-4 px-6">
+    <CatalystEmptyState
+      className="h-auto"
+      icon={<UniCalendarDaysIcon />}
+      title="アーカイブを読み込めませんでした"
+      description="時間をおいてもう一度お試しください"
+    />
+    <CatalystButton tone="secondary" onPress={onReload}>
+      <CatalystButtonText>再読み込み</CatalystButtonText>
+    </CatalystButton>
+  </View>
+);
+
 const ArchiveHeader = () => (
   <View className="px-4 pt-4 pb-2">
     <CatalystText tone="muted">過去の投稿を月別に振り返ることができます。</CatalystText>
@@ -35,7 +56,7 @@ const ArchiveHeader = () => (
 
 export default function ArchivePage() {
   const router = useRouter();
-  const { months, isLoading } = useArchiveMonths();
+  const { months, isLoading, isError, reload } = useArchiveMonths();
 
   // months は新しい順なので、年が変わるところに見出しを差し込む
   const rows = useMemo(() => {
@@ -104,7 +125,9 @@ export default function ArchivePage() {
         renderItem={renderItem}
         stickyHeaderIndices={stickyHeaderIndices}
         ListHeaderComponent={ArchiveHeader}
-        ListEmptyComponent={isLoading ? ArchiveMonthsPlaceholder : ArchiveMonthsEmpty}
+        ListEmptyComponent={
+          isLoading ? ArchiveMonthsPlaceholder : isError ? <ArchiveMonthsError onReload={reload} /> : ArchiveMonthsEmpty
+        }
         ListEmptyComponentStyle={{ minHeight: "80%" }}
       />
     </View>

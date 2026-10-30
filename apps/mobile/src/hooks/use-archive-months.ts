@@ -1,7 +1,7 @@
 import { useAsyncEffect } from "@/hooks/use-async-effect";
 import { clientAtom } from "@/models/atoms/credential";
 import { atom, useAtom, useAtomValue } from "jotai";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 export type ArchiveMonth = { year: number; month: number; count: number };
 
@@ -18,6 +18,8 @@ export const useArchiveMonths = () => {
   const client = useAtomValue(clientAtom);
   const [cache, setCache] = useAtom(archiveMonthsCacheAtom);
   const [isFetching, setIsFetching] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const cached = cache?.client === client ? cache.months : undefined;
 
   // 前回の一覧を出したまま、裏で取り直す
@@ -31,10 +33,22 @@ export const useArchiveMonths = () => {
         client,
         months: data.months.filter((w) => w.count > 0).sort((a, b) => b.year - a.year || b.month - a.month),
       });
+      setHasError(false);
+    } catch (e) {
+      console.error(e);
+      setHasError(true);
     } finally {
       setIsFetching(false);
     }
-  }, [client]);
+  }, [client, attempt]);
 
-  return { months: cached ?? EMPTY, isLoading: cached === undefined && isFetching };
+  const reload = useCallback(() => setAttempt((n) => n + 1), []);
+
+  // 前回の一覧があれば、取り直しに失敗してもそれを出し続ける
+  return {
+    months: cached ?? EMPTY,
+    isLoading: cached === undefined && isFetching,
+    isError: cached === undefined && hasError,
+    reload,
+  };
 };

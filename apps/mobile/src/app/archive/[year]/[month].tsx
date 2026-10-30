@@ -54,11 +54,13 @@ export default function ArchiveMonthPage() {
   const client = useAtomValue(clientAtom);
   const { months } = useArchiveMonths();
 
-  // 前後の月は、投稿のある月だけをたどる (months は新しい順)
-  const index = months.findIndex((w) => w.year === year && w.month === month);
-  const newer = index > 0 ? months[index - 1] : undefined;
-  const older = index >= 0 ? months[index + 1] : undefined;
-  const count = index >= 0 ? months[index].count : undefined;
+  // 前後の月は、投稿のある月だけをたどる (months は新しい順)。
+  // この月が一覧に無くても (投稿の無い月へのリンクなど)、いちばん近い前後の月へ移れるようにする
+  const order = (w: Pick<ArchiveMonth, "year" | "month">) => w.year * 12 + w.month;
+  const current = order({ year, month });
+  const newer = months.findLast((w) => order(w) > current);
+  const older = months.find((w) => order(w) < current);
+  const count = months.find((w) => order(w) === current)?.count;
 
   const fetcher = useCallback(
     async (since: string | null, until: string | null) => {
