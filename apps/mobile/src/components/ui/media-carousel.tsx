@@ -1,5 +1,6 @@
 import { CatalystActionSheetItem, CatalystDivider, usePagerGestures } from "@/components/design-system";
 import { MediaPinOverlay } from "@/components/status/media-pin-overlay";
+import { MediaBadges } from "@/components/ui/media-badges";
 import { useHaptics } from "@/hooks/use-haptics";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { getCdnUrl, resolveDeliveredImageType } from "@/lib/media";
@@ -25,7 +26,7 @@ import {
   requestPermissionsAsync as requestMediaLibraryPermissions,
 } from "expo-media-library";
 import { useAtomValue } from "jotai";
-import { Download, EyeOff, ImageDown, Share2, Tags } from "lucide-react-native";
+import { Download, EyeOff, ImageDown, Share2 } from "lucide-react-native";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Platform, Pressable, Share, Text, View, useColorScheme, useWindowDimensions } from "react-native";
 import Toast from "react-native-toast-message";
@@ -317,20 +318,11 @@ export const MediaCarousel = memo(({ medias, createdAt, onIndexChange, pins }: P
         );
       }
 
-      // タイムラインではピンの座標を取っていないので、今見ている写真にアイテム情報がある目印だけを出す。
-      // 投稿詳細のタグ表示の切り替えボタンと同じ形・同じ右下に置き、画面によってアイコンの場所が変わらないようにする。
+      // タイムラインではピンの座標を取っていないので、アイテム情報がある目印だけを、複数枚の目印と並べて右上に出す。
+      // Web やプロフィールのグリッドと同じく投稿単位で見て、どれか 1 枚にでもあれば出す。
       // 押せない目印なので、カルーセルのスワイプやタップは邪魔しない。古い形式の投稿には hasReference が無いことがある
       if (!pins) {
-        return medias[index]?.hasReference ? (
-          <View
-            pointerEvents="none"
-            accessible
-            accessibilityLabel="アイテム情報あり"
-            className="absolute right-3 bottom-3 size-9 items-center justify-center rounded-full bg-black/40"
-          >
-            <Tags size={16} color="white" />
-          </View>
-        ) : null;
+        return <MediaBadges hasReference={medias.some((m) => m.hasReference)} hasMultiple={medias.length > 1} />;
       }
 
       // Photo pin overlay (座標付きメタデータ) — 現在表示中の media のピンのみ重ねる
