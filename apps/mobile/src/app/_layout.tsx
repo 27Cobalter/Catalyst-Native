@@ -261,6 +261,10 @@ export default Sentry.wrap(function RootLayout() {
                   options={{ title: "お題", headerBackTitle: "戻る" }}
                 />
                 <Stack.Screen
+                  name="theme/points"
+                  options={{ title: "お題ポイント", headerBackTitle: "戻る" }}
+                />
+                <Stack.Screen
                   name="gallery"
                   options={{ title: "ギャラリー", headerBackTitle: "戻る" }}
                 />
