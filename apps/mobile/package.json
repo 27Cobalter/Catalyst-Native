@@ -1,6 +1,6 @@
 {
   "name": "@natsuneko-laboratory/catalyst-mobile",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "private": true,
   "main": "expo-router/entry",
   "packageManager": "pnpm@12.3.4",
