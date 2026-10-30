@@ -84,7 +84,8 @@ export default function ArchiveMonthPage() {
     () => (
       <View className="flex-row items-center gap-2 border-b border-light-divider px-2 py-1 dark:border-dark-divider">
         <MonthLink target={older} current={{ year, month }} direction="older" onPress={moveTo} />
-        <View className="flex-row items-baseline gap-1.5">
+        {/* 前後のボタンと同じ高さ (h-8) を先に取っておき、月の一覧が届いて前後と件数が出ても見出しの高さを変えない */}
+        <View className="min-h-8 flex-row items-center gap-1.5">
           <CatalystText variant="subtitle">{formatArchiveMonth({ year, month })}</CatalystText>
           {count !== undefined ? (
             <CatalystText variant="caption" tone="muted">
