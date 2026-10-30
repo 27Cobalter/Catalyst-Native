@@ -1,5 +1,6 @@
 import { Tab, Tabs } from "@/components/tabs";
 import { WeeklyThemeList } from "@/components/theme/list";
+import { ThemePointsEntry } from "@/components/theme/points-entry";
 import type { TimelineHandle } from "@/components/timeline/base";
 import { useScrollToTop } from "expo-router/react-navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -29,6 +30,7 @@ export default function ThemeScreen() {
 
   return (
     <View className="flex-1 bg-light-background dark:bg-dark-background">
+      <ThemePointsEntry />
       <Tabs
         tabs={TABS}
         onTabChange={(tab) => setActiveTab(tab.key)}
