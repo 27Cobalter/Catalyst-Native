@@ -27,18 +27,18 @@ const MonthLink = ({ target, current, direction, onPress }: MonthLinkProps) => {
 
   const label = target.year === current.year ? `${target.month}月` : formatArchiveMonth(target);
   return (
-    <View className={direction === "newer" ? "flex-1 items-start" : "flex-1 items-end"}>
+    <View className={direction === "older" ? "flex-1 items-start" : "flex-1 items-end"}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${direction === "newer" ? "新しい月" : "古い月"}: ${formatArchiveMonth(target)}`}
+        accessibilityLabel={`${direction === "older" ? "古い月" : "新しい月"}: ${formatArchiveMonth(target)}`}
         onPress={() => onPress(target)}
-        className="h-10 flex-row items-center gap-0.5 rounded-lg px-2 active:opacity-60"
+        className="h-8 flex-row items-center gap-0.5 rounded-lg px-2 active:opacity-60"
       >
-        {direction === "newer" ? <UniChevronLeftIcon size={18} className="text-light-tint dark:text-dark-tint" /> : null}
+        {direction === "older" ? <UniChevronLeftIcon size={18} className="text-light-tint dark:text-dark-tint" /> : null}
         <CatalystText variant="label" tone="tint">
           {label}
         </CatalystText>
-        {direction === "older" ? <UniChevronRightIcon size={18} className="text-light-tint dark:text-dark-tint" /> : null}
+        {direction === "newer" ? <UniChevronRightIcon size={18} className="text-light-tint dark:text-dark-tint" /> : null}
       </Pressable>
     </View>
   );
@@ -79,20 +79,20 @@ export default function ArchiveMonthPage() {
     [router],
   );
 
-  // 月の一覧 (新しい順) と同じ向きにそろえ、左を新しい月、右を古い月にする
+  // カレンダーアプリと同じく、左を古い月、右を新しい月にする
   const ListHeaderComponent = useCallback(
     () => (
-      <View className="flex-row items-center gap-2 border-b border-light-divider px-2 py-3 dark:border-dark-divider">
-        <MonthLink target={newer} current={{ year, month }} direction="newer" onPress={moveTo} />
-        <View className="items-center">
-          <CatalystText variant="title">{formatArchiveMonth({ year, month })}</CatalystText>
+      <View className="flex-row items-center gap-2 border-b border-light-divider px-2 py-1 dark:border-dark-divider">
+        <MonthLink target={older} current={{ year, month }} direction="older" onPress={moveTo} />
+        <View className="flex-row items-baseline gap-1.5">
+          <CatalystText variant="subtitle">{formatArchiveMonth({ year, month })}</CatalystText>
           {count !== undefined ? (
             <CatalystText variant="caption" tone="muted">
-              {count} 件の投稿
+              {count}件
             </CatalystText>
           ) : null}
         </View>
-        <MonthLink target={older} current={{ year, month }} direction="older" onPress={moveTo} />
+        <MonthLink target={newer} current={{ year, month }} direction="newer" onPress={moveTo} />
       </View>
     ),
     [count, month, moveTo, newer, older, year],
