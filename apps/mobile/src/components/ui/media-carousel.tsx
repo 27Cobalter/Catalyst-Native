@@ -1,5 +1,6 @@
 import { CatalystActionSheetItem, CatalystDivider, usePagerGestures } from "@/components/design-system";
 import { MediaPinOverlay } from "@/components/status/media-pin-overlay";
+import { MediaBadges } from "@/components/ui/media-badges";
 import { useHaptics } from "@/hooks/use-haptics";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { getCdnUrl, resolveDeliveredImageType } from "@/lib/media";
@@ -317,9 +318,16 @@ export const MediaCarousel = memo(({ medias, createdAt, onIndexChange, pins }: P
         );
       }
 
+      // タイムラインではピンの座標を取っていないので、アイテム情報がある目印だけを、複数枚の目印と並べて右上に出す。
+      // Web やプロフィールのグリッドと同じく投稿単位で見て、どれか 1 枚にでもあれば出す。
+      // 押せない目印なので、カルーセルのスワイプやタップは邪魔しない。古い形式の投稿には hasReference が無いことがある
+      if (!pins) {
+        return <MediaBadges hasReference={medias.some((m) => m.hasReference)} hasMultiple={medias.length > 1} />;
+      }
+
       // Photo pin overlay (座標付きメタデータ) — 現在表示中の media のピンのみ重ねる
       const currentMedia = medias[index];
-      const references = currentMedia ? pins?.[currentMedia.id] : undefined;
+      const references = currentMedia ? pins[currentMedia.id] : undefined;
       if (!currentMedia || !references || references.length === 0) return null;
 
       return (

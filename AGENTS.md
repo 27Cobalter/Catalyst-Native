@@ -91,6 +91,7 @@ CDN URL 変換やステッカー画像URLの規約（`static.natsuneko.com/image
 [llms-full.txt](https://docs.uniwind.dev/llms-full.txt) が提供されているので、必要に応じて活用してください。
 グローバル CSS は `global.css` に配置されています。
 プラットフォーム固有のコンポーネントバリアントは `.ios.tsx` サフィックスの慣習を使用しています（例: `components/ui/icon-symbol.ios.tsx`）。
+`Modal` の `presentationStyle`（`pageSheet` / `formSheet`）は iOS でしか効かず、Android では全画面で表示されます。アプリは edge-to-edge 表示なので、このとき中身がステータスバーやナビゲーションバーの裏まで描画されます。Android で `Modal` を使うときは、セーフエリアを避けてください（例: `app/settings/custom-reactions.tsx`）。
 
 ### エラーモニタリング
 

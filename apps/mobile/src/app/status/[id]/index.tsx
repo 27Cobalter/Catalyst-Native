@@ -25,10 +25,10 @@ import { quoteSearchQualifier } from "@/lib/search-query";
 import { cn } from "@/lib/utils";
 import { accountAtom } from "@/models/atoms/account";
 import { clientAtom } from "@/models/atoms/credential";
+import { metadataRevisionAtomFamily } from "@/models/atoms/epiclese-metadata";
 import { openUrlWithBrowser } from "@/models/browser-settings";
 import {
   EPICLESE_ITEM_TYPE_LABELS,
-  getEpicleseItemUrl,
   getEpicleseWorld,
   type EpicleseMetadata,
   type EpicleseReference,
@@ -56,6 +56,7 @@ import {
   MoreHorizontal,
   Pencil,
   Send,
+  Tags,
   Trash2,
 } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -90,6 +91,7 @@ type MenuAction =
   | "addToAlbum"
   | "removeFromAlbum"
   | "edit"
+  | "editMetadata"
   | "delete"
   | "report"
   | "openInBrowser"
@@ -110,6 +112,7 @@ const UniMoreHorizontal = withUniwind(MoreHorizontal);
 const UniPencil = withUniwind(Pencil);
 const UniSafeAreaView = withUniwind(SafeAreaView);
 const UniSend = withUniwind(Send);
+const UniTags = withUniwind(Tags);
 const UniGlobe = withUniwind(Globe);
 const UniTrash2 = withUniwind(Trash2);
 
@@ -154,6 +157,7 @@ export default function StatusDetailsPage() {
   const router = useRouter();
   const account = useAtomValue(accountAtom);
   const client = useAtomValue(clientAtom);
+  const metadataRevision = useAtomValue(metadataRevisionAtomFamily(id));
   const { subscribe, unsubscribe } = useStreamingReactions();
 
   const [status, setStatus] = useState<CatalystStatusV1_1 | null>(null);
@@ -248,7 +252,7 @@ export default function StatusDetailsPage() {
     };
 
     fetchData();
-  }, [id, account, client]);
+  }, [id, account, client, metadataRevision]);
 
   const handleStreamingReaction = useCallback(
     (event: ReactionStreamingEvent) => {
@@ -377,6 +381,9 @@ export default function StatusDetailsPage() {
         case "edit":
           setEditingCaption(status?.body ?? "");
           setIsEditSheetVisible(true);
+          break;
+        case "editMetadata":
+          router.push(`/status/${id}/metadata`);
           break;
         case "delete":
           Alert.alert("この投稿を削除しますか？", "この操作は取り消せません", [
@@ -680,7 +687,7 @@ export default function StatusDetailsPage() {
                           <Pressable
                             accessibilityRole="link"
                             className="min-w-0 shrink active:opacity-75"
-                            onPress={() => openUrlWithBrowser(getEpicleseItemUrl(item.reference))}
+                            onPress={() => router.push(`/items/${item.reference}`)}
                           >
                             <CatalystText variant="caption" tone="link" numberOfLines={1}>
                               {item.name}
@@ -858,6 +865,12 @@ export default function StatusDetailsPage() {
           {isMyself && (
             <View>
               <CatalystActionSheetItem icon={UniPencil} title="編集する" onPress={() => handleMenuItemPress("edit")} />
+              <CatalystDivider className="ml-14 w-auto" />
+              <CatalystActionSheetItem
+                icon={UniTags}
+                title="メタデータを編集"
+                onPress={() => handleMenuItemPress("editMetadata")}
+              />
               <CatalystDivider className="ml-14 w-auto" />
               <CatalystActionSheetItem
                 icon={UniTrash2}

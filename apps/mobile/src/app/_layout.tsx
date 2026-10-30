@@ -221,8 +221,12 @@ export default Sentry.wrap(function RootLayout() {
                   }}
                 />
                 <Stack.Screen
-                  name="status/[id]"
+                  name="status/[id]/index"
                   options={{ title: "投稿", headerBackTitle: "戻る" }}
+                />
+                <Stack.Screen
+                  name="status/[id]/metadata"
+                  options={{ title: "メタデータ", headerBackTitle: "キャンセル" }}
                 />
                 <Stack.Screen
                   name="user/[screenName]/index"
@@ -257,6 +261,10 @@ export default Sentry.wrap(function RootLayout() {
                   options={{ title: "お題", headerBackTitle: "戻る" }}
                 />
                 <Stack.Screen
+                  name="theme/points"
+                  options={{ title: "お題ポイント", headerBackTitle: "戻る" }}
+                />
+                <Stack.Screen
                   name="archive/index"
                   options={{ title: "月間アーカイブ", headerBackTitle: "戻る" }}
                 />
@@ -272,6 +280,10 @@ export default Sentry.wrap(function RootLayout() {
                 <Stack.Screen
                   name="search/[query]"
                   options={{ headerBackTitle: "戻る" }}
+                />
+                <Stack.Screen
+                  name="items/[id]"
+                  options={{ title: "アイテム", headerBackTitle: "戻る" }}
                 />
                 <Stack.Screen
                   name="compose/post"

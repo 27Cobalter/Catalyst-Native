@@ -12,12 +12,18 @@ import { useAtom } from "jotai";
 import { useState } from "react";
 import { Alert, Text, TextInput, View } from "react-native";
 
+// 誤操作で削除しないよう、この文言を入力するまで削除を実行できないようにする
+const DELETE_CONFIRMATION_TEXT = "削除する";
+
 export const AccountPage = ({ onBack }: SettingsPageProps) => {
   const [account, setAccount] = useAtom(accountAtom);
   const [screenName, setScreenName] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const user = account?.user;
   const canEditScreenName = user ? user.screenName === user.id : false;
@@ -69,9 +75,16 @@ export const AccountPage = ({ onBack }: SettingsPageProps) => {
     await logout();
   };
 
+  const isDeleteDisabled = deleteConfirmation.trim() !== DELETE_CONFIRMATION_TEXT;
+
+  const cancelDeleteAccount = () => {
+    setIsConfirmingDelete(false);
+    setDeleteConfirmation("");
+  };
+
   const handleDeleteAccount = async () => {
-    const accepted = await confirm("アカウントを削除しますか？", "この操作は取り消せません。", "削除", true);
-    if (!accepted || !account) return;
+    if (!account || isDeleteDisabled) return;
+    setIsDeleting(true);
     try {
       const res = await fetch("https://api.natsuneko.com/egeria/v1/me", {
         method: "DELETE",
@@ -85,6 +98,8 @@ export const AccountPage = ({ onBack }: SettingsPageProps) => {
       await logout();
     } catch {
       Alert.alert("アカウントを削除できませんでした", "時間をおいて再度お試しください。");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -136,9 +151,41 @@ export const AccountPage = ({ onBack }: SettingsPageProps) => {
       <SettingsGroup>
         <SettingsAction label="ログアウト" tone="danger" onPress={handleLogout} />
       </SettingsGroup>
-      <SettingsGroup>
-        <SettingsAction label="アカウントを削除" tone="danger" onPress={handleDeleteAccount} />
-      </SettingsGroup>
+      {isConfirmingDelete ? (
+        <SettingsGroup
+          title={`確認のため「${DELETE_CONFIRMATION_TEXT}」と入力してください`}
+          footer="アカウントを削除すると、投稿やプロフィールなどのデータはすべて削除され、元に戻すことはできません。データが完全に消えるまで最大24時間かかることがあります。"
+          footerTone="danger"
+        >
+          <View className="min-h-11 flex-row items-center px-4 py-2">
+            <TextInput
+              value={deleteConfirmation}
+              onChangeText={setDeleteConfirmation}
+              onSubmitEditing={handleDeleteAccount}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoFocus
+              editable={!isDeleting}
+              placeholder={DELETE_CONFIRMATION_TEXT}
+              placeholderTextColorClassName="accent-light-text-subtle dark:accent-dark-text-subtle"
+              className="flex-1 text-[13px] text-light-text dark:text-dark-text"
+            />
+          </View>
+          <SettingsAction
+            label="アカウントを削除"
+            tone="danger"
+            disabled={isDeleteDisabled}
+            busy={isDeleting}
+            busyLabel="削除しています"
+            onPress={handleDeleteAccount}
+          />
+          <SettingsAction label="キャンセル" disabled={isDeleting} onPress={cancelDeleteAccount} />
+        </SettingsGroup>
+      ) : (
+        <SettingsGroup>
+          <SettingsAction label="アカウントを削除" tone="danger" onPress={() => setIsConfirmingDelete(true)} />
+        </SettingsGroup>
+      )}
     </SettingsPage>
   );
 };
