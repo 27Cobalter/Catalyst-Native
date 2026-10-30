@@ -29,7 +29,7 @@ const DiscoverCard = ({ icon: Icon, eyebrow, title, description, action, disable
       accessibilityRole="button"
       disabled={disabled}
       onPress={onPress}
-      className="gap-3 rounded-xl border border-light-divider bg-light-surface p-4 active:opacity-80 dark:border-dark-divider dark:bg-dark-surface"
+      className="gap-3 rounded-xl bg-light-surface p-4 active:opacity-80 dark:bg-dark-surface"
     >
       <View className="flex-row items-center gap-2">
         <Icon size={16} className="text-light-text-muted dark:text-dark-text-muted" />
