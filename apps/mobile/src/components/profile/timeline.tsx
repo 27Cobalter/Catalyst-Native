@@ -1,5 +1,6 @@
 import { POST_COLUMNS } from "@/lib/device-layout";
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
+import { MediaBadges } from "@/components/ui/media-badges";
 import { getCdnUrl } from "@/lib/media";
 import { merge } from "@/lib/merge";
 import { clientAtom } from "@/models/atoms/credential";
@@ -28,6 +29,8 @@ const ThumbnailCell = memo(({ status, cellSize }: { status: CatalystStatus; cell
   const router = useRouter();
   const media = status.medias[0];
   const [isImageLoading, setIsImageLoading] = useState(true);
+  const isSensitive = status.medias.some((w) => w.metadata?.isSensitive);
+  const isSpoiler = status.medias.some((w) => w.metadata?.isSpoiler);
 
   return (
     <Pressable onPress={() => router.push(`/status/${status.id}`)} style={{ width: cellSize, height: cellSize }}>
@@ -46,17 +49,26 @@ const ThumbnailCell = memo(({ status, cellSize }: { status: CatalystStatus; cell
               contentFit="cover"
               onLoadEnd={() => setIsImageLoading(false)}
             />
-            {status.medias.some((w) => w.metadata?.isSensitive) && (
+            {isSensitive && (
               <View className="absolute inset-0 flex items-center justify-center  bg-light-skeleton dark:bg-dark-skeleton">
                 <Text className="text-light-text dark:text-dark-text">Sensitive Content</Text>
               </View>
             )}
-            {status.medias.some((w) => w.metadata?.isSpoiler) && (
+            {isSpoiler && (
               <View className="absolute inset-0 flex items-center justify-center bg-light-skeleton dark:bg-dark-skeleton">
                 <Text className="text-light-text dark:text-dark-text">Spoiler Content</Text>
               </View>
             )}
           </View>
+          {/* タイムラインのカルーセルと同じく、センシティブ・ネタバレで覆っている間は目印を出さない。
+              読み込み中の表示より前に置き、写真が出るまでは隠す */}
+          {!isSensitive && !isSpoiler && (
+            <MediaBadges
+              compact
+              hasReference={status.medias.some((m) => m.hasReference)}
+              hasMultiple={status.medias.length > 1}
+            />
+          )}
           {isImageLoading && (
             <View className="absolute inset-0 items-center justify-center bg-light-skeleton dark:bg-dark-skeleton">
               <ActivityIndicator colorClassName="accent-light-tint dark:accent-dark-tint" />
