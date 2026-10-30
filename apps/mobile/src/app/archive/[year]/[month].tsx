@@ -17,7 +17,7 @@ type MonthLinkProps = {
   target: ArchiveMonth | undefined;
   current: { year: number; month: number };
   direction: "newer" | "older";
-  onPress: (target: ArchiveMonth) => void;
+  onPress: (target: ArchiveMonth, direction: "newer" | "older") => void;
 };
 
 // 行き先の月を添えた前後移動のボタン。同じ年なら「11月」、年をまたぐときは「2025年12月」と出す
@@ -31,7 +31,7 @@ const MonthLink = ({ target, current, direction, onPress }: MonthLinkProps) => {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${direction === "older" ? "古い月" : "新しい月"}: ${formatArchiveMonth(target)}`}
-        onPress={() => onPress(target)}
+        onPress={() => onPress(target, direction)}
         className="h-8 flex-row items-center gap-0.5 rounded-lg px-2 active:opacity-60"
       >
         {direction === "older" ? <UniChevronLeftIcon size={18} className="text-light-tint dark:text-dark-tint" /> : null}
@@ -74,8 +74,13 @@ export default function ArchiveMonthPage() {
   );
 
   // 月を移るたびに画面を積むと戻るのが大変なので、置き換えて月の一覧へ 1 回で戻れるようにする
+  // 移る向きを渡し、古い月へは戻るときと同じ向きの遷移にする (_layout.tsx の animationTypeForReplace)
   const moveTo = useCallback(
-    (target: ArchiveMonth) => router.replace(`/archive/${target.year}/${target.month}`),
+    (target: ArchiveMonth, direction: "newer" | "older") =>
+      router.replace({
+        pathname: "/archive/[year]/[month]",
+        params: { year: target.year, month: target.month, direction },
+      }),
     [router],
   );
 
