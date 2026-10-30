@@ -7,6 +7,7 @@ import { StatusesPlaceholder } from "@/components/explorer/statuses/placeholder"
 import { TrendList } from "@/components/explorer/trends/list";
 import { UserList } from "@/components/explorer/users/list";
 import { UsersPlaceholder } from "@/components/explorer/users/placeholder";
+import { WorldList } from "@/components/explorer/worlds/list";
 import { Tab, Tabs } from "@/components/tabs";
 import { WeeklyThemeList } from "@/components/theme/list";
 import { TimelineBase, TimelineHandle } from "@/components/timeline/base";
@@ -17,13 +18,14 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { View } from "react-native";
 import { v4 } from "uuid";
 
-// Web 版の検索と同じ並び
+// Web 版の検索と同じ並び。ワールドは Web 版に無いので、同じ撮影メタデータのアイテムの隣に置く
 const TABS: Tab[] = [
   { key: "statuses", label: "投稿" },
   { key: "users", label: "ユーザー" },
   { key: "trends", label: "トレンド" },
   { key: "albums", label: "アルバム" },
   { key: "items", label: "アイテム" },
+  { key: "worlds", label: "ワールド" },
   { key: "contests", label: "コンテスト" },
   { key: "themes", label: "お題" },
 ];
@@ -43,6 +45,7 @@ export default function HomeScreen() {
   const trendsRef = useRef<TimelineHandle>(null);
   const albumsRef = useRef<TimelineHandle>(null);
   const itemsRef = useRef<TimelineHandle>(null);
+  const worldsRef = useRef<TimelineHandle>(null);
   const contestsRef = useRef<TimelineHandle>(null);
   const themesRef = useRef<TimelineHandle>(null);
 
@@ -76,6 +79,7 @@ export default function HomeScreen() {
       trends: trendsRef,
       albums: albumsRef,
       items: itemsRef,
+      worlds: worldsRef,
       contests: contestsRef,
       themes: themesRef,
     };
@@ -146,6 +150,10 @@ export default function HomeScreen() {
 
               case "items": {
                 return <ItemList ref={itemsRef} query={query || undefined} />;
+              }
+
+              case "worlds": {
+                return <WorldList ref={worldsRef} query={query} />;
               }
 
               case "contests": {
