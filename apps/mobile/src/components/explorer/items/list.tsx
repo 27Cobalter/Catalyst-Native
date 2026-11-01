@@ -98,12 +98,21 @@ const ItemsEmptyResult = () => {
   );
 };
 
+const DEFAULT_DESCRIPTION = "アバターや衣装の名前・ショップ名から、そのアイテムを使った写真を探せます。";
+
 type Props = {
   query?: string;
+  /** 見出しの下に出す説明。検索タブ以外から開いたときは、その画面に合った説明に差し替える */
+  description?: string;
+  /**
+   * 作者名が完全に一致するアイテムだけを残す。検索は名前・説明文にも部分一致するので、ほかのアイテムが混ざるのを除く。
+   * 作者の ID ではなく名前で比べるのは、同じショップが別々の作者として登録されていることがあり、まとめて出したいため
+   */
+  author?: string;
   ref?: React.Ref<TimelineHandle>;
 };
 
-export const ItemList = ({ query, ref }: Props) => {
+export const ItemList = ({ query, description = DEFAULT_DESCRIPTION, author, ref }: Props) => {
   const client = useAtomValue(clientAtom);
   const { mediaColumns } = useDeviceLayout();
   const [type, setType] = useState<EpicleseItemType | null>(null);
@@ -125,9 +134,12 @@ export const ItemList = ({ query, ref }: Props) => {
         query: { q: query || undefined, type: type ?? undefined, offset },
         throwOnError: true,
       });
-      return data;
+      if (!author) return data;
+
+      // ページの途中で間引くので、1 ページが 20 件に満たないこともある。続きは nextOffset のまま読む
+      return { ...data, items: data.items.filter((w) => w.item.author.name.trim() === author.trim()) };
     },
-    [client, query, type],
+    [client, query, type, author],
   );
 
   useAsyncEffect(async () => {
@@ -196,7 +208,7 @@ export const ItemList = ({ query, ref }: Props) => {
           <CatalystText>{getItemTypeLabel(type)}</CatalystText>
         </Pressable>
       </View>
-      <CatalystText tone="muted">アバターや衣装の名前・ショップ名から、そのアイテムを使った写真を探せます。</CatalystText>
+      <CatalystText tone="muted">{description}</CatalystText>
     </View>
   );
 
