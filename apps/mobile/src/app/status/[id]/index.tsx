@@ -708,9 +708,21 @@ export default function StatusDetailsPage() {
                               {item.name}
                             </CatalystText>
                           </Pressable>
-                          <CatalystText variant="caption" tone="muted" numberOfLines={1} className="min-w-0 shrink">
-                            by {item.author.name}
-                          </CatalystText>
+                          <Pressable
+                            accessibilityRole="link"
+                            accessibilityLabel={`${item.author.name} のアイテムを探す`}
+                            className="min-w-0 shrink active:opacity-75"
+                            onPress={() =>
+                              router.push(`/items/search?author=${encodeURIComponent(item.author.name.trim())}`)
+                            }
+                          >
+                            <CatalystText variant="caption" tone="muted" numberOfLines={1}>
+                              by{" "}
+                              <CatalystText variant="caption" tone="link">
+                                {item.author.name}
+                              </CatalystText>
+                            </CatalystText>
+                          </Pressable>
                           {item.externalUrl ? (
                             <Pressable
                               accessibilityRole="link"
