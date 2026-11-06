@@ -14,6 +14,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import { useDefaultCategories } from "./emoji-data";
 import { useEmojiPickerDefaults } from "./emoji-picker-view";
 import { recordUnicodeUsage, recordUrlUsage } from "./frequency-manager";
+import { useIntelligenceSearchProvider } from "./intelligence-search";
 
 export type { EmojiPickerSheetRef };
 
@@ -32,6 +33,7 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
     const sheetRef = useRef<EmojiPickerSheetRef>(null);
     const defaultCategories = useDefaultCategories();
     const pickerDefaults = useEmojiPickerDefaults();
+    const intelligenceSearch = useIntelligenceSearchProvider(categories);
 
     useImperativeHandle(ref, () => ({
       open: () => {
@@ -147,6 +149,7 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
         title="リアクションを追加"
         categories={categories}
         isLoading={isCategoriesLoading}
+        searchProvider={intelligenceSearch}
         onEmojiSelected={handleEmojiSelected}
         onDismiss={handleDismiss}
       />
