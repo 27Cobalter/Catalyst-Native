@@ -13,7 +13,8 @@ import { useAtomValue } from "jotai";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useDefaultCategories } from "./emoji-data";
 import { useEmojiPickerDefaults } from "./emoji-picker-view";
-import { recordUnicodeUsage, recordUrlUsage } from "./frequency-manager";
+import { getRecentItems, recordUnicodeUsage, recordUrlUsage, toRecentEmojis } from "./frequency-manager";
+import { useIntelligenceSearchProvider } from "./intelligence-search";
 
 export type { EmojiPickerSheetRef };
 
@@ -32,6 +33,7 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
     const sheetRef = useRef<EmojiPickerSheetRef>(null);
     const defaultCategories = useDefaultCategories();
     const pickerDefaults = useEmojiPickerDefaults();
+    const intelligenceSearch = useIntelligenceSearchProvider(categories);
 
     useImperativeHandle(ref, () => ({
       open: () => {
@@ -51,7 +53,7 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
 
       const load = async () => {
         try {
-          const [customReactions, userReactionList] = await Promise.all([
+          const [customReactions, userReactionList, recentItems] = await Promise.all([
             account?.credential.client
               ? account.credential.client.catalyst.v1.reactions
                   .get({ throwOnError: true })
@@ -64,6 +66,7 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
                   .then(({ data }) => data)
                   .catch(() => null as CatalystCustomReactionList | null)
               : Promise.resolve(null as CatalystCustomReactionList | null),
+            getRecentItems(),
           ]);
 
           if (cancelled) return;
@@ -99,6 +102,15 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
           }
 
           builtCategories.push(...defaultCategories);
+
+          // 履歴が空でもタブは出す (空のときは説明を表示し、開いたときは次のカテゴリが選ばれる)
+          builtCategories.unshift({
+            id: "recent",
+            title: "最近使用",
+            icon: "clock",
+            emojis: toRecentEmojis(recentItems, builtCategories),
+            emptyMessage: "使ったリアクションがここに表示されます",
+          });
 
           setCategories(builtCategories);
         } catch (e) {
@@ -147,6 +159,7 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
         title="リアクションを追加"
         categories={categories}
         isLoading={isCategoriesLoading}
+        searchProvider={intelligenceSearch}
         onEmojiSelected={handleEmojiSelected}
         onDismiss={handleDismiss}
       />
