@@ -185,6 +185,33 @@ describe("PinEditorModal", () => {
     ]);
   });
 
+  it("アイテムを選ぶと、作者の絞り込みを外す", async () => {
+    const { client } = await renderEditor([]);
+    client.epiclese.v1.authors.get.mockResolvedValue({ data: { items: [jacket.author] } } as never);
+
+    await tapCanvas(200, 200);
+    await fireEvent.press(screen.getByText("作者で絞り込む"));
+    await act(async () => {
+      jest.advanceTimersByTime(300);
+    });
+    await fireEvent.press(screen.getByText("Author"));
+    await act(async () => {
+      jest.advanceTimersByTime(300);
+    });
+    expect(client.epiclese.v1.items.get).toHaveBeenLastCalledWith(
+      expect.objectContaining({ query: { q: "", author: "a-1" } }),
+    );
+
+    await fireEvent.press(screen.getByText("Jacket"));
+    // 写真の画面は作り直されるので、大きさを伝え直す
+    await fireEvent(screen.getByTestId("pin-canvas"), "layout", {
+      nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 400 } },
+    });
+    await tapCanvas(100, 100);
+
+    expect(screen.getByText("すべての作者")).toBeTruthy();
+  });
+
   it("新規作成で作者が無ければ完了で止まる", async () => {
     const { onDone } = await renderEditor([]);
 
