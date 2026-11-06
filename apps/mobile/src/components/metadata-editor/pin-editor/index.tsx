@@ -50,7 +50,8 @@ export const PinEditorModal = ({ visible, media, pins, platform, platforms, onCa
   const [draft, setDraft] = useState(pins);
   const [step, setStep] = useState<Step>("canvas");
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  // アイテム検索の作者の絞り込み。ピンごとではなく、モーダルを開いている間は持ち越す
+  // アイテム検索の作者の絞り込み。アイテムを選んでピンが決まるまでは、作者の検索や新規作成を行き来しても持ち越す。
+  // 次のピンは別の作者のアイテムのことが多いので、アイテムを選んだら外す
   const [authorFilter, setAuthorFilter] = useState<EpicleseAuthorResponse | null>(null);
   const activePin = activeIndex !== null ? draft[activeIndex] : undefined;
 
@@ -210,6 +211,7 @@ export const PinEditorModal = ({ visible, media, pins, platform, platforms, onCa
               onPickAuthorFilter={() => setStep("author-filter")}
               onSelect={(item) => {
                 updateActive((pin) => applyItem(pin, item));
+                setAuthorFilter(null);
                 setActiveIndex(null);
                 setStep("canvas");
               }}
