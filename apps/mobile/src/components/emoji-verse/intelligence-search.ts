@@ -9,10 +9,13 @@ import type {
   EmojiSearchProvider,
   EmojiSearchResult,
 } from "@natsuneko-laboratory/react-native-emoji-verse";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 const PAIMON_SEARCH = "https://paimon.natsuneko.com/v1/search";
 const SEARCH_LIMIT = 50;
+// 同じ投稿でピッカーを開き直したときに、待たずに前の結果を出すため、探した結果をしばらく覚えておく
+const CACHE_TTL_MS = 10 * 60 * 1000;
+const CACHE_SIZE = 20;
 
 type PaimonSearchResponse = {
   results?: { emoji: string }[];
@@ -47,9 +50,32 @@ export function matchPickerEmojis(
   });
 }
 
+type SearchCache = Map<string, { response: PaimonSearchResponse; at: number }>;
+
+function toSearchResult(response: PaimonSearchResponse, categories: readonly EmojiCategory[]): EmojiSearchResult {
+  return {
+    items: matchPickerEmojis(response.results ?? [], categories),
+    message:
+      response.degraded === true
+        ? "いまはキーワードの一致だけで探しています。結果が少なかったり、ずれていたりすることがあります。"
+        : undefined,
+  };
+}
+
+function peekCache(cache: SearchCache, query: string, categories: readonly EmojiCategory[]) {
+  const entry = cache.get(query);
+  if (!entry) return undefined;
+  if (Date.now() - entry.at > CACHE_TTL_MS) {
+    cache.delete(query);
+    return undefined;
+  }
+  return toSearchResult(entry.response, categories);
+}
+
 async function searchByMeaning(
   query: string,
   categories: readonly EmojiCategory[],
+  cache: SearchCache,
   signal: AbortSignal,
 ): Promise<EmojiSearchResult> {
   const url = `${PAIMON_SEARCH}?q=${encodeURIComponent(query)}&limit=${SEARCH_LIMIT}`;
@@ -62,18 +88,19 @@ async function searchByMeaning(
   }
   if (!res.ok) throw new Error(`paimon search failed: ${res.status}`);
 
-  const body = (await res.json()) as PaimonSearchResponse;
-  return {
-    items: matchPickerEmojis(body.results ?? [], categories),
-    message:
-      body.degraded === true
-        ? "いまはキーワードの一致だけで探しています。結果が少なかったり、ずれていたりすることがあります。"
-        : undefined,
-  };
+  const response = (await res.json()) as PaimonSearchResponse;
+  cache.delete(query);
+  cache.set(query, { response, at: Date.now() });
+  // Map は入れた順に並ぶので、先頭がいちばん古い
+  if (cache.size > CACHE_SIZE) cache.delete(cache.keys().next().value!);
+  return toSearchResult(response, categories);
 }
 
 /** ピッカーのカテゴリタブの先頭に、意味の近い絵文字を探すタブを追加する */
 export function useIntelligenceSearchProvider(categories: readonly EmojiCategory[]): EmojiSearchProvider {
+  // ピッカーを開き直すたびにカテゴリを作り直すので、結果は paimon の応答のまま覚えておき、出すときに置き換える
+  const [cache] = useState<SearchCache>(() => new Map());
+
   return useMemo(
     () => ({
       icon: "sparkles",
@@ -82,8 +109,9 @@ export function useIntelligenceSearchProvider(categories: readonly EmojiCategory
       emptyMessage: "見つかりませんでした",
       errorMessage: "絵文字を探せませんでした。しばらくしてからもう一度お試しください。",
       tryLabel: "Intelligence Search で探す",
-      search: (query, { signal }) => searchByMeaning(query, categories, signal),
+      search: (query, { signal }) => searchByMeaning(query, categories, cache, signal),
+      peek: (query) => peekCache(cache, query, categories),
     }),
-    [categories],
+    [cache, categories],
   );
 }
