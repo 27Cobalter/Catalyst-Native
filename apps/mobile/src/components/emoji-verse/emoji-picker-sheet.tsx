@@ -34,8 +34,6 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
     const defaultCategories = useDefaultCategories();
     const pickerDefaults = useEmojiPickerDefaults();
     const intelligenceSearch = useIntelligenceSearchProvider(categories);
-    // 同じ投稿に同じ言葉から続けてリアクションを付けられるよう、開き直したときは前に意味で探した言葉から始める
-    const [intelligenceQuery, setIntelligenceQuery] = useState("");
 
     useImperativeHandle(ref, () => ({
       open: () => {
@@ -162,8 +160,6 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
         categories={categories}
         isLoading={isCategoriesLoading}
         searchProvider={intelligenceSearch}
-        defaultProviderQuery={intelligenceQuery}
-        onProviderQueryChange={setIntelligenceQuery}
         onEmojiSelected={handleEmojiSelected}
         onDismiss={handleDismiss}
       />
