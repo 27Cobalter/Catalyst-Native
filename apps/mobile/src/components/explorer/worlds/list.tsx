@@ -8,50 +8,69 @@ import {
 import { useAsyncEffect } from "@/hooks/use-async-effect";
 import { useDeviceLayout } from "@/lib/device-layout";
 import { quoteSearchQualifier } from "@/lib/search-query";
-import { fetchVRChatWorldAuthorName, isVRChatWorldId, vrchatWorldThumbnailUrl } from "@/lib/vrchat-world";
+import { isResoniteWorld, resoniteWorldThumbnailUrl } from "@/lib/resonite-world";
+import { getWorldSite } from "@/lib/world-site";
 import { clientAtom } from "@/models/atoms/credential";
-import type { EpicleseWorldResponse } from "@natsuneko-laboratory/catalyst-sdk";
+import type { EpiclesePlatformResponse, EpicleseWorldResponse } from "@natsuneko-laboratory/catalyst-sdk";
 import { FlashList, FlashListRef, ListRenderItem, useRecyclingState } from "@shopify/flash-list";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
-import { ChevronRight, Globe, SearchX } from "lucide-react-native";
+import { ChevronRight, Globe, ListFilter, SearchX } from "lucide-react-native";
 import { memo, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { withUniwind } from "uniwind";
+import { WorldPlatformSheet, type WorldPlatformSheetRef } from "./platform-sheet";
 
 const UniImage = withUniwind(Image);
 const UniGlobe = withUniwind(Globe);
 const UniChevronRight = withUniwind(ChevronRight);
 const UniSearchXIcon = withUniwind(SearchX);
+const UniListFilterIcon = withUniwind(ListFilter);
 
 type TimelineHandle = {
   scrollToTop: () => void;
 };
 
+// SDK の型にはまだ無いが、カタログ検索は Resonite のワールドにオーナー ID を付けて返す
+type CatalogWorld = EpicleseWorldResponse & { platformOwnerIdentifier?: string | null };
+
+/** サムネイルを引けないプラットフォームなら null */
+const getThumbnailUrl = (world: CatalogWorld) => {
+  const platformName = world.platform?.name;
+  const site = getWorldSite(platformName, world.platformIdentifier);
+  if (site) return site.thumbnailUrl;
+  if (world.platformOwnerIdentifier && isResoniteWorld(platformName, world.platformIdentifier)) {
+    return resoniteWorldThumbnailUrl(world.platformOwnerIdentifier, world.platformIdentifier);
+  }
+  return null;
+};
+
 /**
  * カタログ検索の 1 件。カタログには作成者が入っていないワールドが多いので、
- * 無いときは VRChat のワールドに限り miliastra から補う。問い合わせるのは描画された行だけ
+ * 無いときは VRChat・XRift のワールドに限り miliastra から補う。問い合わせるのは描画された行だけ
  */
-const WorldRow = memo(({ world }: { world: EpicleseWorldResponse }) => {
+const WorldRow = memo(({ world }: { world: CatalogWorld }) => {
   const router = useRouter();
-  const isVRChat = isVRChatWorldId(world.platformIdentifier);
+  const thumbnailUrl = getThumbnailUrl(world);
   // カタログの作成者名は先頭に半角スペースが付いていることがある
   const catalogAuthorName = world.author?.name.trim() || null;
   // FlashList は行を使い回すので、別のワールドの行になったら状態を戻す
   const [fetchedAuthorName, setFetchedAuthorName] = useRecyclingState<string | null>(null, [world.id]);
-  const [isThumbnailBroken, setIsThumbnailBroken] = useRecyclingState(!isVRChat, [world.id]);
+  const [isThumbnailBroken, setIsThumbnailBroken] = useRecyclingState(!thumbnailUrl, [world.id]);
   const authorName = catalogAuthorName ?? fetchedAuthorName;
+  const platformName = world.platform?.name;
 
   useEffect(() => {
-    if (catalogAuthorName || !isVRChat) return;
+    const site = getWorldSite(platformName, world.platformIdentifier);
+    if (catalogAuthorName || !site) return;
 
     const controller = new AbortController();
-    fetchVRChatWorldAuthorName(world.platformIdentifier, controller.signal).then((name) => {
+    site.fetchAuthorName(controller.signal).then((name) => {
       if (!controller.signal.aborted) setFetchedAuthorName(name);
     });
     return () => controller.abort();
-  }, [catalogAuthorName, isVRChat, setFetchedAuthorName, world.platformIdentifier]);
+  }, [catalogAuthorName, platformName, setFetchedAuthorName, world.platformIdentifier]);
 
   // 投稿詳細でワールドをタップしたときと同じ検索に飛ばす。先頭にワールドのカードが出る
   const onPress = () => {
@@ -64,11 +83,11 @@ const WorldRow = memo(({ world }: { world: EpicleseWorldResponse }) => {
   return (
     <CatalystListItem onPress={onPress} accessibilityRole="button" accessibilityLabel={`${world.name} の投稿を検索`}>
       <View className="aspect-video w-32 items-center justify-center overflow-hidden rounded-lg bg-light-surface-muted dark:bg-dark-surface-muted">
-        {isThumbnailBroken ? (
+        {isThumbnailBroken || !thumbnailUrl ? (
           <UniGlobe size={24} className="text-light-text-subtle dark:text-dark-text-subtle" />
         ) : (
           <UniImage
-            source={vrchatWorldThumbnailUrl(world.platformIdentifier)}
+            source={thumbnailUrl}
             contentFit="cover"
             className="absolute inset-0"
             onError={() => setIsThumbnailBroken(true)}
@@ -115,12 +134,16 @@ const WorldListPlaceholder = () => {
   );
 };
 
-const WorldsEmptyResult = () => {
+const WorldsEmptyResult = ({ isFiltered }: { isFiltered: boolean }) => {
   return (
     <CatalystEmptyState
       icon={<UniSearchXIcon />}
       title="ワールドが見つかりません"
-      description="ワールド名の一部や、wrld_ から始まる ID でも検索できます"
+      description={
+        isFiltered
+          ? "別のキーワードやプラットフォームで検索してみてください"
+          : "ワールド名の一部や、wrld_ から始まる ID でも検索できます"
+      }
     />
   );
 };
@@ -134,26 +157,37 @@ type Props = {
 export const WorldList = ({ query, ref }: Props) => {
   const client = useAtomValue(clientAtom);
   const { listColumns } = useDeviceLayout();
-  const [worlds, setWorlds] = useState<EpicleseWorldResponse[]>([]);
+  const [platforms, setPlatforms] = useState<EpiclesePlatformResponse[]>([]);
+  const [platform, setPlatform] = useState<EpiclesePlatformResponse | null>(null);
+  const [worlds, setWorlds] = useState<CatalogWorld[]>([]);
   // `offset` は件数ではなくページの番号
   const [nextPage, setNextPage] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const isLoadingMore = useRef(false);
   // キーワードを変えたら番号を進め、前のキーワードのリクエストが後から返ってきても結果を捨てる
   const requestId = useRef(0);
-  const list = useRef<FlashListRef<EpicleseWorldResponse>>(null);
+  const list = useRef<FlashListRef<CatalogWorld>>(null);
+  const platformSheet = useRef<WorldPlatformSheetRef>(null);
+
+  // 絞り込みの選択肢。取れなかったら「すべて」だけになる
+  useEffect(() => {
+    client?.epiclese.v1.platforms
+      .get({ throwOnError: true })
+      .then(({ data }) => setPlatforms(data.platforms))
+      .catch(console.error);
+  }, [client]);
 
   const fetchWorlds = useCallback(
     async (page?: number) => {
       if (!client) return null;
 
       const { data } = await client.epiclese.v1.worlds.get({
-        query: { q: query || undefined, offset: page },
+        query: { q: query || undefined, platform: platform?.id, offset: page },
         throwOnError: true,
       });
       return data;
     },
-    [client, query],
+    [client, platform, query],
   );
 
   useAsyncEffect(async () => {
@@ -192,7 +226,7 @@ export const WorldList = ({ query, ref }: Props) => {
     }
   }, [fetchWorlds, nextPage]);
 
-  const onRender = useCallback<ListRenderItem<EpicleseWorldResponse>>(({ item }) => {
+  const onRender = useCallback<ListRenderItem<CatalogWorld>>(({ item }) => {
     return <WorldRow world={item} />;
   }, []);
 
@@ -206,17 +240,46 @@ export const WorldList = ({ query, ref }: Props) => {
     [],
   );
 
+  const platformLabel = platform?.name ?? "すべて";
+
+  // アイテム検索 (items/list.tsx) の見出しと同じ並び
+  const ListHeaderComponent = (
+    <View className="gap-1 px-4 pt-4 pb-1.5">
+      <View className="flex-row items-center justify-between gap-3">
+        <CatalystText variant="title" className="shrink">
+          ワールド
+        </CatalystText>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`プラットフォームで絞り込む: ${platformLabel}`}
+          onPress={() => platformSheet.current?.open()}
+          className="h-8 flex-row items-center gap-1.5 rounded-full border border-light-divider bg-light-surface pr-3 pl-2.5 active:opacity-80 dark:border-dark-divider dark:bg-dark-surface"
+        >
+          <UniListFilterIcon size={16} className="text-light-icon dark:text-dark-icon" />
+          <CatalystText>{platformLabel}</CatalystText>
+        </Pressable>
+      </View>
+      <CatalystText tone="muted">ワールドの名前や ID から、そのワールドで撮った写真を探せます。</CatalystText>
+    </View>
+  );
+
   return (
-    <FlashList
-      numColumns={listColumns}
-      ref={list}
-      data={worlds}
-      keyExtractor={(w) => w.id}
-      renderItem={onRender}
-      ListEmptyComponent={isLoading ? WorldListPlaceholder : WorldsEmptyResult}
-      ListEmptyComponentStyle={{ minHeight: "80%" }}
-      onEndReached={onLoadMore}
-      onEndReachedThreshold={0.75}
-    />
+    <>
+      <FlashList
+        numColumns={listColumns}
+        ref={list}
+        data={worlds}
+        keyExtractor={(w) => w.id}
+        renderItem={onRender}
+        ListHeaderComponent={ListHeaderComponent}
+        ListEmptyComponent={isLoading ? WorldListPlaceholder : <WorldsEmptyResult isFiltered={platform !== null} />}
+        ListEmptyComponentStyle={{ minHeight: "80%" }}
+        onEndReached={onLoadMore}
+        onEndReachedThreshold={0.75}
+        // プラットフォームを切り替えると一覧を丸ごと入れ替えるので、前の一覧の位置を保とうとしないようにする
+        maintainVisibleContentPosition={{ disabled: true }}
+      />
+      <WorldPlatformSheet ref={platformSheet} platforms={platforms} selected={platform} onSelect={setPlatform} />
+    </>
   );
 };
