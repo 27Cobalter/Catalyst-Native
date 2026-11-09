@@ -128,7 +128,8 @@ async function searchByMeaning(
   // キーワードの一致だけで探した結果は、paimon が直ったらすぐ探し直せるよう覚えない
   if (response.degraded !== true) {
     cache.delete(query);
-    cache.set(query, { response, at: Date.now() });
+    // 返す結果も一緒に覚え、直後の peek で同じオブジェクトを返す (置き換え直さず、一覧も描き直させない)
+    cache.set(query, { response, at: Date.now(), result: { categories, value: result } });
     // Map は入れた順に並ぶので、先頭がいちばん古い
     if (cache.size > CACHE_SIZE) cache.delete(cache.keys().next().value!);
   }
@@ -143,8 +144,6 @@ export function useIntelligenceSearchProvider(categories: readonly EmojiCategory
       icon: "sparkles",
       placeholder: "気持ちや場面で探す（例：仕事おわった）",
       idleMessage: "言い回しや場面を入力して検索すると、意味の近い絵文字を探します。",
-      // かな漢字変換の途中の読みで探さないよう、また短い時間に探しすぎて制限されないよう、確定してから探す
-      searchOn: "submit",
       submitLabel: (query) => `「${query}」で探す`,
       emptyMessage: "見つかりませんでした",
       errorMessage: "絵文字を探せませんでした。しばらくしてからもう一度お試しください。",
