@@ -1,10 +1,12 @@
 import { accountAtom } from "@/models/atoms/account";
+import { emojiPickerTabAtom } from "@/models/atoms/emoji-picker-tab";
 import { intelligenceSearchQueryAtom } from "@/models/atoms/intelligence-search";
 import type { CatalystCustomReaction, CatalystCustomReactionList } from "@/models/sdk-types";
 import {
   emojiToCodepoints,
   type EmojiCategory,
   type EmojiItem,
+  type EmojiPickerTab,
 } from "@natsuneko-laboratory/react-native-emoji-verse";
 import {
   EmojiPickerSheet as BaseEmojiPickerSheet,
@@ -24,8 +26,8 @@ type Props = {
   onEmojiSelected?: (emoji: EmojiItem) => void;
   includeCatalystReactions?: boolean;
   /**
-   * リアクションを付ける投稿の id など。同じ id で開き直したときは、前に意味で探した言葉から始める。
-   * 覚えるのは直前に探した 1 つだけで、別の id で探すと前の言葉は消える
+   * リアクションを付ける投稿の id など。同じ id で開き直したときは、前に選んでいたタブや、意味で探した言葉から始める。
+   * 覚えるのはそれぞれ直前の 1 つだけで、別の id でタブを移ったり探したりすると前のものは消える
    */
   searchContextId?: string;
 };
@@ -46,6 +48,7 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
     // 言葉は開いたときに一度読めばよい。購読すると、どこかで探すたびにタイムラインにある全投稿のシートが描き直される
     const store = useStore();
     const [intelligenceQuery, setIntelligenceQuery] = useState("");
+    const [defaultTab, setDefaultTab] = useState<EmojiPickerTab>();
     const handleIntelligenceQueryChange = useCallback(
       (query: string) => {
         if (searchContextId === undefined) return;
@@ -57,11 +60,21 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
       },
       [searchContextId, store],
     );
+    // 同じ投稿の 2 つめ以降のリアクションも同じタブから選べるよう、開き直したときは前に選んでいたタブから始める
+    const handleTabChange = useCallback(
+      (tab: EmojiPickerTab) => {
+        if (searchContextId === undefined) return;
+        store.set(emojiPickerTabAtom, { contextId: searchContextId, tab });
+      },
+      [searchContextId, store],
+    );
 
     useImperativeHandle(ref, () => ({
       open: () => {
         const last = store.get(intelligenceSearchQueryAtom);
         setIntelligenceQuery(searchContextId !== undefined && last?.contextId === searchContextId ? last.query : "");
+        const lastTab = store.get(emojiPickerTabAtom);
+        setDefaultTab(searchContextId !== undefined && lastTab?.contextId === searchContextId ? lastTab.tab : undefined);
         setIsPresented(true);
         sheetRef.current?.open();
       },
@@ -194,6 +207,8 @@ export const EmojiPickerSheet = forwardRef<EmojiPickerSheetRef, Props>(
         searchProvider={intelligenceSearch}
         defaultProviderQuery={intelligenceQuery}
         onProviderQueryChange={handleIntelligenceQueryChange}
+        defaultTab={defaultTab}
+        onTabChange={handleTabChange}
         onEmojiSelected={handleEmojiSelected}
         onDismiss={handleDismiss}
       />

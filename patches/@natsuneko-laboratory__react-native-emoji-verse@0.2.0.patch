@@ -1,0 +1,422 @@
+diff --git a/README.md b/README.md
+index 9d3575c5e50c4b2f528528a26d49d1df43093971..7386638cbf42123c206671eaeff0f141eedb4f47 100644
+--- a/README.md
++++ b/README.md
+@@ -148,6 +148,7 @@ To open the picker on the same search again, keep the text from `onProviderQuery
+ | `showSkinToneSelector` | auto | Shows the skin tone button in the search bar. By default, the button appears only when some emoji in `categories` has skin tone variants. |
+ | `searchProvider` | | Adds a tab that searches with your own function. See [Search provider](#search-provider). |
+ | `defaultProviderQuery` / `onProviderQueryChange` | | Opens the picker on the provider tab with this text, and reports the text submitted on that tab. See [Search provider](#search-provider). |
++| `defaultTab` / `onTabChange` | | Opens the picker on this tab (`{ kind: "provider" }` or `{ kind: "category", id }`), and reports the tab the user moves to. If the category is not in `categories`, the picker opens on the first category with emoji. When the categories arrive after the picker opens, it selects the tab then. `defaultProviderQuery` takes priority. `onTabChange` is not called when the picker opens. |
+ 
+ The picker does not store the skin tone. To keep it between launches, persist the value from `onSkinToneChange`.
+ 
+diff --git a/lib/emoji-picker-view.d.ts b/lib/emoji-picker-view.d.ts
+index aa3357b3d68d966b7e7d3cbf31cc125e9a8f21e2..f962f3a1ef85d0c4505e8187a04c518cebb0f232 100644
+--- a/lib/emoji-picker-view.d.ts
++++ b/lib/emoji-picker-view.d.ts
+@@ -1,6 +1,6 @@
+ import React from "react";
+-import { type FlatListProps, type ImageStyle, type ScrollViewProps, type StyleProp } from "react-native";
+-import type { EmojiCategory, EmojiItem, EmojiSearchProvider, SkinTone } from "./types";
++import { type FlatListProps, type ImageStyle, ScrollView, type ScrollViewProps, type StyleProp } from "react-native";
++import type { EmojiCategory, EmojiItem, EmojiPickerTab, EmojiSearchProvider, SkinTone } from "./types";
+ export type EmojiImageProps = {
+     source: {
+         uri: string;
+@@ -29,7 +29,7 @@ export type EmojiPickerViewProps = {
+      * デフォルトは RN の ScrollView。BottomSheet 内では react-native-gesture-handler の ScrollView を渡すこと。
+      * RN の ScrollView では、横のスワイプをシートのジェスチャーに取られてスクロールしない
+      */
+-    CategoryScrollViewComponent?: React.ComponentType<ScrollViewProps>;
++    CategoryScrollViewComponent?: React.ComponentType<ScrollViewProps & React.RefAttributes<ScrollView>>;
+     /**
+      * Unicode 絵文字を画像で表示する場合の URL。undefined を返すとテキスト (システムフォント) で表示する。
+      * Twemoji 形式のファイル名には `emojiToTwemojiKey` が使える。
+@@ -52,5 +52,12 @@ export type EmojiPickerViewProps = {
+     defaultProviderQuery?: string;
+     /** 検索プロバイダのタブで確定した文字 (前後の空白を除く) が変わったとき。ほかのタブに移ったときは空文字。開いたときは呼ばない */
+     onProviderQueryChange?: (query: string) => void;
++    /**
++     * 開いたときに選ぶタブ (uncontrolled)。カテゴリがあとから届くときは、届いたときに選ぶ。
++     * そのカテゴリがないときは、指定しないときと同じく絵文字のある最初のカテゴリを選ぶ。defaultProviderQuery があるときは検索プロバイダのタブを選ぶ
++     */
++    defaultTab?: EmojiPickerTab;
++    /** タブを押して、選んでいるタブが変わったとき。開いたときや、カテゴリが届いて選び直したときは呼ばない */
++    onTabChange?: (tab: EmojiPickerTab) => void;
+ };
+-export declare function EmojiPickerView({ categories, onEmojiSelected, isLoading, listHeaderPrepend, FlatListComponent, CategoryScrollViewComponent, getEmojiImageUrl, ImageComponent, searchPlaceholder, skinTone: controlledSkinTone, defaultSkinTone, onSkinToneChange, showSkinToneSelector: showSkinToneSelectorProp, searchProvider, defaultProviderQuery, onProviderQueryChange, }: EmojiPickerViewProps): React.JSX.Element;
++export declare function EmojiPickerView({ categories, onEmojiSelected, isLoading, listHeaderPrepend, FlatListComponent, CategoryScrollViewComponent, getEmojiImageUrl, ImageComponent, searchPlaceholder, skinTone: controlledSkinTone, defaultSkinTone, onSkinToneChange, showSkinToneSelector: showSkinToneSelectorProp, searchProvider, defaultProviderQuery, onProviderQueryChange, defaultTab, onTabChange, }: EmojiPickerViewProps): React.JSX.Element;
+diff --git a/lib/emoji-picker-view.js b/lib/emoji-picker-view.js
+index 61d80e89765cd2cf616872688f4bef349ccd32b5..d164f43701616222f0240a44b31dd9594276a9a2 100644
+--- a/lib/emoji-picker-view.js
++++ b/lib/emoji-picker-view.js
+@@ -95,25 +95,29 @@ function peekSafely(provider, query) {
+         return undefined;
+     }
+ }
+-// 開いたときは、絵文字のある最初のカテゴリを選ぶ (先頭の「最近使用」などが空のことがある)
+-function defaultCategory(categories) {
+-    return categories.find((c) => c.emojis.length > 0) ?? categories[0];
++// 開いたときは、指定されたカテゴリか、絵文字のある最初のカテゴリを選ぶ (先頭の「最近使用」などが空のことがある)
++function defaultCategory(categories, id) {
++    return ((id !== undefined ? categories.find((c) => c.id === id) : undefined) ??
++        categories.find((c) => c.emojis.length > 0) ??
++        categories[0]);
+ }
+ function resolveIcon(icon) {
+     return typeof icon === "string" ? ICON_MAP[icon] : icon;
+ }
+-function CategoryButton({ icon, isSelected, disabled, onPress, }) {
++function CategoryButton({ icon, isSelected, disabled, onPress, onLayout, }) {
+     const theme = useColorScheme() ?? "light";
+     const IconComponent = resolveIcon(icon);
+     const activeColor = theme === "dark" ? "#0A84FF" : "#007AFF";
+     const inactiveColor = "#8E8E93";
+-    return (_jsxs(Pressable, { onPress: onPress, disabled: disabled, style: [styles.categoryButton, disabled && { opacity: 0.5 }], children: [IconComponent && _jsx(IconComponent, { size: 22, color: isSelected ? activeColor : inactiveColor }), _jsx(View, { style: [styles.categoryIndicator, isSelected && { backgroundColor: activeColor }] })] }));
++    return (_jsxs(Pressable, { onPress: onPress, onLayout: onLayout, disabled: disabled, style: [styles.categoryButton, disabled && { opacity: 0.5 }], children: [IconComponent && _jsx(IconComponent, { size: 22, color: isSelected ? activeColor : inactiveColor }), _jsx(View, { style: [styles.categoryIndicator, isSelected && { backgroundColor: activeColor }] })] }));
+ }
+-export function EmojiPickerView({ categories, onEmojiSelected, isLoading = false, listHeaderPrepend, FlatListComponent = FlatList, CategoryScrollViewComponent = ScrollView, getEmojiImageUrl, ImageComponent = DefaultImage, searchPlaceholder = "Search emoji", skinTone: controlledSkinTone, defaultSkinTone = 0, onSkinToneChange, showSkinToneSelector: showSkinToneSelectorProp, searchProvider, defaultProviderQuery, onProviderQueryChange, }) {
++export function EmojiPickerView({ categories, onEmojiSelected, isLoading = false, listHeaderPrepend, FlatListComponent = FlatList, CategoryScrollViewComponent = ScrollView, getEmojiImageUrl, ImageComponent = DefaultImage, searchPlaceholder = "Search emoji", skinTone: controlledSkinTone, defaultSkinTone = 0, onSkinToneChange, showSkinToneSelector: showSkinToneSelectorProp, searchProvider, defaultProviderQuery, onProviderQueryChange, defaultTab, onTabChange, }) {
+     const theme = useColorScheme() ?? "light";
+-    const [selectedCategoryId, setSelectedCategoryId] = useState(() => defaultCategory(categories)?.id ?? "");
+     const restoresProviderQuery = searchProvider !== undefined && !!defaultProviderQuery;
+-    const [isProviderSelected, setIsProviderSelected] = useState(restoresProviderQuery);
++    // uncontrolled なので、開いたときの値だけを使う
++    const [defaultCategoryId] = useState(() => defaultTab?.kind === "category" && !restoresProviderQuery ? defaultTab.id : undefined);
++    const [selectedCategoryId, setSelectedCategoryId] = useState(() => defaultCategory(categories, defaultCategoryId)?.id ?? "");
++    const [isProviderSelected, setIsProviderSelected] = useState(restoresProviderQuery || (searchProvider !== undefined && defaultTab?.kind === "provider"));
+     const [searchText, setSearchText] = useState(restoresProviderQuery ? defaultProviderQuery : "");
+     // 検索プロバイダで探す文字。確定するまで searchText とは別に持つ
+     const [submittedText, setSubmittedText] = useState(restoresProviderQuery ? defaultProviderQuery : "");
+@@ -123,6 +127,11 @@ export function EmojiPickerView({ categories, onEmojiSelected, isLoading = false
+     const [variantTarget, setVariantTarget] = useState(null);
+     const [gridWidth, setGridWidth] = useState(0);
+     const searchInputRef = useRef(null);
++    const categoryBarRef = useRef(null);
++    const categoryBarWidth = useRef(0);
++    // 開いたときに選んだカテゴリのタブの右端。タブが並んで位置がわかるまでは undefined
++    const defaultCategoryTabEnd = useRef(undefined);
++    const isDefaultCategoryTabRevealed = useRef(false);
+     const gridColumns = Math.max(MIN_GRID_COLUMNS, Math.floor((gridWidth - GRID_PADDING * 2) / TARGET_CELL_SIZE));
+     // セルは正方形 (aspectRatio: 1) なので、行の高さはセルの幅と同じ
+     const rowHeight = gridWidth > 0 ? (gridWidth - GRID_PADDING * 2) / gridColumns : EMOJI_SIZE + 8;
+@@ -135,9 +144,11 @@ export function EmojiPickerView({ categories, onEmojiSelected, isLoading = false
+         const isValid = categories.some((c) => c.id === selectedCategoryId);
+         if (!isValid) {
+             // eslint-disable-next-line react-hooks/set-state-in-effect
+-            setSelectedCategoryId(defaultCategory(categories)?.id ?? "");
++            setSelectedCategoryId(defaultCategory(categories, defaultCategoryId)?.id ?? "");
+         }
+-    }, [categories, selectedCategoryId]);
++    }, [categories, selectedCategoryId, defaultCategoryId]);
++    // 選んでいたカテゴリがないときは、effect で選び直す前の描画でも、開いたときと同じカテゴリを出す
++    const selectedCategory = categories.find((c) => c.id === selectedCategoryId) ?? defaultCategory(categories, defaultCategoryId);
+     const isProviderActive = isProviderSelected && searchProvider !== undefined;
+     // 検索プロバイダのタブでは、検索欄の文字はプロバイダの検索に使う
+     const isSearching = !isProviderActive && searchText.trim().length > 0;
+@@ -192,11 +203,33 @@ export function EmojiPickerView({ categories, onEmojiSelected, isLoading = false
+             return;
+         }
+         setIsProviderSelected(true);
++        onTabChange?.({ kind: "provider" });
+         // タブを移ったときは、入力済みの文字をそのまま確定する。前に移ったときの結果を出さないよう、探し直す
+         setSubmittedText(searchText);
+         setSubmitCount((count) => count + 1);
+-    }, [isProviderActive, searchText, submitSearchText]);
++    }, [isProviderActive, searchText, submitSearchText, onTabChange]);
++    // 開いたときに選んだカテゴリのタブが、見えている範囲より右にあれば、右端に来るまで送る。開いたときに 1 度だけ
++    const revealDefaultCategoryTab = useCallback(() => {
++        const end = defaultCategoryTabEnd.current;
++        const width = categoryBarWidth.current;
++        if (isDefaultCategoryTabRevealed.current || end === undefined || width === 0)
++            return;
++        isDefaultCategoryTabRevealed.current = true;
++        if (end > width)
++            categoryBarRef.current?.scrollTo({ x: end - width, animated: false });
++    }, []);
++    const handleCategoryBarLayout = useCallback((e) => {
++        categoryBarWidth.current = e.nativeEvent.layout.width;
++        revealDefaultCategoryTab();
++    }, [revealDefaultCategoryTab]);
++    const handleDefaultCategoryTabLayout = useCallback((e) => {
++        const { x, width } = e.nativeEvent.layout;
++        defaultCategoryTabEnd.current = x + width + styles.categoryBarContent.paddingHorizontal;
++        revealDefaultCategoryTab();
++    }, [revealDefaultCategoryTab]);
+     const selectCategory = (id) => {
++        if (isProviderActive || id !== selectedCategory?.id)
++            onTabChange?.({ kind: "category", id });
+         if (isProviderActive) {
+             // 意味で探していた文字が残ると、カテゴリではなくその文字での通常の検索になってしまうので消す
+             setSearchText("");
+@@ -246,8 +279,6 @@ export function EmojiPickerView({ categories, onEmojiSelected, isLoading = false
+     }, [onEmojiSelected]);
+     const renderItem = useCallback(({ item }) => (_jsx(EmojiItemCell, { item: item, skinTone: skinTone, onPress: handleEmojiPress, onLongPress: setVariantTarget, renderGlyph: renderGlyph, ImageComponent: ImageComponent, columns: gridColumns })), [skinTone, handleEmojiPress, renderGlyph, ImageComponent, gridColumns]);
+     const keyExtractor = useCallback((item, index) => `${item.id}-${index}`, []);
+-    // 選んでいたカテゴリがないときは、effect で選び直す前の描画でも、開いたときと同じカテゴリを出す
+-    const selectedCategory = categories.find((c) => c.id === selectedCategoryId) ?? defaultCategory(categories);
+     const providerResult = providerState.type === "ok" ? providerState.result : undefined;
+     const displayEmojis = isProviderActive
+         ? (providerResult?.items ?? [])
+@@ -280,10 +311,10 @@ export function EmojiPickerView({ categories, onEmojiSelected, isLoading = false
+     return (
+     // 通常の View (flex:1) をルートにすることで、BottomSheetContent が計算した
+     // height を正しく受け取れる。BottomSheetView は position:absolute のため不可。
+-    _jsxs(View, { style: [styles.container, { backgroundColor: bgColor }], children: [_jsxs(View, { style: { backgroundColor: bgColor }, children: [listHeaderPrepend, _jsxs(View, { style: [styles.searchBar, { backgroundColor: panelColor }], children: [_jsx(Search, { size: 16, color: "#8E8E93" }), _jsx(TextInput, { ref: searchInputRef, style: [styles.searchInput, { color: theme === "dark" ? "#FFFFFF" : "#000000" }], placeholder: isProviderActive ? (searchProvider?.placeholder ?? searchPlaceholder) : searchPlaceholder, placeholderTextColor: "#8E8E93", value: searchText, onChangeText: handleSearchTextChange, onSubmitEditing: isProviderActive ? submitSearchText : undefined, returnKeyType: isProviderActive ? "search" : undefined, autoCapitalize: "none", autoCorrect: false }), searchText.length > 0 && (_jsx(Pressable, { onPress: () => handleSearchTextChange(""), children: _jsx(X, { size: 16, color: "#8E8E93" }) })), showSkinToneSelector && (_jsx(Pressable, { accessibilityRole: "button", accessibilityLabel: "Skin tone", onPress: () => setIsSkinTonePickerOpen((open) => !open), hitSlop: 8, children: renderGlyph(skinToneSample(skinTone), SKIN_TONE_ICON_SIZE) }))] }), showSkinToneSelector && isSkinTonePickerOpen && (_jsx(View, { style: [styles.skinTonePicker, { backgroundColor: panelColor }], children: SKIN_TONES.map((tone) => (_jsx(Pressable, { accessibilityRole: "button", accessibilityState: { selected: tone === skinTone }, onPress: () => handleSkinToneChange(tone), style: [styles.skinToneOption, tone === skinTone && { backgroundColor: dividerColor }], children: renderGlyph(skinToneSample(tone), SKIN_TONE_ICON_SIZE) }, tone))) })), _jsxs(CategoryScrollViewComponent, { horizontal: true, 
++    _jsxs(View, { style: [styles.container, { backgroundColor: bgColor }], children: [_jsxs(View, { style: { backgroundColor: bgColor }, children: [listHeaderPrepend, _jsxs(View, { style: [styles.searchBar, { backgroundColor: panelColor }], children: [_jsx(Search, { size: 16, color: "#8E8E93" }), _jsx(TextInput, { ref: searchInputRef, style: [styles.searchInput, { color: theme === "dark" ? "#FFFFFF" : "#000000" }], placeholder: isProviderActive ? (searchProvider?.placeholder ?? searchPlaceholder) : searchPlaceholder, placeholderTextColor: "#8E8E93", value: searchText, onChangeText: handleSearchTextChange, onSubmitEditing: isProviderActive ? submitSearchText : undefined, returnKeyType: isProviderActive ? "search" : undefined, autoCapitalize: "none", autoCorrect: false }), searchText.length > 0 && (_jsx(Pressable, { onPress: () => handleSearchTextChange(""), children: _jsx(X, { size: 16, color: "#8E8E93" }) })), showSkinToneSelector && (_jsx(Pressable, { accessibilityRole: "button", accessibilityLabel: "Skin tone", onPress: () => setIsSkinTonePickerOpen((open) => !open), hitSlop: 8, children: renderGlyph(skinToneSample(skinTone), SKIN_TONE_ICON_SIZE) }))] }), showSkinToneSelector && isSkinTonePickerOpen && (_jsx(View, { style: [styles.skinTonePicker, { backgroundColor: panelColor }], children: SKIN_TONES.map((tone) => (_jsx(Pressable, { accessibilityRole: "button", accessibilityState: { selected: tone === skinTone }, onPress: () => handleSkinToneChange(tone), style: [styles.skinToneOption, tone === skinTone && { backgroundColor: dividerColor }], children: renderGlyph(skinToneSample(tone), SKIN_TONE_ICON_SIZE) }, tone))) })), _jsxs(CategoryScrollViewComponent, { ref: categoryBarRef, onLayout: handleCategoryBarLayout, horizontal: true, 
+                         // キーボードが出ているときも、1 回目のタップでタブを移れるようにする。
+                         // 移れないと、キーボードが閉じたことで検索プロバイダの検索が確定してしまう
+-                        keyboardShouldPersistTaps: "handled", showsHorizontalScrollIndicator: false, style: styles.categoryBar, contentContainerStyle: styles.categoryBarContent, children: [searchProvider && (_jsx(CategoryButton, { icon: searchProvider.icon, isSelected: isProviderActive, disabled: false, onPress: selectProvider })), categories.map((category) => (_jsx(CategoryButton, { icon: category.icon, isSelected: !isProviderActive && selectedCategory?.id === category.id, disabled: isSearching, onPress: () => selectCategory(category.id) }, category.id)))] }), _jsx(View, { style: [styles.divider, { backgroundColor: dividerColor }] })] }), note ? _jsx(Text, { style: styles.note, children: note }) : null, _jsx(FlatListComponent
++                        keyboardShouldPersistTaps: "handled", showsHorizontalScrollIndicator: false, style: styles.categoryBar, contentContainerStyle: styles.categoryBarContent, children: [searchProvider && (_jsx(CategoryButton, { icon: searchProvider.icon, isSelected: isProviderActive, disabled: false, onPress: selectProvider })), categories.map((category) => (_jsx(CategoryButton, { icon: category.icon, isSelected: !isProviderActive && selectedCategory?.id === category.id, disabled: isSearching, onPress: () => selectCategory(category.id), onLayout: category.id === defaultCategoryId ? handleDefaultCategoryTabLayout : undefined }, category.id)))] }), _jsx(View, { style: [styles.divider, { backgroundColor: dividerColor }] })] }), note ? _jsx(Text, { style: styles.note, children: note }) : null, _jsx(FlatListComponent
+             // FlatList は numColumns を実行中に変えられないので、列数が変わったら作り直す
+             , { style: styles.list, onLayout: (e) => setGridWidth(e.nativeEvent.layout.width), data: placeholder === undefined ? displayEmojis : NO_EMOJIS, renderItem: renderItem, keyExtractor: keyExtractor, numColumns: gridColumns, contentContainerStyle: [styles.gridContent, placeholder !== undefined && styles.placeholderContent], columnWrapperStyle: styles.gridRow, ListEmptyComponent: placeholder ?? null, 
+                 // キーボードが出ているときも、1 回目のタップで絵文字やボタンを押せるようにする
+diff --git a/lib/index.d.ts b/lib/index.d.ts
+index 255041b5a948fd96b389c678007ef3452632d92c..c4b98816973ef1e8d40b87491c10219d0ef8c224 100644
+--- a/lib/index.d.ts
++++ b/lib/index.d.ts
+@@ -8,4 +8,4 @@ export type { UnicodeVersion } from "./versions";
+ export { parseEmojiTest } from "./parser";
+ export { applySkinTone, findSkinToneVariant, SKIN_TONE_MODIFIERS, SKIN_TONES } from "./skin-tone";
+ export { emojiToCodepoints, emojiToTwemojiKey } from "./unicode";
+-export type { EmojiCategory, EmojiCategoryType, EmojiData, EmojiIcon, EmojiItem, EmojiItemType, EmojiSearchProvider, EmojiSearchResult, RawEmoji, SkinTone, } from "./types";
++export type { EmojiCategory, EmojiCategoryType, EmojiData, EmojiIcon, EmojiItem, EmojiItemType, EmojiPickerTab, EmojiSearchProvider, EmojiSearchResult, RawEmoji, SkinTone, } from "./types";
+diff --git a/lib/types.d.ts b/lib/types.d.ts
+index ba3e7543d475ae717ca79cca05b45b74f5eedaf1..c367f369c4e9db0ec60fe175fdf9e10a9b04d706 100644
+--- a/lib/types.d.ts
++++ b/lib/types.d.ts
+@@ -36,6 +36,13 @@ export type EmojiCategory = {
+     /** 絵文字が 1 つもないときに表示する文言 */
+     emptyMessage?: string;
+ };
++/** ピッカーのタブ。検索プロバイダのタブか、カテゴリのタブ */
++export type EmojiPickerTab = {
++    kind: "provider";
++} | {
++    kind: "category";
++    id: string;
++};
+ export type EmojiCategoryType = "smileys_and_people" | "animals_and_nature" | "food_and_drink" | "activity" | "travel_and_places" | "objects" | "symbols" | "flags";
+ export type EmojiSearchResult = {
+     items: EmojiItem[];
+diff --git a/src/emoji-picker-view.tsx b/src/emoji-picker-view.tsx
+index 413e6c13bbfe675755cfebe1b573714c2b9ca482..a90ee28ed2318f0179a7d76efc34e31dea96dc64 100644
+--- a/src/emoji-picker-view.tsx
++++ b/src/emoji-picker-view.tsx
+@@ -38,6 +38,7 @@ import type {
+   EmojiCategory,
+   EmojiIcon,
+   EmojiItem,
++  EmojiPickerTab,
+   EmojiSearchProvider,
+   EmojiSearchResult,
+   SkinTone,
+@@ -97,7 +98,7 @@ export type EmojiPickerViewProps = {
+    * デフォルトは RN の ScrollView。BottomSheet 内では react-native-gesture-handler の ScrollView を渡すこと。
+    * RN の ScrollView では、横のスワイプをシートのジェスチャーに取られてスクロールしない
+    */
+-  CategoryScrollViewComponent?: React.ComponentType<ScrollViewProps>;
++  CategoryScrollViewComponent?: React.ComponentType<ScrollViewProps & React.RefAttributes<ScrollView>>;
+   /**
+    * Unicode 絵文字を画像で表示する場合の URL。undefined を返すとテキスト (システムフォント) で表示する。
+    * Twemoji 形式のファイル名には `emojiToTwemojiKey` が使える。
+@@ -120,6 +121,13 @@ export type EmojiPickerViewProps = {
+   defaultProviderQuery?: string;
+   /** 検索プロバイダのタブで確定した文字 (前後の空白を除く) が変わったとき。ほかのタブに移ったときは空文字。開いたときは呼ばない */
+   onProviderQueryChange?: (query: string) => void;
++  /**
++   * 開いたときに選ぶタブ (uncontrolled)。カテゴリがあとから届くときは、届いたときに選ぶ。
++   * そのカテゴリがないときは、指定しないときと同じく絵文字のある最初のカテゴリを選ぶ。defaultProviderQuery があるときは検索プロバイダのタブを選ぶ
++   */
++  defaultTab?: EmojiPickerTab;
++  /** タブを押して、選んでいるタブが変わったとき。開いたときや、カテゴリが届いて選び直したときは呼ばない */
++  onTabChange?: (tab: EmojiPickerTab) => void;
+ };
+ 
+ function DefaultImage({ source, style }: EmojiImageProps) {
+@@ -240,9 +248,13 @@ function peekSafely(provider: EmojiSearchProvider | undefined, query: string) {
+   }
+ }
+ 
+-// 開いたときは、絵文字のある最初のカテゴリを選ぶ (先頭の「最近使用」などが空のことがある)
+-function defaultCategory(categories: EmojiCategory[]): EmojiCategory | undefined {
+-  return categories.find((c) => c.emojis.length > 0) ?? categories[0];
++// 開いたときは、指定されたカテゴリか、絵文字のある最初のカテゴリを選ぶ (先頭の「最近使用」などが空のことがある)
++function defaultCategory(categories: EmojiCategory[], id: string | undefined): EmojiCategory | undefined {
++  return (
++    (id !== undefined ? categories.find((c) => c.id === id) : undefined) ??
++    categories.find((c) => c.emojis.length > 0) ??
++    categories[0]
++  );
+ }
+ 
+ function resolveIcon(icon: EmojiIcon) {
+@@ -254,11 +266,13 @@ function CategoryButton({
+   isSelected,
+   disabled,
+   onPress,
++  onLayout,
+ }: {
+   icon: EmojiIcon;
+   isSelected: boolean;
+   disabled: boolean;
+   onPress: () => void;
++  onLayout?: (event: LayoutChangeEvent) => void;
+ }) {
+   const theme = useColorScheme() ?? "light";
+   const IconComponent = resolveIcon(icon);
+@@ -266,7 +280,12 @@ function CategoryButton({
+   const inactiveColor = "#8E8E93";
+ 
+   return (
+-    <Pressable onPress={onPress} disabled={disabled} style={[styles.categoryButton, disabled && { opacity: 0.5 }]}>
++    <Pressable
++      onPress={onPress}
++      onLayout={onLayout}
++      disabled={disabled}
++      style={[styles.categoryButton, disabled && { opacity: 0.5 }]}
++    >
+       {IconComponent && <IconComponent size={22} color={isSelected ? activeColor : inactiveColor} />}
+       <View style={[styles.categoryIndicator, isSelected && { backgroundColor: activeColor }]} />
+     </Pressable>
+@@ -290,11 +309,21 @@ export function EmojiPickerView({
+   searchProvider,
+   defaultProviderQuery,
+   onProviderQueryChange,
++  defaultTab,
++  onTabChange,
+ }: EmojiPickerViewProps) {
+   const theme = useColorScheme() ?? "light";
+-  const [selectedCategoryId, setSelectedCategoryId] = useState(() => defaultCategory(categories)?.id ?? "");
+   const restoresProviderQuery = searchProvider !== undefined && !!defaultProviderQuery;
+-  const [isProviderSelected, setIsProviderSelected] = useState(restoresProviderQuery);
++  // uncontrolled なので、開いたときの値だけを使う
++  const [defaultCategoryId] = useState(() =>
++    defaultTab?.kind === "category" && !restoresProviderQuery ? defaultTab.id : undefined,
++  );
++  const [selectedCategoryId, setSelectedCategoryId] = useState(
++    () => defaultCategory(categories, defaultCategoryId)?.id ?? "",
++  );
++  const [isProviderSelected, setIsProviderSelected] = useState(
++    restoresProviderQuery || (searchProvider !== undefined && defaultTab?.kind === "provider"),
++  );
+   const [searchText, setSearchText] = useState(restoresProviderQuery ? defaultProviderQuery : "");
+   // 検索プロバイダで探す文字。確定するまで searchText とは別に持つ
+   const [submittedText, setSubmittedText] = useState(restoresProviderQuery ? defaultProviderQuery : "");
+@@ -304,6 +333,11 @@ export function EmojiPickerView({
+   const [variantTarget, setVariantTarget] = useState<EmojiItem | null>(null);
+   const [gridWidth, setGridWidth] = useState(0);
+   const searchInputRef = useRef<TextInput>(null);
++  const categoryBarRef = useRef<ScrollView>(null);
++  const categoryBarWidth = useRef(0);
++  // 開いたときに選んだカテゴリのタブの右端。タブが並んで位置がわかるまでは undefined
++  const defaultCategoryTabEnd = useRef<number | undefined>(undefined);
++  const isDefaultCategoryTabRevealed = useRef(false);
+   const gridColumns = Math.max(MIN_GRID_COLUMNS, Math.floor((gridWidth - GRID_PADDING * 2) / TARGET_CELL_SIZE));
+   // セルは正方形 (aspectRatio: 1) なので、行の高さはセルの幅と同じ
+   const rowHeight = gridWidth > 0 ? (gridWidth - GRID_PADDING * 2) / gridColumns : EMOJI_SIZE + 8;
+@@ -316,9 +350,12 @@ export function EmojiPickerView({
+     const isValid = categories.some((c) => c.id === selectedCategoryId);
+     if (!isValid) {
+       // eslint-disable-next-line react-hooks/set-state-in-effect
+-      setSelectedCategoryId(defaultCategory(categories)?.id ?? "");
++      setSelectedCategoryId(defaultCategory(categories, defaultCategoryId)?.id ?? "");
+     }
+-  }, [categories, selectedCategoryId]);
++  }, [categories, selectedCategoryId, defaultCategoryId]);
++  // 選んでいたカテゴリがないときは、effect で選び直す前の描画でも、開いたときと同じカテゴリを出す
++  const selectedCategory =
++    categories.find((c) => c.id === selectedCategoryId) ?? defaultCategory(categories, defaultCategoryId);
+   const isProviderActive = isProviderSelected && searchProvider !== undefined;
+   // 検索プロバイダのタブでは、検索欄の文字はプロバイダの検索に使う
+   const isSearching = !isProviderActive && searchText.trim().length > 0;
+@@ -373,11 +410,36 @@ export function EmojiPickerView({
+       return;
+     }
+     setIsProviderSelected(true);
++    onTabChange?.({ kind: "provider" });
+     // タブを移ったときは、入力済みの文字をそのまま確定する。前に移ったときの結果を出さないよう、探し直す
+     setSubmittedText(searchText);
+     setSubmitCount((count) => count + 1);
+-  }, [isProviderActive, searchText, submitSearchText]);
++  }, [isProviderActive, searchText, submitSearchText, onTabChange]);
++  // 開いたときに選んだカテゴリのタブが、見えている範囲より右にあれば、右端に来るまで送る。開いたときに 1 度だけ
++  const revealDefaultCategoryTab = useCallback(() => {
++    const end = defaultCategoryTabEnd.current;
++    const width = categoryBarWidth.current;
++    if (isDefaultCategoryTabRevealed.current || end === undefined || width === 0) return;
++    isDefaultCategoryTabRevealed.current = true;
++    if (end > width) categoryBarRef.current?.scrollTo({ x: end - width, animated: false });
++  }, []);
++  const handleCategoryBarLayout = useCallback(
++    (e: LayoutChangeEvent) => {
++      categoryBarWidth.current = e.nativeEvent.layout.width;
++      revealDefaultCategoryTab();
++    },
++    [revealDefaultCategoryTab],
++  );
++  const handleDefaultCategoryTabLayout = useCallback(
++    (e: LayoutChangeEvent) => {
++      const { x, width } = e.nativeEvent.layout;
++      defaultCategoryTabEnd.current = x + width + styles.categoryBarContent.paddingHorizontal;
++      revealDefaultCategoryTab();
++    },
++    [revealDefaultCategoryTab],
++  );
+   const selectCategory = (id: string) => {
++    if (isProviderActive || id !== selectedCategory?.id) onTabChange?.({ kind: "category", id });
+     if (isProviderActive) {
+       // 意味で探していた文字が残ると、カテゴリではなくその文字での通常の検索になってしまうので消す
+       setSearchText("");
+@@ -458,8 +520,6 @@ export function EmojiPickerView({
+ 
+   const keyExtractor = useCallback((item: EmojiItem, index: number) => `${item.id}-${index}`, []);
+ 
+-  // 選んでいたカテゴリがないときは、effect で選び直す前の描画でも、開いたときと同じカテゴリを出す
+-  const selectedCategory = categories.find((c) => c.id === selectedCategoryId) ?? defaultCategory(categories);
+   const providerResult = providerState.type === "ok" ? providerState.result : undefined;
+   const displayEmojis = isProviderActive
+     ? (providerResult?.items ?? [])
+@@ -581,6 +641,8 @@ export function EmojiPickerView({
+ 
+         {/* カテゴリタブ */}
+         <CategoryScrollViewComponent
++          ref={categoryBarRef}
++          onLayout={handleCategoryBarLayout}
+           horizontal
+           // キーボードが出ているときも、1 回目のタップでタブを移れるようにする。
+           // 移れないと、キーボードが閉じたことで検索プロバイダの検索が確定してしまう
+@@ -604,6 +666,7 @@ export function EmojiPickerView({
+               isSelected={!isProviderActive && selectedCategory?.id === category.id}
+               disabled={isSearching}
+               onPress={() => selectCategory(category.id)}
++              onLayout={category.id === defaultCategoryId ? handleDefaultCategoryTabLayout : undefined}
+             />
+           ))}
+         </CategoryScrollViewComponent>
+diff --git a/src/index.ts b/src/index.ts
+index ac390f6a9015bc54b83f275ffa9869da4be33b8b..f70de81ec988d0466409b596ab96ba96a0f8e1cc 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -21,6 +21,7 @@ export type {
+   EmojiIcon,
+   EmojiItem,
+   EmojiItemType,
++  EmojiPickerTab,
+   EmojiSearchProvider,
+   EmojiSearchResult,
+   RawEmoji,
+diff --git a/src/types.ts b/src/types.ts
+index ca8827f584ad61d1831cbd7d02e651ee9f852214..2d7d2edaff2889b829667842409cf7f4103d5dee 100644
+--- a/src/types.ts
++++ b/src/types.ts
+@@ -36,6 +36,9 @@ export type EmojiCategory = {
+   emptyMessage?: string;
+ };
+ 
++/** ピッカーのタブ。検索プロバイダのタブか、カテゴリのタブ */
++export type EmojiPickerTab = { kind: "provider" } | { kind: "category"; id: string };
++
+ export type EmojiCategoryType =
+   | "smileys_and_people"
+   | "animals_and_nature"
