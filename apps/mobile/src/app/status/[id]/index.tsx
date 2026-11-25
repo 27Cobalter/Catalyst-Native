@@ -19,15 +19,18 @@ import { StatusVisibilityBadge } from "@/components/status/visibility-badge";
 import { StatusDetailPlaceholder } from "@/components/timeline/placeholder";
 import { MediaCarousel } from "@/components/ui/media-carousel";
 import { ProfileEmoji } from "@/components/user/profile-emoji";
+import { useStatusReactions } from "@/hooks/use-status-reactions";
 import { abs, rel } from "@/lib/dayjs";
 import { getCdnUrl } from "@/lib/media";
-import { getReactionKey } from "@/lib/reactions";
+import { getStatusReactions } from "@/lib/reactions";
 import { quoteSearchQualifier } from "@/lib/search-query";
 import { cn } from "@/lib/utils";
 import { accountAtom } from "@/models/atoms/account";
 import { clientAtom } from "@/models/atoms/credential";
 import { metadataRevisionAtomFamily } from "@/models/atoms/epiclese-metadata";
+import { applyFetchedReactionsAtom } from "@/models/atoms/reactions";
 import { openUrlWithBrowser } from "@/models/browser-settings";
+import { reactionClock, whenReactionRequestsSettled } from "@/models/reaction-freshness";
 import {
   EPICLESE_ITEM_TYPE_LABELS,
   getEpicleseWorld,
@@ -41,15 +44,9 @@ import type {
   CatalystStatusV1_1,
   CatalystWeeklyTheme,
 } from "@/models/sdk-types";
-import {
-  applyReactionStreamingEvent,
-  registerLocalReactionMutation,
-  useStreamingReactions,
-  type ReactionStreamingEvent,
-} from "@/models/streaming";
 import * as Clipboard from "expo-clipboard";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import {
   ArrowLeft,
   Bookmark,
@@ -167,20 +164,24 @@ const METADATA_LABELS: Record<string, string> = {
   World: "撮影ワールド",
 };
 
+const EMPTY_REACTIONS: Record<string, CatalystReaction> = {};
+
 export default function StatusDetailsPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const account = useAtomValue(accountAtom);
   const client = useAtomValue(clientAtom);
   const metadataRevision = useAtomValue(metadataRevisionAtomFamily(id));
-  const { subscribe, unsubscribe } = useStreamingReactions();
 
   const [status, setStatus] = useState<CatalystStatusV1_1 | null>(null);
   const [contest, setContest] = useState<Pick<CatalystContest, "slug" | "title" | "headerUrl"> | null>(null);
   const [weeklyTheme, setWeeklyTheme] = useState<Pick<CatalystWeeklyTheme, "slug" | "title" | "weekKey" | "sponsor"> | null>(null);
   const [metadata, setMetadata] = useState<EpicleseMetadata>({});
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
-  const [reactions, setReactions] = useState<Record<string, CatalystReaction>>({});
+  // TL と同じキャッシュを使い、ここで取り直したリアクションを戻った先の TL にも出す
+  const baseReactions = useMemo(() => (status ? getStatusReactions(status) : EMPTY_REACTIONS), [status]);
+  const { reactions, react: handleReact, unreact: handleUnreact } = useStatusReactions(id, baseReactions);
+  const applyFetchedReactions = useSetAtom(applyFetchedReactionsAtom);
   const [editingCaption, setEditingCaption] = useState("");
   const [editingPassphrase, setEditingPassphrase] = useState("");
   const [isEditSheetVisible, setIsEditSheetVisible] = useState(false);
@@ -233,6 +234,8 @@ export default function StatusDetailsPage() {
     if (!id) return;
 
     const fetchData = async () => {
+      const requestedAt = reactionClock();
+      let reactionsRequestedAt = requestedAt;
       try {
         const [statusRes, metadataRes, reactionsRes] = await Promise.all([
           client.catalyst.v11.status.id.get({ path: { id } }).then(({ data, error, response }) => {
@@ -244,15 +247,24 @@ export default function StatusDetailsPage() {
           fetch(`https://api.natsuneko.com/epiclese/v1/tag/by/status/${id}`)
             .then((r) => r.json() as Promise<EpicleseMetadata>)
             .catch(() => ({})),
-          client.catalyst.v1.status.id.reactions
-            .get({ path: { id }, throwOnError: true })
+          // 自分のリアクションの送信中に取ると古い値になるので、終わってから取る
+          whenReactionRequestsSettled(id)
+            .then(() => {
+              reactionsRequestedAt = reactionClock();
+              return client.catalyst.v1.status.id.reactions.get({ path: { id }, throwOnError: true });
+            })
             .then(({ data }) => data.reactions)
-            .catch(() => ({})),
+            .catch(() => null),
         ]);
         setStatus(statusRes);
         setPassphraseLockedAuthor(null);
         setMetadata(metadataRes ?? {});
-        setReactions(reactionsRes);
+        // 取れなかったときは投稿に付いてくる値を使う
+        applyFetchedReactions(
+          reactionsRes
+            ? { entries: [[id, reactionsRes]], requestedAt: reactionsRequestedAt }
+            : { entries: [[id, getStatusReactions(statusRes)]], requestedAt },
+        );
 
         const contestSlug = getContestSlug(statusRes.contest);
         if (contestSlug) {
@@ -286,7 +298,7 @@ export default function StatusDetailsPage() {
     };
 
     fetchData();
-  }, [id, account, client, metadataRevision, reloadKey]);
+  }, [id, account, client, metadataRevision, reloadKey, applyFetchedReactions]);
 
   // 解除 API が返した投稿をすぐ出し、リアクションやいいねの状態などは取り直す
   const handlePassphraseUnlocked = useCallback((unlocked: CatalystStatusV1_1) => {
@@ -294,91 +306,6 @@ export default function StatusDetailsPage() {
     setPassphraseLockedAuthor(null);
     setReloadKey((key) => key + 1);
   }, []);
-
-  const handleStreamingReaction = useCallback(
-    (event: ReactionStreamingEvent) => {
-      setReactions((prev) => applyReactionStreamingEvent(prev, event, `status-detail:${id}`));
-    },
-    [id],
-  );
-
-  useEffect(() => {
-    if (!id) return;
-
-    subscribe(id, handleStreamingReaction);
-    return () => {
-      unsubscribe(id, handleStreamingReaction);
-    };
-  }, [handleStreamingReaction, id, subscribe, unsubscribe]);
-
-  const handleReact = useCallback(
-    async (symbol: string, url?: string, customReactionId?: string) => {
-      if (!account?.credential.client || !id) return;
-      const snapshot = reactions;
-      const key = getReactionKey(symbol, customReactionId);
-      setReactions((prev) => ({
-        ...prev,
-        [key]: {
-          ...prev[key],
-          symbol,
-          url: url ?? prev[key]?.url,
-          customReactionId: customReactionId ?? prev[key]?.customReactionId,
-          count: (prev[key]?.count ?? 0) + 1,
-          hasSelfReaction: true,
-        },
-      }));
-      const rollbackLocalMutation = registerLocalReactionMutation(id, "reaction:increment", symbol, customReactionId);
-      try {
-        if (customReactionId) {
-          await account.credential.client.catalyst.v1.status.id.reactions.custom.customReactionId.create({
-            path: { id, customReactionId },
-            throwOnError: true,
-          });
-        } else {
-          await account.credential.client.catalyst.v1.status.id.reactions.symbol.create({
-            path: { id, symbol },
-            throwOnError: true,
-          });
-        }
-      } catch {
-        rollbackLocalMutation();
-        setReactions(snapshot);
-        Alert.alert("エラー", "リアクションに失敗しました");
-      }
-    },
-    [account, id, reactions],
-  );
-
-  const handleUnreact = useCallback(
-    async (symbol: string, customReactionId?: string) => {
-      if (!account?.credential.client || !id) return;
-      const snapshot = reactions;
-      const key = getReactionKey(symbol, customReactionId);
-      setReactions((prev) => ({
-        ...prev,
-        [key]: { ...prev[key], count: Math.max(0, (prev[key]?.count ?? 0) - 1), hasSelfReaction: false },
-      }));
-      const rollbackLocalMutation = registerLocalReactionMutation(id, "reaction:decrement", symbol, customReactionId);
-      try {
-        if (customReactionId) {
-          await account.credential.client.catalyst.v1.status.id.reactions.custom.customReactionId.delete({
-            path: { id, customReactionId },
-            throwOnError: true,
-          });
-        } else {
-          await account.credential.client.catalyst.v1.status.id.reactions.symbol.delete({
-            path: { id, symbol },
-            throwOnError: true,
-          });
-        }
-      } catch {
-        rollbackLocalMutation();
-        setReactions(snapshot);
-        Alert.alert("エラー", "リアクションの取り消しに失敗しました");
-      }
-    },
-    [account, id, reactions],
-  );
 
   const handleDeleteStatus = useCallback(async () => {
     if (!account?.credential.client || !id) return;

@@ -2,8 +2,10 @@ import { CatalystDivider, CatalystEmptyState, CatalystText } from "@/components/
 import { useAsyncOneTimeEffect } from "@/hooks/use-async-one-time-effect";
 import { merge } from "@/lib/merge";
 import { clientAtom } from "@/models/atoms/credential";
+import { applyFetchedStatusesAtom } from "@/models/atoms/reactions";
+import { reactionClock } from "@/models/reaction-freshness";
 import { CatalystStatusV1_1 } from "@/models/sdk-types";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { HeartOff, Lock } from "lucide-react-native";
 import React, { memo, useCallback, useImperativeHandle, useRef, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
@@ -43,6 +45,7 @@ const EmptyState = () => {
 export const UserLikes = memo(
   React.forwardRef<UserTimelineHandle>((_props, ref) => {
     const client = useAtomValue(clientAtom);
+    const applyFetchedStatuses = useSetAtom(applyFetchedStatusesAtom);
     const [items, setItems] = useState<CatalystStatusV1_1[]>([]);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -54,14 +57,16 @@ export const UserLikes = memo(
       setIsInitialLoading(true);
       isLoadingRef.current = true;
       try {
+        const requestedAt = reactionClock();
         const { data } = await client.catalyst.v1.timeline.favorite.get({ query: {}, throwOnError: true });
+        applyFetchedStatuses({ statuses: data.statuses, requestedAt });
         setItems((prev) => merge(prev, data.statuses, sets, (item) => item.id));
       } finally {
         setIsInitialLoading(false);
         isLoadingRef.current = false;
         setHasFetched(true);
       }
-    }, [client]);
+    }, [client, applyFetchedStatuses]);
 
     const loadMore = useCallback(async () => {
       if (isLoadingRef.current || isInitialLoading) return;
@@ -72,10 +77,12 @@ export const UserLikes = memo(
       setIsLoadingMore(true);
       isLoadingRef.current = true;
       try {
+        const requestedAt = reactionClock();
         const { data } = await client.catalyst.v1.timeline.favorite.get({
           query: { until: lastItem.id },
           throwOnError: true,
         });
+        applyFetchedStatuses({ statuses: data.statuses, requestedAt });
 
         if (data.statuses.length > 0) {
           setItems((prev) => merge(prev, data.statuses, sets, (item) => item.id));
@@ -84,7 +91,7 @@ export const UserLikes = memo(
         setIsLoadingMore(false);
         isLoadingRef.current = false;
       }
-    }, [items, client, isInitialLoading]);
+    }, [items, client, isInitialLoading, applyFetchedStatuses]);
 
     useImperativeHandle(ref, () => ({ loadMore }), [loadMore]);
 

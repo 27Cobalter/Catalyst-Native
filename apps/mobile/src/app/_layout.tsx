@@ -28,6 +28,7 @@ import {
   timelineImageQualityAtom,
   timelineWifiUpgradeAtom,
 } from "@/models/atoms/image-quality";
+import { clearReactionCachesAtom } from "@/models/atoms/reactions";
 import { hideSensitiveContentAtom } from "@/models/atoms/sensitive-content";
 import { streamingEnabledAtom } from "@/models/atoms/streaming";
 import * as Credential from "@/models/credential";
@@ -54,7 +55,8 @@ import {
 } from "expo-router/react-navigation";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
+import { selectAtom } from "jotai/utils";
 import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -93,6 +95,8 @@ SplashScreen.setOptions({
 });
 
 
+const accountUserIdAtom = selectAtom(accountAtom, (account) => account?.user?.id ?? null);
+
 export const unstable_settings = {
   anchor: "(drawer)",
 };
@@ -112,12 +116,19 @@ export default Sentry.wrap(function RootLayout() {
   const setHapticsEnabled = useSetAtom(hapticsEnabledAtom);
   const setEmojiSkinTone = useSetAtom(emojiSkinToneAtom);
   useSystemReducedMotionSync();
+  const accountUserId = useAtomValue(accountUserIdAtom);
+  const clearReactionCaches = useSetAtom(clearReactionCachesAtom);
   const [loaded, error] = useFonts({
     "Noto Sans JP Regular": require("@/assets/fonts/NotoSansJP-Regular.ttf"),
     "Noto Sans JP Bold": require("@/assets/fonts/NotoSansJP-Bold.ttf"),
     "HunyaJi-Re": require("@/assets/fonts/HonyaJi-Re.ttf"),
     "FiraCode-Regular": require("@/assets/fonts/FiraCode-Regular.ttf"),
   });
+
+  // 自分が付けたかどうかはアカウントごとに違うので、アカウントを切り替えたらリアクションのキャッシュを捨てる
+  useEffect(() => {
+    clearReactionCaches();
+  }, [accountUserId, clearReactionCaches]);
 
   useEffect(() => {
     Promise.all([

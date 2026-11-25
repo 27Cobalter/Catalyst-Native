@@ -1,4 +1,6 @@
+import { clearReactionCachesAtom, reactionCacheAtomFamily } from "@/models/atoms/reactions";
 import { act, render, waitFor } from "@testing-library/react-native";
+import { getDefaultStore } from "jotai";
 import React from "react";
 import type { TimelineHandle, TimelineStatusItem } from "./base";
 import { TimelineBase } from "./base";
@@ -27,16 +29,40 @@ jest.mock("@shopify/flash-list", () => {
   };
 });
 
+const mockBulkReactions = jest.fn();
+jest.mock("@/models/atoms/credential", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { atom } = require("jotai");
+  return {
+    clientAtom: atom({
+      catalyst: { v1: { statuses: { reactions: { create: (...args: unknown[]) => mockBulkReactions(...args) } } } },
+    }),
+  };
+});
+
 jest.mock("./status", () => ({ TimelineStatus: () => null }));
 jest.mock("./advertisement", () => ({ TimelineAdvertisement: () => null }));
 jest.mock("./placeholder", () => ({ TimelinePlaceholder: () => null }));
 
 const item = (id: string, cursor = id) => ({ id, cursor }) as unknown as TimelineStatusItem;
+const reaction = (count: number) => ({
+  name: "kawaii",
+  symbol: "kawaii",
+  url: "https://example.com/kawaii.png",
+  count,
+});
+const getCachedReactions = (id: string) => getDefaultStore().get(reactionCacheAtomFamily(id));
 
 describe("TimelineBase", () => {
   beforeEach(() => {
     mockCaptured = null;
     mockCapturedScrollToOffset = jest.fn();
+    mockBulkReactions.mockReset();
+    mockBulkReactions.mockResolvedValue({ data: { reactions: {} } });
+  });
+
+  afterEach(() => {
+    getDefaultStore().set(clearReactionCachesAtom);
   });
 
   it("初回マウント時に fetcher を呼び、取得結果を data として渡す", async () => {
@@ -164,6 +190,69 @@ describe("TimelineBase", () => {
     });
 
     expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("取得した投稿のリアクションで、すでにあるキャッシュだけを入れ直す", async () => {
+    getDefaultStore().set(reactionCacheAtomFamily("cache-1"), { kawaii: reaction(1) });
+    getDefaultStore().set(reactionCacheAtomFamily("cache-3"), { kawaii: reaction(1) });
+    const statuses = [
+      { id: "cache-1", reactions: { kawaii: reaction(2) }, visitor: { reactions: ["kawaii"] } },
+      { id: "cache-2", reactions: { kawaii: reaction(3) }, visitor: {} },
+      // v1.0 の API は visitor を返さないので、自分が付けたかどうかが分からない
+      { id: "cache-3", reactions: { kawaii: reaction(4) } },
+    ];
+    const fetcher = jest.fn().mockResolvedValue(statuses as unknown as TimelineStatusItem[]);
+
+    await render(<TimelineBase fetcher={fetcher} />);
+
+    await waitFor(() => {
+      expect(getCachedReactions("cache-1")).toEqual({ kawaii: { ...reaction(2), hasSelfReaction: true } });
+    });
+    // キャッシュが無い投稿は status の値がそのまま出るので、書かない
+    expect(getCachedReactions("cache-2")).toBeNull();
+    expect(getCachedReactions("cache-3")).toEqual({ kawaii: reaction(1) });
+  });
+
+  it("pull-to-refresh で読み込み済みの投稿のリアクションを取り直し、共有キャッシュに書く", async () => {
+    const ad = { id: "advertisement:x:0", advertisement: true } as unknown as TimelineStatusItem;
+    const locked = { id: "refresh-locked", locked: true } as unknown as TimelineStatusItem;
+    const fetcher = jest
+      .fn()
+      .mockResolvedValueOnce([item("refresh-2"), ad, locked, item("refresh-1")])
+      .mockResolvedValueOnce([]);
+    const fresh = { kawaii: { ...reaction(5), hasSelfReaction: true } };
+    mockBulkReactions.mockResolvedValue({ data: { reactions: { "refresh-2": fresh, "refresh-1": {} } } });
+
+    await render(<TimelineBase fetcher={fetcher} />);
+    await waitFor(() => expect(mockCaptured?.data).toHaveLength(4));
+
+    await act(async () => {
+      await mockCaptured?.refreshControl.props.onRefresh();
+    });
+
+    // 広告と合言葉付きの投稿は除き、1 回のリクエストでまとめて取る
+    expect(mockBulkReactions).toHaveBeenCalledTimes(1);
+    expect(mockBulkReactions).toHaveBeenCalledWith({ body: { ids: ["refresh-2", "refresh-1"] }, throwOnError: true });
+    await waitFor(() => expect(getCachedReactions("refresh-2")).toEqual(fresh));
+    expect(getCachedReactions("refresh-1")).toEqual({});
+  });
+
+  it("リアクションを取り直せなくても新着はマージする", async () => {
+    const fetcher = jest
+      .fn()
+      .mockResolvedValueOnce([item("fail-1")])
+      .mockResolvedValueOnce([item("fail-2")]);
+    mockBulkReactions.mockRejectedValue(new Error("network"));
+
+    await render(<TimelineBase fetcher={fetcher} />);
+    await waitFor(() => expect(mockCaptured?.data).toEqual([item("fail-1")]));
+
+    await act(async () => {
+      await mockCaptured?.refreshControl.props.onRefresh();
+    });
+
+    await waitFor(() => expect(mockCaptured?.data).toEqual([item("fail-2"), item("fail-1")]));
+    expect(getCachedReactions("fail-1")).toBeNull();
   });
 
   it("scrollToTop ハンドルで FlashList の scrollToOffset を呼ぶ", async () => {
