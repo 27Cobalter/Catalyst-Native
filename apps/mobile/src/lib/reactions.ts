@@ -1,4 +1,4 @@
-import type { CatalystReaction } from "@/models/sdk-types";
+import type { CatalystReaction, CatalystStatus, CatalystStatusV1_1, CatalystStatusV1_2 } from "@/models/sdk-types";
 
 const CUSTOM_REACTION_KEY_PREFIX = "custom:";
 
@@ -24,4 +24,29 @@ export const getReactionClipboardValue = ({
     return symbol.startsWith(":") ? symbol : `:${symbol}:`;
   }
   return customReactionId;
+};
+
+type StatusWithReactions = {
+  reactions?: Record<string, CatalystReaction>;
+  visitor?: {
+    reactions?: string[];
+  };
+};
+
+// 投稿に付いてくるリアクションに、自分が付けたかどうかとカスタムリアクションの ID を足す
+export const getStatusReactions = (
+  status: CatalystStatus | CatalystStatusV1_1 | CatalystStatusV1_2,
+): Record<string, CatalystReaction> => {
+  const s = status as StatusWithReactions;
+  const vr = s.visitor?.reactions ?? [];
+  return Object.fromEntries(
+    Object.entries(s.reactions ?? {}).map(([key, reaction]) => [
+      key,
+      {
+        ...reaction,
+        customReactionId: getCustomReactionId(key, reaction),
+        hasSelfReaction: vr.includes(key),
+      },
+    ]),
+  );
 };
